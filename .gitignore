@@ -79,3 +79,4 @@ criterion/
 coverage/
 lcov.info
 *.lcov
+.claude/scheduled_tasks.lock
