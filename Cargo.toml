@@ -1,0 +1,85 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Nexus Engine contributors
+#
+# Nexus Engine — workspace root.
+# Authoritative for Law 3 (Sacred Module Boundaries) and Law 4 (Always Compiles).
+# Spec: docs/architecture/04-workspace-layout.md
+
+[workspace]
+resolver = "2"
+members = [
+  "crates/nexus-core",
+  "crates/nexus-hal",
+  "crates/nexus-assets",
+  "crates/nexus-renderer",
+  "crates/nexus-physics",
+  "crates/nexus-audio",
+  "crates/nexus-net",
+  "crates/nexus-script",
+  "crates/nexus-agent",
+  "crates/nexus-editor",
+  "crates/nexus-cli",
+  "crates/nexus-merge",
+  "crates/nexus-engine",
+  "crates/styles/*",
+  "crates/genres/*",
+  "crates/sdks/nexus-agent-sdk-rs",
+  # crates/sdks/nexus-agent-sdk-py — deferred (needs Python toolchain), see .placeholder
+  "games/*",
+  "tools/*",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+authors = ["Nexus Engine contributors"]
+repository = "https://github.com/developerz-ai/nexus-engine"
+rust-version = "1.95"
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+unused = { level = "warn", priority = -1 }
+
+[workspace.lints.clippy]
+# Phase 0 scaffold: keep lint groups permissive (priority = -1) so individual
+# lints can override. Tighten in a later PR (ADR-pending) — Law 4 first.
+all = { level = "warn", priority = -1 }
+
+[workspace.dependencies]
+# Foundational deps — pinned to minor. Bumps require a PR + bench delta (Law 5).
+wgpu = "29"
+winit = "0.30"
+raw-window-handle = "0.6"
+rapier3d = { version = "0.32", features = ["enhanced-determinism"] }
+rapier2d = { version = "0.32", features = ["enhanced-determinism"] }
+cpal = "0.17"
+rayon = "1.12"
+tokio = { version = "1", features = ["rt-multi-thread", "net", "io-util"] }
+quinn = "0.11"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+bincode = "3.0"
+toml = "1.1"
+glam = { version = "0.32", features = ["serde", "bytemuck"] }
+bytemuck = "1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["json", "env-filter"] }
+thiserror = "2"
+mlua = { version = "0.11", features = ["lua54", "vendored", "send"] }
+rune = "0.14"
+image = "0.25"
+gltf = "1.4"
+zstd = "0.13"
+lz4_flex = "0.13"
+rand = "0.10"
+rand_chacha = "0.10"
+proptest = "1"
+criterion = "0.8"
+naga = "29"
+notify = "8"
+clap = { version = "4", features = ["derive"] }
+walkdir = "2"
+syn = { version = "2", features = ["full"] }
+quote = "1"
+proc-macro2 = "1"

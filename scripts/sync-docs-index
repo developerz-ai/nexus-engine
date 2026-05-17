@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Nexus Engine contributors
+exec bun "$(dirname "$0")/bin/sync-docs-index.ts" "$@"

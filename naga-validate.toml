@@ -1,0 +1,72 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Nexus Engine contributors
+#
+# WGSL validation policy. Consumed by `scripts/check` (§"WGSL") which invokes
+# `naga` against every shader matched by the globs below.
+#
+# Spec refs:
+#   - docs/architecture/01-principles.md (Laws 4, 5)
+#   - docs/architecture/03-tech-stack.md §"Shader language" (WGSL canonical)
+#   - docs/specs/renderer/shaders.md (when authored)
+#
+# No WGSL files exist yet; this file is policy. The `.keep` under
+# `crates/nexus-renderer/shaders/` preserves the expected target dir.
+
+[validation]
+# Strict means: every WGSL feature naga knows about is validated, including:
+#   - capability matching against WebGPU baseline,
+#   - type inference,
+#   - resource binding rules,
+#   - entry point signature conformance.
+# Warnings are promoted to errors. Law 4: WGSL that "almost" validates does
+# not ship.
+level = "strict"
+warnings_as_errors = true
+
+[targets]
+# Every shader Nexus ships goes here. Globs are evaluated from repo root.
+include = [
+  "crates/nexus-renderer/shaders/**/*.wgsl",
+  "crates/nexus-renderer/src/**/*.wgsl",
+  "crates/styles/nexus-style-pbr/shaders/**/*.wgsl",
+  "crates/styles/nexus-style-pbr/src/**/*.wgsl",
+  "crates/styles/nexus-style-npr/shaders/**/*.wgsl",
+  "crates/styles/nexus-style-npr/src/**/*.wgsl",
+  "crates/styles/nexus-style-pixel/shaders/**/*.wgsl",
+  "crates/styles/nexus-style-pixel/src/**/*.wgsl",
+  "crates/styles/nexus-style-2d/shaders/**/*.wgsl",
+  "crates/styles/nexus-style-2d/src/**/*.wgsl",
+  "crates/styles/nexus-style-mixed/shaders/**/*.wgsl",
+  "crates/styles/nexus-style-mixed/src/**/*.wgsl",
+]
+
+# Generated shaders (compiled from shader graph) live here at runtime; skip.
+exclude = [
+  "target/**",
+  "**/*.gen.wgsl",
+]
+
+[capabilities]
+# Baseline = downlevel WebGPU. Anything beyond requires an opt-in capability
+# bit declared in the renderer spec and the shader's `@capability(...)`
+# attribute (when naga supports it).
+profile = "webgpu-baseline"
+required = [
+  "FLOAT32_FILTERABLE",
+]
+# Capabilities a shader is allowed to opt into via an explicit attribute.
+optional = [
+  "PUSH_CONSTANT",
+  "MULTIVIEW",
+  "SUBGROUP",
+]
+
+[backends]
+# Every shader must cross-compile clean to every backend Nexus targets.
+# A shader that validates on WebGPU but fails MSL is a bug.
+require_clean = ["spv", "msl", "hlsl", "glsl", "wgsl"]
+
+[output]
+# Machine-readable report for nexus-merge to consume.
+report = "logs/check/naga-report.json"
+fail_on_first = false   # collect every error, then fail

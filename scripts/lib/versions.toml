@@ -1,0 +1,45 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Nexus Engine contributors
+# scripts/lib/versions.toml — pinned tool versions for bootstrap + lint.
+# Updated by Renovate. Verified by scripts/bootstrap.
+
+schema_version = "1"
+
+[rust]
+rustup        = "1.27.1"
+toolchain     = "1.82.0"
+cargo-nextest = "0.9.85"
+cargo-deny    = "0.16.2"
+cargo-audit   = "0.21.0"
+sccache       = "0.8.2"
+
+[python]
+python  = "3.11"
+ruff    = "0.7.4"
+pytest  = "8.3.3"
+
+[typescript]
+bun        = "1.1.34"
+biome      = "1.9.4"
+commander  = "12.1.0"
+vitest     = "2.1.4"
+
+[bash]
+shellcheck = "0.10.0"
+shfmt      = "3.10.0"
+bats-core  = "1.11.0"
+bats-assert = "2.1.0"
+bats-support = "0.3.0"
+bats-file  = "0.4.0"
+
+[graphics]
+naga-cli = "22.1.0"
+
+[secrets]
+sops = "3.9.1"
+age  = "1.2.0"
+
+[utility]
+jq = "1.7.1"
+yq = "4.44.3"
+gh = "2.60.0"

@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Nexus Engine contributors
+# Normalize line endings; mark binaries; tag generated files.
+
+* text=auto eol=lf
+
+*.rs    text eol=lf diff=rust
+*.toml  text eol=lf
+*.ts    text eol=lf
+*.tsx   text eol=lf
+*.js    text eol=lf
+*.json  text eol=lf
+*.md    text eol=lf
+*.yml   text eol=lf
+*.yaml  text eol=lf
+*.sh    text eol=lf
+
+*.wgsl  text eol=lf linguist-language=WGSL
+*.glsl  text eol=lf linguist-language=GLSL
+
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.webp  binary
+*.ico   binary
+*.ttf   binary
+*.otf   binary
+*.woff  binary
+*.woff2 binary
+*.wav   binary
+*.ogg   binary
+*.mp3   binary
+*.flac  binary
+*.gltf  binary
+*.glb   binary
+*.fbx   binary
+*.obj   binary
+
+Cargo.lock merge=binary linguist-generated=true
+*.lockb    binary

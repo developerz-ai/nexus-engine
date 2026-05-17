@@ -1,0 +1,22 @@
+[package]
+name = "nexus-style-npr"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+description = "Non-photorealistic rendering style module (cel/toon, hatching, painterly)."
+readme = "README.md"
+
+[package.metadata.nexus]
+spec = "docs/specs/styles/npr.md"
+laws = ["2", "3", "5", "7", "11", "12", "14"]
+
+[lints]
+workspace = true
+
+[dependencies]
+nexus-core = { path = "../../nexus-core" }
+nexus-renderer = { path = "../../nexus-renderer" }
+nexus-assets = { path = "../../nexus-assets" }

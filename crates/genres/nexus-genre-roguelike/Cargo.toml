@@ -1,0 +1,21 @@
+[package]
+name = "nexus-genre-roguelike"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+description = "Roguelike genre module."
+readme = "README.md"
+
+[package.metadata.nexus]
+spec = "docs/specs/genres/roguelike.md"
+laws = ["2", "3", "7", "11", "12", "14"]
+
+[lints]
+workspace = true
+
+[dependencies]
+nexus-core = { path = "../../nexus-core" }
+nexus-script = { path = "../../nexus-script" }

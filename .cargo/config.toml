@@ -1,0 +1,45 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Nexus Engine contributors
+#
+# Workspace-level cargo config.
+# Applies to every `cargo` invocation rooted at the repo.
+#
+# Spec refs:
+#   - docs/architecture/01-principles.md (Laws 4, 6)
+#   - docs/architecture/03-tech-stack.md
+#   - docs/architecture/04-workspace-layout.md
+
+[build]
+# Workspace-wide rustflags. Per-target adds linker tuning below.
+#   unreachable_pub — flags `pub` items not reachable from the crate root
+#                     (helps Law 3 — Sacred Module Boundaries — by surfacing
+#                     accidental over-exposure).
+#   rust_2018_idioms — keeps the codebase idiomatic across edition bumps.
+rustflags = [
+  "-W", "unreachable_pub",
+  "-W", "rust_2018_idioms",
+]
+
+# ---------------------------------------------------------------------------
+# Per-target linker tuning. lld on Linux for fast incremental link.
+# (mold is faster still; opt in by setting CARGO_TARGET_*_LINKER locally —
+# kept off by default so a stock dev box without mold installed still links.)
+# ---------------------------------------------------------------------------
+[target.x86_64-unknown-linux-gnu]
+rustflags = ["-C", "link-arg=-fuse-ld=lld"]
+
+[target.aarch64-unknown-linux-gnu]
+rustflags = ["-C", "link-arg=-fuse-ld=lld"]
+
+[net]
+# git CLI honors the user's SSH agent + credential helpers; libgit2 does not.
+git-fetch-with-cli = true
+
+[registries.crates-io]
+# Sparse protocol is the default since 1.70 but pinning explicitly for older
+# toolchains and CI containers.
+protocol = "sparse"
+
+[term]
+verbose = false
+color = "auto"

@@ -1,0 +1,6 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Nexus Engine contributors
+#
+# Keeps crates/nexus-renderer/shaders/ in git before the first WGSL lands.
+# Shader files are owned by shader-specialist + renderer-engineer.
+# Validation policy: ../../../naga-validate.toml.

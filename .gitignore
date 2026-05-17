@@ -1,0 +1,81 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Nexus Engine contributors
+# Repo-root ignore rules. Cargo.lock + bun.lockb are COMMITTED (Law 4).
+
+# --- Rust ---
+target/
+**/target/
+**/*.rs.bk
+**/*.profraw
+**/*.profdata
+
+# --- Node / Bun (scripts/) ---
+node_modules/
+**/node_modules/
+
+# --- Editor ---
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# --- OS ---
+Thumbs.db
+desktop.ini
+
+# --- Build artifacts ---
+dist/
+build/
+out/
+*.pdb
+*.dSYM/
+
+# --- Local env (keep .env.example) ---
+.env
+.env.local
+.env.*.local
+
+# --- Logs (keep subdir markers) ---
+# Re-include dirs first so git recurses, then ignore files inside, then re-include .keep + README.
+logs/**
+!logs/
+!logs/**/
+!logs/**/.keep
+!logs/README.md
+
+# --- Tmp (keep subdir markers) ---
+tmp/**
+!tmp/
+!tmp/**/
+!tmp/**/.keep
+!tmp/README.md
+
+# --- Secrets ---
+*.key
+*.pem
+*.p12
+secrets/
+
+# --- Caches ---
+**/.cache/
+.parcel-cache/
+.next/
+.turbo/
+
+# --- Fuzzing ---
+fuzz/target/
+fuzz/corpus/
+fuzz/artifacts/
+
+# --- Benches ---
+criterion/
+**/criterion/
+
+# --- Coverage ---
+coverage/
+lcov.info
+*.lcov

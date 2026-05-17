@@ -1,0 +1,1403 @@
+{
+  "schema_version": "1",
+  "generated_at": "2026-05-17T15:45:55Z",
+  "repo_kind": "engine",
+  "scripts": [
+    {
+      "name": "bootstrap",
+      "path": "scripts/bootstrap",
+      "lang": "typescript",
+      "category": "bootstrap",
+      "description": "Install required toolchains (rustup, nextest, sccache, bun, ruff, sops, …).",
+      "since": "0.1.0",
+      "idempotent": true,
+      "flags": [
+        {
+          "name": "help",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "json",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "quiet",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "verbose",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "dry-run",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "no-color",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "version",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "minimal",
+          "type": "switch",
+          "source": "manifest"
+        },
+        {
+          "name": "with-gpu",
+          "type": "switch",
+          "source": "manifest"
+        },
+        {
+          "name": "tool",
+          "type": "string",
+          "multi": true,
+          "source": "manifest"
+        },
+        {
+          "name": "env",
+          "type": "string",
+          "source": "manifest"
+        }
+      ],
+      "exit_codes": [
+        {
+          "code": 0,
+          "meaning": "success"
+        },
+        {
+          "code": 4,
+          "meaning": "missing prerequisite"
+        },
+        {
+          "code": 10,
+          "meaning": "download / network error"
+        }
+      ],
+      "required_env": [],
+      "test_file": "scripts/tests/bootstrap.test.ts"
+    },
+    {
+      "name": "check",
+      "path": "scripts/check",
+      "lang": "typescript",
+      "category": "test",
+      "description": "Run all quality gates: fmt, clippy, biome, ruff, shellcheck, naga, cargo-deny.",
+      "since": "0.1.0",
+      "idempotent": true,
+      "flags": [
+        {
+          "name": "help",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "json",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "quiet",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "verbose",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "dry-run",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "no-color",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "version",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "fix",
+          "type": "switch",
+          "source": "manifest"
+        },
+        {
+          "name": "only",
+          "type": "enum:fmt|clippy|biome|ruff|shellcheck|deny|naga",
+          "source": "manifest"
+        },
+        {
+          "name": "env",
+          "type": "string",
+          "source": "manifest"
+        }
+      ],
+      "exit_codes": [
+        {
+          "code": 0,
+          "meaning": "all gates pass"
+        },
+        {
+          "code": 5,
+          "meaning": "one or more gates failed"
+        }
+      ],
+      "required_env": [
+        "NEXUS_ENV"
+      ],
+      "test_file": "scripts/tests/check.test.ts"
+    },
+    {
+      "name": "build",
+      "path": "scripts/build",
+      "lang": "typescript",
+      "category": "build",
+      "description": "Compile workspace with sccache + features.",
+      "since": "0.1.0",
+      "idempotent": true,
+      "flags": [
+        {
+          "name": "help",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "json",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "quiet",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "verbose",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "dry-run",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "no-color",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "version",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "profile",
+          "type": "enum:dev|release|dist",
+          "default": "dev",
+          "source": "manifest"
+        },
+        {
+          "name": "target",
+          "type": "string",
+          "source": "manifest"
+        },
+        {
+          "name": "feature",
+          "type": "string",
+          "multi": true,
+          "source": "manifest"
+        },
+        {
+          "name": "workspace",
+          "type": "switch",
+          "source": "manifest"
+        },
+        {
+          "name": "env",
+          "type": "string",
+          "source": "manifest"
+        }
+      ],
+      "exit_codes": [
+        {
+          "code": 0,
+          "meaning": "success"
+        },
+        {
+          "code": 4,
+          "meaning": "missing toolchain — run scripts/bootstrap"
+        },
+        {
+          "code": 5,
+          "meaning": "compile error"
+        }
+      ],
+      "required_env": [
+        "NEXUS_ENV"
+      ],
+      "test_file": "scripts/tests/build.test.ts"
+    },
+    {
+      "name": "test",
+      "path": "scripts/test",
+      "lang": "typescript",
+      "category": "test",
+      "description": "Run unit, integration, scenario, and script tests.",
+      "since": "0.1.0",
+      "idempotent": true,
+      "flags": [
+        {
+          "name": "help",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "json",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "quiet",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "verbose",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "dry-run",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "no-color",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "version",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "unit",
+          "type": "switch",
+          "source": "manifest"
+        },
+        {
+          "name": "integration",
+          "type": "switch",
+          "source": "manifest"
+        },
+        {
+          "name": "scenario",
+          "type": "switch",
+          "source": "manifest"
+        },
+        {
+          "name": "scripts",
+          "type": "switch",
+          "source": "manifest"
+        },
+        {
+          "name": "workspace",
+          "type": "switch",
+          "source": "manifest"
+        },
+        {
+          "name": "filter",
+          "type": "string",
+          "source": "manifest"
+        },
+        {
+          "name": "env",
+          "type": "string",
+          "source": "manifest"
+        }
+      ],
+      "exit_codes": [
+        {
+          "code": 0,
+          "meaning": "all tests pass"
+        },
+        {
+          "code": 5,
+          "meaning": "one or more suites failed"
+        }
+      ],
+      "required_env": [
+        "NEXUS_ENV"
+      ],
+      "test_file": "scripts/tests/test.test.ts"
+    },
+    {
+      "name": "scenario",
+      "path": "scripts/scenario",
+      "lang": "typescript",
+      "category": "test",
+      "description": "Run TOML scenario(s) via `nexus run --scenario`.",
+      "since": "0.1.0",
+      "idempotent": true,
+      "flags": [
+        {
+          "name": "help",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "json",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "quiet",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "verbose",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "dry-run",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "no-color",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "version",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "file",
+          "type": "path",
+          "source": "manifest"
+        },
+        {
+          "name": "batch",
+          "type": "switch",
+          "source": "manifest"
+        },
+        {
+          "name": "parallel",
+          "type": "int",
+          "default": 1,
+          "source": "manifest"
+        },
+        {
+          "name": "record",
+          "type": "switch",
+          "source": "manifest"
+        },
+        {
+          "name": "env",
+          "type": "string",
+          "source": "manifest"
+        }
+      ],
+      "exit_codes": [
+        {
+          "code": 0,
+          "meaning": "scenarios passed"
+        },
+        {
+          "code": 2,
+          "meaning": "neither --file nor --batch given"
+        },
+        {
+          "code": 4,
+          "meaning": "nexus CLI missing"
+        },
+        {
+          "code": 5,
+          "meaning": "one or more scenarios failed"
+        }
+      ],
+      "required_env": [
+        "NEXUS_ENV"
+      ],
+      "test_file": "scripts/tests/scenario.test.ts"
+    },
+    {
+      "name": "bench",
+      "path": "scripts/bench",
+      "lang": "typescript",
+      "category": "test",
+      "description": "Run criterion benches with baseline compare.",
+      "since": "0.1.0",
+      "idempotent": true,
+      "flags": [
+        {
+          "name": "help",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "json",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "quiet",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "verbose",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "dry-run",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "no-color",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "version",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "baseline",
+          "type": "string",
+          "source": "manifest"
+        },
+        {
+          "name": "save",
+          "type": "string",
+          "source": "manifest"
+        },
+        {
+          "name": "package",
+          "type": "string",
+          "source": "manifest"
+        },
+        {
+          "name": "env",
+          "type": "string",
+          "source": "manifest"
+        }
+      ],
+      "exit_codes": [
+        {
+          "code": 0,
+          "meaning": "success"
+        },
+        {
+          "code": 5,
+          "meaning": "bench failed"
+        }
+      ],
+      "required_env": [
+        "NEXUS_ENV"
+      ],
+      "test_file": "scripts/tests/bench.test.ts"
+    },
+    {
+      "name": "replay",
+      "path": "scripts/replay",
+      "lang": "typescript",
+      "category": "test",
+      "description": "Replay a deterministic snapshot via `nexus replay`.",
+      "since": "0.1.0",
+      "idempotent": true,
+      "flags": [
+        {
+          "name": "help",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "json",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "quiet",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "verbose",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "dry-run",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "no-color",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "version",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "snapshot",
+          "type": "path",
+          "required": true,
+          "source": "manifest"
+        },
+        {
+          "name": "from-frame",
+          "type": "int",
+          "default": 0,
+          "source": "manifest"
+        },
+        {
+          "name": "patch",
+          "type": "string",
+          "source": "manifest"
+        },
+        {
+          "name": "bisect",
+          "type": "switch",
+          "source": "manifest"
+        },
+        {
+          "name": "env",
+          "type": "string",
+          "source": "manifest"
+        }
+      ],
+      "exit_codes": [
+        {
+          "code": 0,
+          "meaning": "replay completed"
+        },
+        {
+          "code": 2,
+          "meaning": "missing --snapshot"
+        },
+        {
+          "code": 4,
+          "meaning": "nexus CLI missing"
+        },
+        {
+          "code": 5,
+          "meaning": "replay failed"
+        }
+      ],
+      "required_env": [
+        "NEXUS_ENV"
+      ],
+      "test_file": "scripts/tests/replay.test.ts"
+    },
+    {
+      "name": "index-scripts",
+      "path": "scripts/index-scripts",
+      "lang": "typescript",
+      "category": "meta",
+      "description": "Regenerate scripts/index.json from manifest + --help output.",
+      "since": "0.1.0",
+      "idempotent": true,
+      "flags": [
+        {
+          "name": "help",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "json",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "quiet",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "verbose",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "dry-run",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "no-color",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "version",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "check",
+          "type": "switch",
+          "source": "manifest"
+        },
+        {
+          "name": "env",
+          "type": "string",
+          "source": "manifest"
+        }
+      ],
+      "exit_codes": [
+        {
+          "code": 0,
+          "meaning": "index up to date or written"
+        },
+        {
+          "code": 3,
+          "meaning": "manifest missing or invalid"
+        },
+        {
+          "code": 4,
+          "meaning": "yq/jq missing"
+        },
+        {
+          "code": 8,
+          "meaning": "drift detected (--check mode)"
+        }
+      ],
+      "required_env": [],
+      "test_file": "scripts/tests/index-scripts.test.ts"
+    },
+    {
+      "name": "new-script",
+      "path": "scripts/new-script",
+      "lang": "typescript",
+      "category": "meta",
+      "description": "Scaffold a new script + test + manifest entry.",
+      "since": "0.1.0",
+      "idempotent": false,
+      "flags": [
+        {
+          "name": "help",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "json",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "quiet",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "verbose",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "dry-run",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "no-color",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "version",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "required": true,
+          "source": "manifest"
+        },
+        {
+          "name": "lang",
+          "type": "enum:bash|py|ts",
+          "required": true,
+          "source": "manifest"
+        },
+        {
+          "name": "category",
+          "type": "enum:bootstrap|build|test|dev|deploy|release|liveops|meta",
+          "required": true,
+          "source": "manifest"
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "source": "manifest"
+        },
+        {
+          "name": "custom",
+          "type": "switch",
+          "source": "manifest"
+        },
+        {
+          "name": "env",
+          "type": "string",
+          "source": "manifest"
+        }
+      ],
+      "exit_codes": [
+        {
+          "code": 0,
+          "meaning": "scaffolded"
+        },
+        {
+          "code": 2,
+          "meaning": "missing/invalid required flag"
+        },
+        {
+          "code": 3,
+          "meaning": "script already exists"
+        }
+      ],
+      "required_env": [],
+      "test_file": "scripts/tests/new-script.test.ts"
+    },
+    {
+      "name": "lint-scripts",
+      "path": "scripts/lint-scripts",
+      "lang": "typescript",
+      "category": "meta",
+      "description": "Lint scripts/ — shellcheck, ruff, bats, manifest consistency, secret-echo grep.",
+      "since": "0.1.0",
+      "idempotent": true,
+      "flags": [
+        {
+          "name": "help",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "json",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "quiet",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "verbose",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "dry-run",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "no-color",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "version",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "security",
+          "type": "switch",
+          "source": "manifest"
+        },
+        {
+          "name": "env",
+          "type": "string",
+          "source": "manifest"
+        }
+      ],
+      "exit_codes": [
+        {
+          "code": 0,
+          "meaning": "clean"
+        },
+        {
+          "code": 5,
+          "meaning": "lint errors found"
+        }
+      ],
+      "required_env": [],
+      "test_file": "scripts/tests/lint-scripts.test.ts"
+    },
+    {
+      "name": "release-engine",
+      "path": "scripts/release-engine",
+      "lang": "typescript",
+      "category": "release",
+      "description": "Tag, build artifacts, sign, upload to GitHub release.",
+      "since": "0.1.0",
+      "idempotent": false,
+      "flags": [
+        {
+          "name": "help",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "json",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "quiet",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "verbose",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "dry-run",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "no-color",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "version",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "release-version",
+          "type": "string",
+          "required": true,
+          "source": "manifest"
+        },
+        {
+          "name": "channel",
+          "type": "enum:stable|beta|nightly",
+          "required": true,
+          "source": "manifest"
+        },
+        {
+          "name": "env",
+          "type": "string",
+          "source": "manifest"
+        }
+      ],
+      "exit_codes": [
+        {
+          "code": 0,
+          "meaning": "release published"
+        },
+        {
+          "code": 2,
+          "meaning": "invalid version/channel"
+        },
+        {
+          "code": 5,
+          "meaning": "build failed"
+        },
+        {
+          "code": 6,
+          "meaning": "GitHub API error"
+        }
+      ],
+      "required_env": [
+        "NEXUS_ENV",
+        "GH_TOKEN"
+      ],
+      "test_file": "scripts/tests/release-engine.test.ts"
+    },
+    {
+      "name": "symbols-upload",
+      "path": "scripts/symbols-upload",
+      "lang": "typescript",
+      "category": "release",
+      "description": "Upload PDB/dSYM/source-maps to a symbol store.",
+      "since": "0.1.0",
+      "idempotent": true,
+      "flags": [
+        {
+          "name": "help",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "json",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "quiet",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "verbose",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "dry-run",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "no-color",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "version",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "target",
+          "type": "string",
+          "required": true,
+          "source": "manifest"
+        },
+        {
+          "name": "release",
+          "type": "string",
+          "required": true,
+          "source": "manifest"
+        },
+        {
+          "name": "store",
+          "type": "enum:sentry|glitchtip|self",
+          "default": "sentry",
+          "source": "manifest"
+        },
+        {
+          "name": "env",
+          "type": "string",
+          "source": "manifest"
+        }
+      ],
+      "exit_codes": [
+        {
+          "code": 0,
+          "meaning": "uploaded"
+        },
+        {
+          "code": 2,
+          "meaning": "missing/invalid flag"
+        },
+        {
+          "code": 4,
+          "meaning": "symbols dir missing"
+        },
+        {
+          "code": 6,
+          "meaning": "upload failed"
+        }
+      ],
+      "required_env": [
+        "NEXUS_ENV"
+      ],
+      "test_file": "scripts/tests/symbols-upload.test.ts"
+    },
+    {
+      "name": "triage-issues",
+      "path": "scripts/triage-issues",
+      "lang": "typescript",
+      "category": "liveops",
+      "description": "Fetch GitHub issues, cluster by label, emit JSON for the crash-triager subagent.",
+      "since": "0.1.0",
+      "idempotent": true,
+      "flags": [
+        {
+          "name": "help",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "json",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "quiet",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "verbose",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "dry-run",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "no-color",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "version",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "state",
+          "type": "enum:open|closed|all",
+          "default": "open",
+          "source": "manifest"
+        },
+        {
+          "name": "limit",
+          "type": "int",
+          "default": 100,
+          "source": "manifest"
+        },
+        {
+          "name": "env",
+          "type": "string",
+          "source": "manifest"
+        }
+      ],
+      "exit_codes": [
+        {
+          "code": 0,
+          "meaning": "fetched and clustered"
+        },
+        {
+          "code": 4,
+          "meaning": "gh/jq missing"
+        },
+        {
+          "code": 10,
+          "meaning": "network / API error"
+        }
+      ],
+      "required_env": [
+        "GH_TOKEN"
+      ],
+      "test_file": "scripts/tests/triage-issues.test.ts"
+    },
+    {
+      "name": "sync-docs-index",
+      "path": "scripts/sync-docs-index",
+      "lang": "typescript",
+      "category": "meta",
+      "description": "Regenerate docs/INDEX.md from the filesystem.",
+      "since": "0.1.0",
+      "idempotent": true,
+      "flags": [
+        {
+          "name": "help",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "json",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "quiet",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "verbose",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "dry-run",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "no-color",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "version",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "check",
+          "type": "switch",
+          "source": "manifest"
+        },
+        {
+          "name": "env",
+          "type": "string",
+          "source": "manifest"
+        }
+      ],
+      "exit_codes": [
+        {
+          "code": 0,
+          "meaning": "written or up to date"
+        },
+        {
+          "code": 8,
+          "meaning": "drift detected (--check mode)"
+        }
+      ],
+      "required_env": [],
+      "test_file": "scripts/tests/sync-docs-index.test.ts"
+    },
+    {
+      "name": "nexus-add",
+      "path": "scripts/nexus-add",
+      "lang": "typescript",
+      "category": "dev",
+      "description": "Resolve and add a Nexus crate (genre/style/feature/explicit) to Nexus.toml + Cargo.toml. Wraps the 10-step resolution pipeline.",
+      "since": "0.2.0",
+      "idempotent": false,
+      "flags": [
+        {
+          "name": "help",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "json",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "quiet",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "verbose",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "dry-run",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "no-color",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "version",
+          "type": "switch",
+          "default": false,
+          "source": "base"
+        },
+        {
+          "name": "version",
+          "type": "string",
+          "source": "manifest"
+        },
+        {
+          "name": "registry",
+          "type": "string",
+          "source": "manifest"
+        },
+        {
+          "name": "allow-unverified",
+          "type": "switch",
+          "source": "manifest"
+        },
+        {
+          "name": "allow-quarantine",
+          "type": "switch",
+          "source": "manifest"
+        },
+        {
+          "name": "features",
+          "type": "string",
+          "source": "manifest"
+        },
+        {
+          "name": "secondary",
+          "type": "switch",
+          "source": "manifest"
+        },
+        {
+          "name": "env",
+          "type": "string",
+          "source": "manifest"
+        }
+      ],
+      "exit_codes": [
+        {
+          "code": 0,
+          "meaning": "added"
+        },
+        {
+          "code": 2,
+          "meaning": "missing/invalid args"
+        },
+        {
+          "code": 3,
+          "meaning": "manifest missing for crate (E_CRATE_NO_MANIFEST)"
+        },
+        {
+          "code": 4,
+          "meaning": "engine incompat (E_CRATE_ENGINE_INCOMPAT)"
+        },
+        {
+          "code": 5,
+          "meaning": "bad category (E_CRATE_BAD_CATEGORY)"
+        },
+        {
+          "code": 6,
+          "meaning": "plugin trait not implemented (E_CRATE_NO_PLUGIN)"
+        },
+        {
+          "code": 10,
+          "meaning": "network / registry error"
+        }
+      ],
+      "required_env": [],
+      "test_file": "scripts/tests/nexus-add.test.ts"
+    }
+  ]
+}

@@ -1,0 +1,257 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+
+# Nexus Engine — CodeRabbit configuration
+#
+# Spec-driven, AI-first, MIT-forever, Rust monorepo.
+# Constitution: docs/architecture/00-vision.md
+# 12 Laws:      docs/architecture/01-principles.md
+#
+# Companion: docs/guides/coderabbit.md  ·  .claude/skills/coderabbit-*
+
+language: en-US
+early_access: false           # stable schema only; this repo lands ≥100 PRs/day
+enable_free_tier: true        # MIT, public, no paid surface
+
+# Tone — every review is judged against the 12 Laws.
+# CR may be wrong; .claude/skills/coderabbit-triage/SKILL.md allows reject with principle cite.
+tone_instructions: |
+  This is the Nexus Engine repo — open source (MIT), spec-driven, AI-first Rust game engine.
+  Authority order: 12 Laws (docs/architecture/01-principles.md) > spec (docs/specs/**) > contract
+  (docs/contracts/**) > style guide (docs/guides/style-guide.md) > taste.
+  Reject (with reasoning) any suggestion that violates a Law.
+  Every code change MUST cite the spec it implements — flag PRs with no `docs/specs/**` or
+  `docs/contracts/**` reference (Law 2: spec-before-code).
+  Flag any panic!, unwrap(), expect(), or .ok().unwrap() outside `#[cfg(test)]` (Law 6, Law 10).
+  Flag any string-only error (anyhow::anyhow!("..."), format!() returned as Err) outside
+  examples/ and tests/ (Law 10: structured errors only).
+  Flag any println!/eprintln! outside examples/ and tests/ (Law 11: structured telemetry only).
+  Flag any `unsafe` block lacking a `// SAFETY:` paragraph proving the invariants (Law 6).
+  Flag any source file lacking the SPDX MIT header (Law 7).
+  Flag any change to docs/architecture/00-vision.md or docs/architecture/01-principles.md
+  without a paired ADR under docs/architecture/05-adr/ (governance).
+  Prefer concrete fix diffs over abstract advice. Cite line numbers and spec anchors.
+  Skip nits when behavior is unchanged and house style is satisfied.
+
+reviews:
+  profile: assertive                  # default; relax to chill only via ADR
+  request_changes_workflow: true      # CR blocks merge until issues addressed
+  high_level_summary: true
+  high_level_summary_placeholder: "@coderabbitai summary"
+  auto_title_placeholder: "@coderabbitai"
+  poem: false                          # AI-first repo, no decoration
+  review_status: true
+  collapse_walkthrough: false
+  sequence_diagrams: true              # helps human reviewers parse cross-system flows
+  estimate_code_review_effort: true
+  suggested_reviewers: true
+  auto_assign_reviewers: false         # `nexus-merge` bot owns assignment
+  abort_on_close: true
+
+  auto_review:
+    enabled: true
+    auto_incremental_review: true      # re-review on push, not from scratch
+    ignore_title_keywords:
+      - "WIP"
+      - "DRAFT"
+      - "DO NOT REVIEW"
+    drafts: false                      # leave drafts alone; mark ready when you want CR
+    base_branches:
+      - main                           # trunk-based; see docs/guides/pr-protocol.md
+
+  # Tools — enable everything relevant to the Nexus monorepo.
+  # See docs/guides/coderabbit.md for the rationale per tool.
+  tools:
+    shellcheck:        { enabled: true }   # scripts/, ci helpers
+    markdownlint:      { enabled: true }   # docs/** quality
+    github-checks:     { enabled: true, timeout_ms: 900000 }   # 15-min wait for CI
+    gitleaks:          { enabled: true }   # MIT repo, but never leak tokens
+    actionlint:        { enabled: true }   # .github/workflows/** correctness
+    yamllint:          { enabled: true }   # .coderabbit.yaml, configs
+    hadolint:          { enabled: true }   # Dockerfiles for headless runner images
+    biome:             { enabled: true }   # TS/JS (scripting/ts-bindings, web tooling)
+    ruff:              { enabled: true }   # Python (nexus-agent-sdk/python, tools/)
+    checkov:           { enabled: false }  # enable when infra/** lands (matchmaking/relay IaC)
+    sqlfluff:          { enabled: false }  # no SQL today; enable if migrations/** appears
+    prisma-lint:       { enabled: false }  # no Prisma
+    ktlint:            { enabled: false }  # no Kotlin
+    rubocop:           { enabled: false }  # no Ruby
+    swiftlint:         { enabled: false }  # iOS via Rust toolchain only
+    eslint:            { enabled: false }  # biome supersedes
+    detekt:            { enabled: false }  # ktlint disabled too
+
+  # Per-path rules — concise, imperative, link the canonical spec.
+  path_instructions:
+    # ── Global scope restriction ──────────────────────────────────────
+    - path: "**/*"
+      instructions: |
+        Review only files changed in this PR and code directly affected by those changes.
+        Ignore unrelated files. Cite the spec the change implements
+        (docs/specs/** or docs/contracts/**). Reject if no spec ref (Law 2).
+        Flag missing tests for new public APIs (Law 12).
+
+    # ── Specs (the source of truth) ───────────────────────────────────
+    - path: "docs/specs/**"
+      instructions: |
+        Enforce spec format (docs/guides/spec-format.md): every spec must include the sections
+        Boundaries / Architecture / Public API / Performance Contract / Error Contract /
+        Integration Points / Test Requirements / Prior Art / Open Questions.
+        No invented performance numbers — `[BENCHMARK NEEDED]` placeholder is mandatory when
+        target is unknown (Law 5).
+        Cross-link contracts the spec depends on (docs/contracts/**).
+        Flag unresolved `[DECISION NEEDED]` — must route to docs/architecture/decisions-open.md.
+        MIT SPDX header on every file.
+
+    # ── Contracts (system boundaries) ────────────────────────────────
+    - path: "docs/contracts/**"
+      instructions: |
+        Enforce contract format (docs/guides/contract-format.md). Both sides referenced.
+        Owner system declared. Caller obligations and callee guarantees explicit.
+        Performance and error contracts present. SPDX MIT header.
+
+    # ── ADRs (Nygard format) ──────────────────────────────────────────
+    - path: "docs/architecture/05-adr/**"
+      instructions: |
+        Nygard ADR format: Title · Status · Context · Decision · Consequences.
+        Each ADR is immutable once Accepted; supersede via new ADR linking the old.
+        Cite the Law(s) the decision interprets.
+
+    # ── Architecture constitution (governance gate) ───────────────────
+    - path: "docs/architecture/00-vision.md"
+      instructions: |
+        Any change requires a paired ADR under docs/architecture/05-adr/ and 7-day notice.
+        Reject otherwise. This file is the constitution.
+    - path: "docs/architecture/01-principles.md"
+      instructions: |
+        Any change to the 12 Laws requires a paired ADR. Reject otherwise. The Laws are
+        the binding contract the merge system enforces.
+
+    # ── Other docs ────────────────────────────────────────────────────
+    - path: "docs/guides/**"
+      instructions: |
+        SPDX MIT header. claude-code-bible Ch.11 style: lead with the rule, tables over prose,
+        no filler, file paths over descriptions. Link from CLAUDE.md when adding a new guide.
+    - path: "docs/prior-art/**"
+      instructions: |
+        Synthesis only — never copy code or text from referenced projects.
+        ✓ for wins, ✗ for pitfalls. Cite repo URL and version studied.
+    - path: "docs/games/**"
+      instructions: |
+        Demo games are integration tests. Each demo must list the systems it exercises and
+        the "done" criterion. Headless run target: nexus run --headless games/<name>/scenario.toml.
+
+    # ── Rust source ───────────────────────────────────────────────────
+    - path: "crates/**/src/**/*.rs"
+      instructions: |
+        clippy clean (`cargo clippy --all-targets -- -D warnings`) and rustfmt clean.
+        No unwrap/expect/panic! outside `#[cfg(test)]` (Law 6, Law 10).
+        Structured errors via thiserror; never anyhow in shipped code (Law 10).
+        `#[deny(missing_docs)]` on every public module.
+        Tests live next to code in `#[cfg(test)] mod tests`.
+        Every public item has a one-line doc + `# Errors` / `# Panics` / `# Safety` sections
+        where relevant. SPDX MIT header.
+        `unsafe` block REQUIRES a `// SAFETY:` paragraph proving the invariants (Law 6).
+        Cite the spec implemented in commit body: `docs/specs/<system>/<file>.md`.
+
+    - path: "crates/**/benches/**"
+      instructions: |
+        Criterion only. Benchmark must define a baseline and target from the spec's
+        Performance Contract. Output goes to target/criterion/ — committing baseline JSON
+        under benches/baselines/ is fine.
+
+    - path: "crates/**/examples/**"
+      instructions: |
+        Examples are user-facing — must compile, be runnable headlessly when possible, and
+        link to the spec they demonstrate.
+
+    # ── Shaders ───────────────────────────────────────────────────────
+    - path: "**/*.wgsl"
+      instructions: |
+        Must pass `naga` validation. Uniform blocks named `U<Pass><Stage>`. Binding indices
+        named, not magic numbers. Group 0 = per-frame, Group 1 = per-pass, Group 2 = per-material,
+        Group 3 = per-draw (see docs/specs/renderer/shaders.md). Comment-cite the spec section.
+
+    # ── Configs / data ────────────────────────────────────────────────
+    - path: "**/*.toml"
+      instructions: |
+        Schema-checked. Cargo.toml: deny `*` versions; pin minor for workspace deps.
+        Nexus.toml game config: validate against docs/game-template/nexus-toml.md.
+    - path: "**/*.json"
+      instructions: |
+        Schema validation required. Reject unknown top-level keys.
+
+    # ── CI / workflows ────────────────────────────────────────────────
+    - path: ".github/workflows/**"
+      instructions: |
+        Every action pinned to a full commit SHA (never @v3 or @main).
+        No inline secrets — use `secrets.*` from env.
+        Minimal `permissions:` block; deny all by default and grant per-job.
+        `concurrency:` set for any deploy/release job.
+        Match docs/guides/testing/ci.md targets.
+
+    # ── Scripts ───────────────────────────────────────────────────────
+    - path: "scripts/**"
+      instructions: |
+        shellcheck-clean (`set -Eeuo pipefail` at top). Idempotent — re-runnable.
+        Document inputs at top of file. Use `gh`/`cargo`/`git` over custom curl when possible.
+
+    # ── Coder agent (Nexus's own AI coder) ────────────────────────────
+    - path: "crates/coder/**"
+      instructions: |
+        Vercel AI SDK + OpenRouter integration. Spec: docs/specs/coder/** (Agent 18).
+        Never log model API keys. Stream tokens via structured telemetry, never println!.
+
+  # Files we never review (noise, generated, vendored, secrets).
+  path_filters:
+    - "!target/**"
+    - "!**/target/**"
+    - "!node_modules/**"
+    - "!**/node_modules/**"
+    - "!**/*.lock"
+    - "!Cargo.lock"
+    - "!**/*.log"
+    - "!**/dist/**"
+    - "!**/build/**"
+    - "!.env*"
+    - "!**/.DS_Store"
+    - "!**/__pycache__/**"
+    - "!**/.venv/**"
+    - "!**/golden/**"           # visual-regression goldens — checked by visual-regression-engineer
+    - "!**/*.snap"
+    - "!docs/_attic/**"          # archived material
+
+# Chat: humans and other agents talk to CodeRabbit inline.
+chat:
+  auto_reply: true               # CR responds to clarifying questions in threads
+  art: false                     # AI-first repo, no ASCII art
+
+# AI-generated docstrings inserted by CR's "generate docstrings" command.
+code_generation:
+  docstrings:
+    language: en-US
+    # path_instructions inherited from reviews.path_instructions
+
+# Knowledge base: let CR remember repo conventions across PRs.
+knowledge_base:
+  opt_out: false
+
+  web_search:
+    enabled: true                # for prior-art lookups and crate-version checks
+
+  code_guidelines:
+    enabled: true
+    filePatterns:
+      - "**/CLAUDE.md"
+      - "**/.cursor/rules/*"
+      - "**/CODING_STANDARDS.md"
+      - "docs/architecture/01-principles.md"
+      - "docs/guides/style-guide.md"
+      - "docs/guides/coding-style/**"
+
+  learnings:
+    scope: global                # CR remembers Nexus conventions across PRs
+
+  issues:
+    scope: global
+
+  pull_requests:
+    scope: global

@@ -1,0 +1,23 @@
+[package]
+name = "nexus-editor"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+description = "Visual editor: scene tree, inspector, asset browser, shader graph, debug overlays, live reload."
+readme = "README.md"
+
+[package.metadata.nexus]
+spec = "docs/specs/editor/overview.md"
+laws = ["1", "2", "3", "7", "10", "11", "12", "13"]
+
+[lints]
+workspace = true
+
+[dependencies]
+nexus-core = { path = "../nexus-core" }
+nexus-hal = { path = "../nexus-hal" }
+nexus-renderer = { path = "../nexus-renderer" }
+nexus-agent = { path = "../nexus-agent" }

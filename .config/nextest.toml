@@ -1,0 +1,100 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Nexus Engine contributors
+#
+# cargo-nextest workspace configuration.
+# Spec refs: docs/guides/testing/overview.md, docs/guides/testing/unit.md,
+#            docs/architecture/01-principles.md (Laws 4, 11, 12).
+#
+# Invoked via `cargo nextest run --workspace` and by `scripts/test`.
+# CI selects the `ci` profile via `--profile ci` (or NEXTEST_PROFILE=ci env var).
+
+[store]
+# Per-run artifacts (binary cache, run metadata) live under target/nextest/.
+# Logs are exported separately; see junit configs below.
+
+# ---------------------------------------------------------------------------
+# Default profile — used by developers running `cargo nextest run` locally.
+# ---------------------------------------------------------------------------
+[profile.default]
+# Law 4: surface every failure, do not stop at first.
+fail-fast = false
+
+# Local: no flake masking. CI overrides to 2 (see [profile.ci]).
+retries = 0
+
+# Law 12: per-test wall clock cap. Anything over 30s prints a "slow" warning;
+# anything over 60s terminates and fails the test (push it into the nightly
+# slow bucket per docs/guides/testing/overview.md §"Performance contract").
+slow-timeout = { period = "30s", terminate-after = 2 }
+
+# Status level: skip green output, show full output on failure.
+status-level = "pass"
+final-status-level = "fail"
+
+# Show stdout/stderr only for failing tests.
+success-output = "never"
+failure-output = "immediate-final"
+
+[profile.default.junit]
+# Machine-readable test report. Law 1 + Law 11.
+path = "logs/test/nextest-junit.xml"
+report-name = "nexus-engine"
+store-success-output = false
+store-failure-output = true
+
+# Per-test default. Overrides below for known-slow buckets.
+[[profile.default.overrides]]
+filter = "all()"
+slow-timeout = { period = "30s", terminate-after = 2 }
+threads-required = 1
+
+# Integration tests get longer leash (≤ 5s p95 per overview.md, but allow
+# headroom for cold-cache CI nodes). `kind(test)` matches all integration-test
+# binaries (everything under `tests/`); per-binary patterns activate once real
+# integration binaries exist.
+[[profile.default.overrides]]
+filter = "kind(test) and test(/integration_/)"
+slow-timeout = { period = "60s", terminate-after = 3 }
+
+# Scenario tests (TOML-driven, run inside engine binary) — 30s per scenario.
+[[profile.default.overrides]]
+filter = "test(scenario_)"
+slow-timeout = { period = "60s", terminate-after = 2 }
+
+# Property tests — bounded by proptest config; this is the wall clock cap.
+[[profile.default.overrides]]
+filter = "test(prop_)"
+slow-timeout = { period = "60s", terminate-after = 2 }
+
+# ---------------------------------------------------------------------------
+# CI profile — used in GitHub Actions (workflow YAML lands in a later phase).
+# Same as default with retries enabled for genuinely flaky-environment issues
+# (network jitter on hosted runners). Tests that flake on the same SHA without
+# environment cause are still bugs per docs/guides/testing/overview.md.
+# ---------------------------------------------------------------------------
+[profile.ci]
+fail-fast = false
+retries = 2
+slow-timeout = { period = "30s", terminate-after = 2 }
+status-level = "pass"
+final-status-level = "fail"
+success-output = "never"
+failure-output = "immediate-final"
+
+[profile.ci.junit]
+path = "logs/test/nextest-junit.xml"
+report-name = "nexus-engine-ci"
+store-success-output = false
+store-failure-output = true
+
+# ---------------------------------------------------------------------------
+# Quick profile — `cargo nextest run --profile quick` for fast pre-push.
+# Skips scenarios + property tests.
+# ---------------------------------------------------------------------------
+[profile.quick]
+fail-fast = true
+retries = 0
+slow-timeout = { period = "10s", terminate-after = 1 }
+status-level = "pass"
+final-status-level = "fail"
+default-filter = "not (test(scenario_) | test(prop_))"

@@ -1,0 +1,23 @@
+[package]
+name = "nexus-scenario"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+description = "Scenario runner CLI. Drives the engine via the agent SDK."
+readme = "README.md"
+
+[package.metadata.nexus]
+spec = "docs/specs/agent/scenarios.md"
+laws = ["1", "2", "7", "8", "9", "10", "11", "12"]
+
+[lints]
+workspace = true
+
+[[bin]]
+name = "nexus-scenario"
+path = "src/main.rs"
+
+[dependencies]

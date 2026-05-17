@@ -1,0 +1,11 @@
+DEFERRED — Python bindings (pyo3 + maturin).
+
+The Python SDK needs a Python toolchain (cpython headers + maturin) that is not
+guaranteed in the dev environment. Deferring to a later phase so Phase 0
+`cargo check --workspace` stays green on a vanilla Rust install.
+
+When ready, replace this file with a `Cargo.toml` (pyo3 + the rust SDK as a path
+dep) and `src/lib.rs` (#[pymodule]). Until then, the `crates/sdks/*` workspace
+glob in `/Cargo.toml` skips empty dirs.
+
+Spec: docs/specs/agent/api.md §Python (forthcoming).

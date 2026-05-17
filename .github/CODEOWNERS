@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: MIT
+# Subagent owners (advisory; GitHub will warn — intentional)
+/docs/specs/core/        @ecs-engineer @memory-engineer @jobs-engineer @math-engineer
+/docs/specs/renderer/    @renderer-engineer @shader-engineer
+/docs/specs/physics/     @physics-engineer
+/docs/specs/audio/       @audio-engineer
+/docs/specs/networking/  @network-engineer
+/docs/specs/scripting/   @scripting-engineer
+/docs/specs/assets/      @asset-pipeline-engineer
+/docs/specs/agent/       @agent-api-engineer
+/docs/specs/editor/      @editor-engineer
+/docs/specs/genres/      @orchestrator
+/docs/specs/styles/      @orchestrator
+/docs/contracts/         @architect @contract-author
+/docs/architecture/      @architect
+/crates/nexus-core/      @ecs-engineer @memory-engineer @jobs-engineer
+/crates/nexus-renderer/  @renderer-engineer @shader-engineer
+/scripts/                @ts-script-author
+/.github/workflows/      @ci-engineer
+/.coderabbit.yaml        @ci-engineer
+/CLAUDE.md               @architect

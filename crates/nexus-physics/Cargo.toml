@@ -1,0 +1,20 @@
+[package]
+name = "nexus-physics"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+description = "Physics world, rigid bodies, collision, character controller, soft body, fluid, determinism."
+readme = "README.md"
+
+[package.metadata.nexus]
+spec = "docs/specs/physics/overview.md"
+laws = ["1", "2", "3", "5", "7", "9", "10", "11", "12"]
+
+[lints]
+workspace = true
+
+[dependencies]
+nexus-core = { path = "../nexus-core" }

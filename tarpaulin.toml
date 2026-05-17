@@ -1,0 +1,89 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Nexus Engine contributors
+#
+# cargo-tarpaulin workspace configuration.
+# CI default is cargo-llvm-cov (per docs/guides/testing/coverage.md §"Tool per
+# language"). Tarpaulin remains supported for local exploration and for
+# environments where llvm-cov is unavailable.
+#
+# Spec refs:
+#   - docs/architecture/01-principles.md (Law 12 — Tests ship with code)
+#   - docs/guides/testing/coverage.md (per-crate floors + diff gate)
+#
+# Invoked via:
+#   cargo tarpaulin                                     # default profile
+#   cargo tarpaulin --config-name ci                    # ci profile
+#   scripts/test --coverage                             # wrapper
+
+[default]
+# Output formats. JSON is the machine-readable surface nexus-merge consumes.
+# HTML is for human exploration.
+out = ["Json", "Html"]
+output-dir = "logs/test/coverage"
+
+# Workspace-wide.
+workspace = true
+
+# Run tests through nextest where available; honors .config/nextest.toml.
+engine = "llvm"
+
+# Coverage floor. Workspace-wide minimum. Per-crate floors are stricter and
+# are enforced by scripts/lib/test-policy.toml + nexus-merge consuming the
+# JSON output. The 70% number here is the floor of the lowest per-crate tier
+# in docs/guides/testing/coverage.md §"Coverage floors" (genre/style crates).
+# Engine-core crates (nexus-core, nexus-ecs, nexus-math) need 90% via the
+# stricter per-crate gate.
+fail-under = 70
+
+# Files to exclude from coverage measurement.
+# Mirrors docs/guides/testing/coverage.md §"Excludes".
+exclude-files = [
+  "crates/*/examples/*",
+  "crates/*/benches/*",
+  "crates/*/tests/integration/*",
+  "crates/*/fuzz/*",
+  "crates/*/build.rs",
+  "tools/*/examples/*",
+  "games/*/examples/*",
+  "target/*",
+  "**/*.gen.rs",
+]
+
+# Skip code blocks tagged `#[cfg(test)]`.
+ignore-tests = true
+
+# Determinism: fail fast on first crate that explodes during instrumentation,
+# but still produce a partial JSON so nexus-merge can show what ran.
+no-fail-fast = true
+
+# Timeout per test (matches nextest slow-timeout terminate budget).
+timeout = "120s"
+
+# Include doc-tests in coverage (Law 12: every public API has a doc-test).
+run-types = ["Tests", "Doctests"]
+
+# ---------------------------------------------------------------------------
+# CI profile — `cargo tarpaulin --config-name ci`.
+# Adds Lcov for codecov.io / sonar uploads.
+# ---------------------------------------------------------------------------
+[ci]
+out = ["Json", "Lcov", "Html"]
+output-dir = "logs/test/coverage"
+workspace = true
+engine = "llvm"
+fail-under = 70
+exclude-files = [
+  "crates/*/examples/*",
+  "crates/*/benches/*",
+  "crates/*/tests/integration/*",
+  "crates/*/fuzz/*",
+  "crates/*/build.rs",
+  "tools/*/examples/*",
+  "games/*/examples/*",
+  "target/*",
+  "**/*.gen.rs",
+]
+ignore-tests = true
+no-fail-fast = true
+timeout = "180s"
+run-types = ["Tests", "Doctests"]

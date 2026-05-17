@@ -1,0 +1,10 @@
+{
+  "name": "nexus-engine-root",
+  "private": true,
+  "type": "module",
+  "workspaces": ["scripts"],
+  "scripts": {
+    "check": "bun run scripts/check",
+    "test": "bun test"
+  }
+}

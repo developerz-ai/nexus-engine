@@ -1,0 +1,297 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Nexus Engine contributors
+#
+# Declarative test policy consumed by `scripts/test`.
+#
+# Spec refs:
+#   - docs/architecture/01-principles.md (Law 12 — Tests ship with code)
+#   - docs/architecture/04-workspace-layout.md (crate inventory)
+#   - docs/guides/testing/overview.md (test classes)
+#   - docs/guides/testing/coverage.md (per-crate floors)
+#
+# Schema:
+#   [floors]            — per-crate-tier minimum line / branch coverage
+#   [classes.*]         — which test classes each crate must ship
+#   [per_crate.<name>]  — overrides + the floor tier this crate belongs to
+#
+# `scripts/test` reads this, computes the required matrix, and routes each
+# crate to the right runner. Missing classes → block via nexus-merge lint
+# `crate_ships_required_test_classes`.
+
+# ---------------------------------------------------------------------------
+# Per-crate-tier coverage floors. Source of truth:
+# docs/guides/testing/coverage.md §"Coverage floors".
+# ---------------------------------------------------------------------------
+[floors.core]
+line   = 90
+branch = 85
+
+[floors.system]
+line   = 80
+branch = 70
+
+[floors.genre_style]
+line   = 70
+branch = 60
+
+[floors.tooling]
+line   = 60
+branch = 0     # best-effort; 0 disables the branch gate
+
+[floors.demo]
+# Games and examples are scenario-covered, not line-covered. Set to -1 to
+# disable the per-crate floor gate. Scenario count is the gate instead.
+line   = -1
+branch = -1
+
+# ---------------------------------------------------------------------------
+# Test classes — which crates must ship which kinds.
+# Sources: docs/guides/testing/{unit,integration,scenarios,property,visual,fuzz}.md
+# ---------------------------------------------------------------------------
+[classes.unit]
+required_for = "every crate with a [lib] or [[bin]] target"
+exempt = []
+
+[classes.integration]
+required_for = "every crate that publishes a public API surface (any non-test [lib])"
+exempt = ["nexus-engine"]   # umbrella facade, integration coverage rides on members
+
+[classes.scenario]
+required_for = "every genre crate (crates/genres/*) and every demo game (games/*)"
+runner = "tools/nexus-scenario"
+
+[classes.property]
+required_for = "crates with non-trivial algorithmic invariants — ECS scheduler, math, physics, netcode, asset compression"
+crates = [
+  "nexus-core",
+  "nexus-physics",
+  "nexus-net",
+  "nexus-assets",
+]
+
+[classes.visual]
+required_for = "renderer + every style crate"
+crates_glob = [
+  "nexus-renderer",
+  "crates/styles/*",
+]
+
+[classes.fuzz]
+required_for = "every parser, deserializer, sandbox boundary, replay loader"
+# Listed targets — concrete fuzz harnesses land in crates/*/fuzz/ per fuzz.md.
+targets = [
+  # docs/guides/testing/fuzz.md §"Asset import fuzzer"
+  "nexus-assets:parse_gltf",
+  "nexus-assets:parse_fbx",
+  "nexus-assets:parse_obj",
+  "nexus-assets:parse_png",
+  "nexus-assets:parse_exr",
+  "nexus-assets:parse_ogg",
+  "nexus-assets:parse_wav",
+  "nexus-assets:parse_flac",
+  "nexus-assets:parse_ttf",
+  # §"Network packet fuzzer"
+  "nexus-net:rollback_resim",
+  "nexus-net:packet_decode",
+  # §"Scripting VM fuzzer"
+  "nexus-script:lua_vm",
+  "nexus-script:rune_vm",
+  # §"Replay loader fuzzer"
+  "nexus-agent:replay_loader",
+  # nexus-merge lint pipeline parses .nexus.toml + spec frontmatter
+  "nexus-merge:parse_manifest",
+]
+
+# ---------------------------------------------------------------------------
+# Per-crate routing.
+#
+# Each entry declares:
+#   tier      — which [floors.*] block applies
+#   classes   — the test classes this crate must ship
+#
+# Engine-core crates
+# ---------------------------------------------------------------------------
+[per_crate."nexus-core"]
+tier = "core"
+classes = ["unit", "integration", "property"]
+
+[per_crate."nexus-hal"]
+tier = "system"
+classes = ["unit", "integration"]
+
+[per_crate."nexus-assets"]
+tier = "system"
+classes = ["unit", "integration", "property", "fuzz"]
+
+[per_crate."nexus-renderer"]
+tier = "system"
+classes = ["unit", "integration", "visual"]
+
+[per_crate."nexus-physics"]
+tier = "system"
+classes = ["unit", "integration", "property"]
+
+[per_crate."nexus-audio"]
+tier = "system"
+classes = ["unit", "integration"]
+
+[per_crate."nexus-net"]
+tier = "system"
+classes = ["unit", "integration", "property", "fuzz"]
+
+[per_crate."nexus-script"]
+tier = "system"
+classes = ["unit", "integration", "fuzz"]
+
+[per_crate."nexus-agent"]
+tier = "system"
+classes = ["unit", "integration", "fuzz"]
+
+[per_crate."nexus-editor"]
+tier = "tooling"
+classes = ["unit", "integration"]
+
+[per_crate."nexus-cli"]
+tier = "tooling"
+classes = ["unit", "integration"]
+
+[per_crate."nexus-merge"]
+tier = "system"
+classes = ["unit", "integration", "property", "fuzz"]
+
+[per_crate."nexus-engine"]
+tier = "system"
+classes = ["unit"]   # facade; integration covered by member crates + games
+
+# ---------------------------------------------------------------------------
+# Style crates — visual tests mandatory, line coverage at genre/style tier.
+# (Inventory: docs/architecture/04-workspace-layout.md §"crates/styles/*".)
+# ---------------------------------------------------------------------------
+[per_crate."nexus-style-pbr"]
+tier = "genre_style"
+classes = ["unit", "integration", "visual"]
+
+[per_crate."nexus-style-npr"]
+tier = "genre_style"
+classes = ["unit", "integration", "visual"]
+
+[per_crate."nexus-style-pixel"]
+tier = "genre_style"
+classes = ["unit", "integration", "visual"]
+
+[per_crate."nexus-style-2d"]
+tier = "genre_style"
+classes = ["unit", "integration", "visual"]
+
+[per_crate."nexus-style-mixed"]
+tier = "genre_style"
+classes = ["unit", "integration", "visual"]
+
+# ---------------------------------------------------------------------------
+# Genre crates — scenario tests mandatory.
+# (Inventory: docs/architecture/04-workspace-layout.md §"crates/genres/*".)
+# ---------------------------------------------------------------------------
+[per_crate."nexus-genre-fps"]
+tier = "genre_style"
+classes = ["unit", "integration", "scenario"]
+
+[per_crate."nexus-genre-rpg"]
+tier = "genre_style"
+classes = ["unit", "integration", "scenario"]
+
+[per_crate."nexus-genre-mmorpg"]
+tier = "genre_style"
+classes = ["unit", "integration", "scenario"]
+
+[per_crate."nexus-genre-rts"]
+tier = "genre_style"
+classes = ["unit", "integration", "scenario"]
+
+[per_crate."nexus-genre-moba"]
+tier = "genre_style"
+classes = ["unit", "integration", "scenario"]
+
+[per_crate."nexus-genre-platformer"]
+tier = "genre_style"
+classes = ["unit", "integration", "scenario"]
+
+[per_crate."nexus-genre-racing"]
+tier = "genre_style"
+classes = ["unit", "integration", "scenario"]
+
+[per_crate."nexus-genre-survival"]
+tier = "genre_style"
+classes = ["unit", "integration", "scenario"]
+
+[per_crate."nexus-genre-horror"]
+tier = "genre_style"
+classes = ["unit", "integration", "scenario"]
+
+[per_crate."nexus-genre-fighting"]
+tier = "genre_style"
+classes = ["unit", "integration", "scenario"]
+
+[per_crate."nexus-genre-battleroyal"]
+tier = "genre_style"
+classes = ["unit", "integration", "scenario"]
+
+[per_crate."nexus-genre-roguelike"]
+tier = "genre_style"
+classes = ["unit", "integration", "scenario"]
+
+[per_crate."nexus-genre-towdef"]
+tier = "genre_style"
+classes = ["unit", "integration", "scenario"]
+
+[per_crate."nexus-genre-puzzle"]
+tier = "genre_style"
+classes = ["unit", "integration", "scenario"]
+
+[per_crate."nexus-genre-visualnovel"]
+tier = "genre_style"
+classes = ["unit", "integration", "scenario"]
+
+[per_crate."nexus-genre-openworld"]
+tier = "genre_style"
+classes = ["unit", "integration", "scenario"]
+
+# ---------------------------------------------------------------------------
+# SDKs
+# ---------------------------------------------------------------------------
+[per_crate."nexus-agent-sdk-rs"]
+tier = "tooling"
+classes = ["unit", "integration"]
+
+[per_crate."nexus-agent-sdk-py"]
+tier = "tooling"
+classes = ["unit", "integration"]
+
+# ---------------------------------------------------------------------------
+# Tools
+# ---------------------------------------------------------------------------
+[per_crate."nexus-codegen"]
+tier = "tooling"
+classes = ["unit", "integration"]
+
+[per_crate."nexus-scenario"]
+tier = "tooling"
+classes = ["unit", "integration"]
+
+# ---------------------------------------------------------------------------
+# Demo games — scenario only; line coverage disabled (demo tier).
+# ---------------------------------------------------------------------------
+[per_crate."nexus-fps"]
+tier = "demo"
+classes = ["scenario"]
+
+[per_crate."nexus-rpg"]
+tier = "demo"
+classes = ["scenario"]
+
+[per_crate."nexus-rts"]
+tier = "demo"
+classes = ["scenario"]
+
+[per_crate."nexus-platformer"]
+tier = "demo"
+classes = ["scenario"]

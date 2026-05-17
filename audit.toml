@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Nexus Engine contributors
+#
+# cargo-audit configuration.
+#
+# Scope: vulnerability advisories from the RustSec advisory database.
+# License + edge enforcement lives in deny.toml (cargo-deny).
+#
+# Spec refs:
+#   - docs/architecture/01-principles.md (Laws 4, 7)
+#   - docs/guides/merge-system.md (security gate)
+
+[advisories]
+# Advisory IDs ignored intentionally. Empty by policy: every ignored
+# advisory requires an entry justifying why (link to ADR or issue).
+ignore = []
+
+# Treat unmaintained / unsound / yanked / notice severities the same as
+# vulnerability for gating purposes. Law 4 — main is always green and safe.
+informational_warnings = ["unmaintained", "unsound", "yanked", "notice"]
+severity_threshold = "low"
+
+[bans]
+# cargo-audit's banned-crate list. Substantive bans (versioned, with rationale)
+# live in deny.toml [bans]; this section stays empty so audit and deny do not
+# duplicate the source of truth.
+
+[output]
+# Promote every advisory to an error.
+deny = ["warnings", "unmaintained", "unsound", "yanked", "notice"]
+format = "json"
+quiet = false
+show_tree = true
+
+[database]
+# Use the upstream RustSec advisory db. Fetched fresh in CI.
+fetch = true
+stale = false

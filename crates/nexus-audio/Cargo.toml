@@ -1,0 +1,22 @@
+[package]
+name = "nexus-audio"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+description = "Audio graph, spatial audio, DSP, streaming, adaptive music, voice."
+readme = "README.md"
+
+[package.metadata.nexus]
+spec = "docs/specs/audio/overview.md"
+laws = ["1", "2", "3", "5", "7", "8", "10", "11", "12"]
+
+[lints]
+workspace = true
+
+[dependencies]
+nexus-core = { path = "../nexus-core" }
+nexus-hal = { path = "../nexus-hal" }
+nexus-assets = { path = "../nexus-assets" }

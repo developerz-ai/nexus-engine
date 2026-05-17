@@ -1,0 +1,23 @@
+[package]
+name = "nexus-codegen"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+description = "Spec → boilerplate generator (types, error enums, telemetry schemas)."
+readme = "README.md"
+
+[package.metadata.nexus]
+spec = "docs/guides/merge-system.md"
+laws = ["1", "2", "7", "10"]
+
+[lints]
+workspace = true
+
+[[bin]]
+name = "nexus-codegen"
+path = "src/main.rs"
+
+[dependencies]

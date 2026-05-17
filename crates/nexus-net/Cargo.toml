@@ -1,0 +1,20 @@
+[package]
+name = "nexus-net"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+description = "Rollback netcode, replication, transport, lobby, anti-cheat."
+readme = "README.md"
+
+[package.metadata.nexus]
+spec = "docs/specs/networking/overview.md"
+laws = ["1", "2", "3", "5", "7", "9", "10", "11", "12"]
+
+[lints]
+workspace = true
+
+[dependencies]
+nexus-core = { path = "../nexus-core" }
