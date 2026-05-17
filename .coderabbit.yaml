@@ -15,22 +15,7 @@ enable_free_tier: true        # MIT, public, no paid surface
 # Tone — every review is judged against the 12 Laws.
 # CR may be wrong; .claude/skills/coderabbit-triage/SKILL.md allows reject with principle cite.
 tone_instructions: |
-  This is the Nexus Engine repo — open source (MIT), spec-driven, AI-first Rust game engine.
-  Authority order: 12 Laws (docs/architecture/01-principles.md) > spec (docs/specs/**) > contract
-  (docs/contracts/**) > style guide (docs/guides/style-guide.md) > taste.
-  Reject (with reasoning) any suggestion that violates a Law.
-  Every code change MUST cite the spec it implements — flag PRs with no `docs/specs/**` or
-  `docs/contracts/**` reference (Law 2: spec-before-code).
-  Flag any panic!, unwrap(), expect(), or .ok().unwrap() outside `#[cfg(test)]` (Law 6, Law 10).
-  Flag any string-only error (anyhow::anyhow!("..."), format!() returned as Err) outside
-  examples/ and tests/ (Law 10: structured errors only).
-  Flag any println!/eprintln! outside examples/ and tests/ (Law 11: structured telemetry only).
-  Flag any `unsafe` block lacking a `// SAFETY:` paragraph proving the invariants (Law 6).
-  Flag any source file lacking the SPDX MIT header (Law 7).
-  Flag any change to docs/architecture/00-vision.md or docs/architecture/01-principles.md
-  without a paired ADR under docs/architecture/05-adr/ (governance).
-  Prefer concrete fix diffs over abstract advice. Cite line numbers and spec anchors.
-  Skip nits when behavior is unchanged and house style is satisfied.
+  Nexus Engine: MIT, spec-driven, AI-first Rust engine. Authority: docs/architecture/01-principles.md (15 Laws) > docs/specs/** > docs/contracts/**. Reject suggestions violating a Law; cite the Law. Prefer concrete diffs. Skip nits.
 
 reviews:
   profile: assertive                  # default; relax to chill only via ADR
