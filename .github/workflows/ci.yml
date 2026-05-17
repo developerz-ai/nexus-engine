@@ -181,7 +181,9 @@ jobs:
           tool: cargo-deny
 
       - name: cargo deny check
-        run: cargo deny check --all-features
+        # cargo-deny does not accept --all-features as a top-level flag;
+        # the `check` subcommand evaluates all features by default.
+        run: cargo deny check
 
   # ─── Rust: cargo-audit (advisory, non-blocking) ─────────────────────────────
   rust-audit:
