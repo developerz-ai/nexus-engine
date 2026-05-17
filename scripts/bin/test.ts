@@ -92,7 +92,12 @@ await defineScript(meta, async (args) => {
 
   const summary = { suites: results, filter };
   if (overall !== 0) {
-    nxThrow({ tag: 'GateFailed', gate: 'test', exitCode: 5, message: 'one or more test suites failed' });
+    nxThrow({
+      tag: 'GateFailed',
+      gate: 'test',
+      exitCode: 5,
+      message: 'one or more test suites failed',
+    });
   }
   return { exitCode: 0, summary };
 });

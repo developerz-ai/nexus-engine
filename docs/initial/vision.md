@@ -1,3 +1,6 @@
+<!-- SPDX-License-Identifier: MIT -->
+<!-- Copyright (c) 2026 Nexus Engine contributors -->
+
 # Nexus Engine — Vision
 
 **Version:** 0.1.0-draft  

@@ -136,7 +136,7 @@ function parseManifest(text: string): Manifest {
   const lines = text.split(/\r?\n/);
   let i = 0;
   while (i < lines.length) {
-    let line = (lines[i] ?? '').trim();
+    const line = (lines[i] ?? '').trim();
     if (line === '' || line.startsWith('#')) {
       i += 1;
       continue;
@@ -235,7 +235,7 @@ function buildEntry(raw: Record<string, unknown>): ScriptEntry {
 function canonical(idx: IndexFile): string {
   const copy: Omit<IndexFile, 'generated_at'> = { ...idx };
   const obj = { ...copy } as Record<string, unknown>;
-  delete obj.generated_at;
+  obj.generated_at = undefined;
   return JSON.stringify(obj, Object.keys(obj).sort());
 }
 

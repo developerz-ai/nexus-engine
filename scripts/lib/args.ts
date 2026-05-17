@@ -21,13 +21,7 @@
 
 import { type NxError, nxThrow } from './errors';
 
-export type FlagType =
-  | 'switch'
-  | 'string'
-  | 'string[]'
-  | 'int'
-  | 'path'
-  | `enum:${string}`;
+export type FlagType = 'switch' | 'string' | 'string[]' | 'int' | 'path' | `enum:${string}`;
 
 export interface FlagDef {
   type: FlagType;
@@ -235,12 +229,7 @@ export function parseArgs<S extends FlagSpec>(spec: S, argv: readonly string[]):
   for (const [k, def] of Object.entries(merged)) {
     if (!def.required) continue;
     const v = out[k];
-    if (
-      v === undefined ||
-      v === '' ||
-      v === null ||
-      (Array.isArray(v) && v.length === 0)
-    ) {
+    if (v === undefined || v === '' || v === null || (Array.isArray(v) && v.length === 0)) {
       const err: NxError = { tag: 'InvalidArg', arg: k, reason: `missing required flag --${k}` };
       nxThrow(err);
     }

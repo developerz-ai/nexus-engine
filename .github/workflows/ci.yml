@@ -1,0 +1,333 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Nexus Engine contributors
+#
+# Nexus Engine — main CI pipeline (Phase 1, Linux-only).
+#
+# Spec refs:
+#   - docs/architecture/01-principles.md (Laws 4, 11, 12)
+#   - scripts/manifest.toml             (script CLI surface invoked by CI)
+#   - .config/nextest.toml              ([profile.ci] retries=2, junit out)
+#
+# Runner:
+#   Blacksmith 4vcpu Linux  — runs-on: blacksmith-4vcpu-ubuntu-2404
+#
+# Cost (founder spec):
+#   Blacksmith 4vcpu Linux  ≈ $0.008 / minute
+#   Avg PR wall time        ≈ 8–12 minutes across all jobs (parallel)
+#   Avg PR cost             ≈ $0.10 / PR
+#
+# Matrix scope:
+#   Linux only for Phase 1. Windows / macOS / WASM are DEFERRED to a later
+#   phase (founder directive — ci-engineer charter §"Non-negotiables: Matrix"
+#   is intentionally NOT met here; a follow-up PR widens the matrix).
+#
+# Blacksmith notes (verified 2026-05):
+#   useblacksmith/setup-rust + useblacksmith/setup-bun are ARCHIVED. Blacksmith
+#   cache works automatically with GitHub's native cache action on Blacksmith
+#   runners, so we use the upstream setup actions:
+#     - actions-rust-lang/setup-rust-toolchain@v1
+#     - oven-sh/setup-bun@v2
+#   and Blacksmith's drop-in cache replacements where they still add value:
+#     - useblacksmith/rust-cache@v3   (replaces Swatinem/rust-cache@v2)
+#     - useblacksmith/cache@v5        (replaces actions/cache@v4)
+
+name: ci
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+  checks: write
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+  CARGO_INCREMENTAL: 0
+  RUSTFLAGS: "-D warnings"
+
+jobs:
+  # ─── Rust: fmt ──────────────────────────────────────────────────────────────
+  rust-fmt:
+    name: rust / fmt
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Rust toolchain (from rust-toolchain.toml)
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          components: rustfmt
+          cache: false
+
+      - name: cargo fmt --check
+        run: cargo fmt --all -- --check
+
+  # ─── Rust: clippy ───────────────────────────────────────────────────────────
+  rust-clippy:
+    name: rust / clippy
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Rust toolchain (from rust-toolchain.toml)
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          components: clippy
+          cache: false
+
+      - name: Cache cargo registry + target (Blacksmith)
+        uses: useblacksmith/rust-cache@v3
+        with:
+          shared-key: clippy
+          cache-on-failure: true
+
+      - name: cargo clippy
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+  # ─── Rust: check ────────────────────────────────────────────────────────────
+  rust-check:
+    name: rust / check
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Rust toolchain (from rust-toolchain.toml)
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          cache: false
+
+      - name: Cache cargo registry + target (Blacksmith)
+        uses: useblacksmith/rust-cache@v3
+        with:
+          shared-key: check
+          cache-on-failure: true
+
+      - name: cargo check
+        run: cargo check --workspace --all-targets
+
+  # ─── Rust: test (nextest, ci profile, junit) ────────────────────────────────
+  rust-test:
+    name: rust / test
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Rust toolchain (from rust-toolchain.toml)
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          cache: false
+
+      - name: Cache cargo registry + target (Blacksmith)
+        uses: useblacksmith/rust-cache@v3
+        with:
+          shared-key: test
+          cache-on-failure: true
+
+      - name: Install cargo-nextest
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-nextest
+
+      - name: cargo nextest run (profile=ci)
+        run: cargo nextest run --workspace --profile ci
+
+      - name: Upload nextest junit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nextest-junit-${{ github.run_id }}
+          path: logs/test/nextest-junit.xml
+          if-no-files-found: warn
+          retention-days: 14
+
+  # ─── Rust: cargo-deny ───────────────────────────────────────────────────────
+  # Note: we install rust + cargo-deny directly instead of using
+  # EmbarkStudios/cargo-deny-action@v2, because that action's musl container
+  # rejects our gnu-target rust-toolchain.toml pin (1.95-musl not available).
+  rust-deny:
+    name: rust / deny
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Rust toolchain (from rust-toolchain.toml)
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          cache: false
+
+      - name: Install cargo-deny
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-deny
+
+      - name: cargo deny check
+        # cargo-deny does not accept --all-features as a top-level flag;
+        # the `check` subcommand evaluates all features by default.
+        run: cargo deny check
+
+  # ─── Rust: cargo-audit (advisory, non-blocking) ─────────────────────────────
+  rust-audit:
+    name: rust / audit
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    timeout-minutes: 20
+    # Advisory-level — never fails the build; tracks RustSec advisories so the
+    # security-reviewer subagent can triage. Hard gate lives in rust-deny.
+    continue-on-error: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Rust toolchain (from rust-toolchain.toml)
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          cache: false
+
+      - name: Install cargo-audit
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-audit
+
+      - name: cargo audit
+        run: cargo audit
+
+  # ─── Scripts: bun test ──────────────────────────────────────────────────────
+  # Note: package.json at repo root declares `workspaces: ["scripts"]`, so
+  # `bun install` and the lockfile (bun.lock) live at the repo root. We install
+  # at the root, then `cd scripts/` for the suite-specific commands.
+  scripts-test:
+    name: scripts / test
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Read pinned Bun version
+        id: bun-version
+        run: echo "version=$(cat scripts/.bun-version)" >> "$GITHUB_OUTPUT"
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ steps.bun-version.outputs.version }}
+
+      - name: Cache bun install (Blacksmith)
+        uses: useblacksmith/cache@v5
+        with:
+          path: |
+            node_modules
+            scripts/node_modules
+            ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock', 'package.json', 'scripts/package.json', 'scripts/.bun-version') }}
+          restore-keys: |
+            bun-${{ runner.os }}-
+
+      - name: bun install (frozen, workspace root)
+        run: bun install --frozen-lockfile
+
+      - name: bun test (scripts/)
+        working-directory: scripts
+        run: bun test
+
+  # ─── Scripts: biome lint ────────────────────────────────────────────────────
+  scripts-lint:
+    name: scripts / lint
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Read pinned Bun version
+        id: bun-version
+        run: echo "version=$(cat scripts/.bun-version)" >> "$GITHUB_OUTPUT"
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ steps.bun-version.outputs.version }}
+
+      - name: Cache bun install (Blacksmith)
+        uses: useblacksmith/cache@v5
+        with:
+          path: |
+            node_modules
+            scripts/node_modules
+            ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock', 'package.json', 'scripts/package.json', 'scripts/.bun-version') }}
+          restore-keys: |
+            bun-${{ runner.os }}-
+
+      - name: bun install (frozen, workspace root)
+        run: bun install --frozen-lockfile
+
+      - name: biome check (scripts/)
+        # Uses the version pinned in scripts/package.json (bun install picks it
+        # up via the root workspace), not `bun x @biomejs/biome` which fetches
+        # latest and breaks on schema-version drift.
+        working-directory: scripts
+        run: bun x biome check .
+
+  # ─── Docs: SPDX header sweep ────────────────────────────────────────────────
+  docs-spdx:
+    name: docs / spdx
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify SPDX headers on tracked files
+        # Law 7: MIT forever. Every source/docs/script file must carry an
+        # `SPDX-License-Identifier:` header. We scan only tracked files under
+        # the four owning subtrees and exempt generated / lockfile-style paths.
+        shell: bash
+        run: |
+          set -euo pipefail
+          missing=()
+          # Use NUL-delimited ls-files so paths with spaces are safe.
+          while IFS= read -r -d '' f; do
+            case "$f" in
+              # Exemptions: lockfiles, binaries, JSON without comments, indexes.
+              *.lock|*.png|*.jpg|*.jpeg|*.webp|*.ico|*.gif|*.svg|*.wasm|*.bin)
+                continue ;;
+              *.json|*/bun.lock|*/Cargo.lock|*/package-lock.json)
+                continue ;;
+              */node_modules/*|*/target/*|*/.git/*)
+                continue ;;
+              *.snap|*/snapshots/*)
+                continue ;;
+              # Single-value pins / placeholders that have no comment syntax.
+              */.placeholder|*/.bun-version|*/.keep|*/.nvmrc)
+                continue ;;
+            esac
+            if ! grep -q -m1 'SPDX-License-Identifier:' "$f"; then
+              missing+=("$f")
+            fi
+          done < <(git ls-files -z -- 'crates/**' 'scripts/**' 'docs/**' '.github/**')
+          if [[ ${#missing[@]} -gt 0 ]]; then
+            printf 'Missing SPDX header in %d file(s):\n' "${#missing[@]}" >&2
+            printf '  %s\n' "${missing[@]}" >&2
+            exit 1
+          fi
+          echo "SPDX headers OK on all tracked files under crates/, scripts/, docs/, .github/"

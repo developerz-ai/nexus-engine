@@ -22,7 +22,7 @@
 //   - tagged-error catch
 //   - telemetry + envelope emission
 
-import { parseArgs, type FlagSpec, type ParsedArgs } from './args';
+import { type FlagSpec, type ParsedArgs, parseArgs } from './args';
 import { loadDotEnv } from './env';
 import {
   type ExitCodeValue,
@@ -33,7 +33,7 @@ import {
   errorToMessage,
 } from './errors';
 import { logError } from './log';
-import { telemetryEnd, telemetryStart, type TelemetryFrame } from './telemetry';
+import { type TelemetryFrame, telemetryEnd, telemetryStart } from './telemetry';
 
 export interface ScriptExitCode {
   code: number;
@@ -164,9 +164,7 @@ export async function defineScript<S extends FlagSpec>(
     const warnings = result.warnings ?? [];
     const ok = finalExit === 0;
     if (args.json) {
-      emitEnvelope(
-        envelope(meta, args, frame, ok, finalExit, result.summary ?? {}, [], warnings),
-      );
+      emitEnvelope(envelope(meta, args, frame, ok, finalExit, result.summary ?? {}, [], warnings));
     }
   } catch (raw) {
     let err: NxError;
@@ -178,7 +176,7 @@ export async function defineScript<S extends FlagSpec>(
       err = { tag: 'Generic', message: String(raw) };
     }
     finalExit = errorToExitCode(err) as ExitCodeValue;
-    if (args && args.json) {
+    if (args?.json) {
       emitEnvelope(envelope(meta, args, frame, false, finalExit, {}, [errorEnvelope(err)], []));
     } else {
       logError(errorToMessage(err), { code: finalExit, tag: err.tag });

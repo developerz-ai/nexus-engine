@@ -20,7 +20,7 @@ export function parseSimpleToml(text: string): VersionsTable {
     if (line === '' || line.startsWith('#')) continue;
 
     const sectionMatch = line.match(/^\[([^\]]+)\]$/);
-    if (sectionMatch && sectionMatch[1]) {
+    if (sectionMatch?.[1]) {
       current = sectionMatch[1].trim();
       if (!out[current]) out[current] = {};
       continue;

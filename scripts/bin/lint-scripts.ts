@@ -85,7 +85,7 @@ function readManifestEntries(manifestPath: string): { path: string; test_file: s
     }
     if (!cur) continue;
     const m = line.match(/^(path|test_file)\s*=\s*"([^"]*)"\s*$/);
-    if (m && m[1] && m[2] !== undefined) {
+    if (m?.[1] && m[2] !== undefined) {
       cur[m[1] as 'path' | 'test_file'] = m[2];
     }
   }

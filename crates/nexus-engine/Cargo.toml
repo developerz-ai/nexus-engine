@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Nexus Engine contributors
+
 [package]
 name = "nexus-engine"
 version.workspace = true
@@ -17,12 +20,12 @@ laws = ["2", "7", "14"]
 workspace = true
 
 [dependencies]
-nexus-core = { path = "../nexus-core" }
-nexus-hal = { path = "../nexus-hal" }
-nexus-assets = { path = "../nexus-assets" }
-nexus-renderer = { path = "../nexus-renderer" }
-nexus-physics = { path = "../nexus-physics" }
-nexus-audio = { path = "../nexus-audio" }
-nexus-net = { path = "../nexus-net" }
-nexus-script = { path = "../nexus-script" }
-nexus-agent = { path = "../nexus-agent" }
+nexus-core = { path = "../nexus-core", version = "0.1.0" }
+nexus-hal = { path = "../nexus-hal", version = "0.1.0" }
+nexus-assets = { path = "../nexus-assets", version = "0.1.0" }
+nexus-renderer = { path = "../nexus-renderer", version = "0.1.0" }
+nexus-physics = { path = "../nexus-physics", version = "0.1.0" }
+nexus-audio = { path = "../nexus-audio", version = "0.1.0" }
+nexus-net = { path = "../nexus-net", version = "0.1.0" }
+nexus-script = { path = "../nexus-script", version = "0.1.0" }
+nexus-agent = { path = "../nexus-agent", version = "0.1.0" }

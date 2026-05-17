@@ -10,14 +10,13 @@
 //   mem_peak    < 64 MB
 
 import { hasTool } from '../lib/bun';
-import { defineScript } from '../lib/skeleton';
 import { logInfo } from '../lib/log';
+import { defineScript } from '../lib/skeleton';
 
 export const meta = {
   name: 'bootstrap',
   version: '0.1.0',
-  description:
-    'Install required toolchains (rustup, nextest, sccache, bun, ruff, sops, …).',
+  description: 'Install required toolchains (rustup, nextest, sccache, bun, ruff, sops, …).',
   flags: {
     minimal: 'switch',
     'with-gpu': 'switch',

@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Nexus Engine contributors
+
 [package]
 name = "nexus-hal"
 version.workspace = true
@@ -17,4 +20,4 @@ laws = ["1", "3", "7", "8", "10", "11"]
 workspace = true
 
 [dependencies]
-nexus-core = { path = "../nexus-core" }
+nexus-core = { path = "../nexus-core", version = "0.1.0" }

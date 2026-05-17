@@ -17,8 +17,7 @@ import { defineScript } from '../lib/skeleton';
 export const meta = {
   name: 'check',
   version: '0.1.0',
-  description:
-    'Run all quality gates: fmt, clippy, biome, ruff, shellcheck, naga, cargo-deny.',
+  description: 'Run all quality gates: fmt, clippy, biome, ruff, shellcheck, naga, cargo-deny.',
   flags: {
     fix: 'switch',
     only: 'enum:fmt|clippy|biome|ruff|shellcheck|deny|naga',
@@ -83,7 +82,12 @@ await defineScript(meta, async (args) => {
 
   const summary = { gates: results, fix: args.fix === true };
   if (!overallOk) {
-    nxThrow({ tag: 'GateFailed', gate: 'multiple', exitCode: 5, message: 'one or more gates failed' });
+    nxThrow({
+      tag: 'GateFailed',
+      gate: 'multiple',
+      exitCode: 5,
+      message: 'one or more gates failed',
+    });
   }
   return { exitCode: 0, summary };
 });

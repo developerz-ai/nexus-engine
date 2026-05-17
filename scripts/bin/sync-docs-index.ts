@@ -80,7 +80,7 @@ function firstHeading(file: string): string {
     const head = readFileSync(file, 'utf8').split(/\r?\n/).slice(0, 5);
     for (const line of head) {
       const m = line.match(/^#\s+(.*)$/);
-      if (m && m[1]) return m[1];
+      if (m?.[1]) return m[1];
     }
   } catch {
     /* fall through */
