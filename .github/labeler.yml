@@ -1,0 +1,90 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Nexus Engine contributors
+#
+# actions/labeler@v5 config — path-based PR labels matching the CLAUDE.md
+# routing table (engine domain specialists + genres + meta dirs).
+#
+# Syntax: https://github.com/actions/labeler#configuration-options
+# v5 requires the `changed-files` matcher form.
+
+area/core:
+  - changed-files:
+      - any-glob-to-any-file:
+          - crates/nexus-core/**
+          - crates/nexus-hal/**
+
+area/renderer:
+  - changed-files:
+      - any-glob-to-any-file:
+          - crates/nexus-renderer/**
+          - crates/styles/**
+
+area/physics:
+  - changed-files:
+      - any-glob-to-any-file:
+          - crates/nexus-physics/**
+
+area/audio:
+  - changed-files:
+      - any-glob-to-any-file:
+          - crates/nexus-audio/**
+
+area/networking:
+  - changed-files:
+      - any-glob-to-any-file:
+          - crates/nexus-net/**
+
+area/scripting:
+  - changed-files:
+      - any-glob-to-any-file:
+          - crates/nexus-script/**
+
+area/agent:
+  - changed-files:
+      - any-glob-to-any-file:
+          - crates/nexus-agent/**
+
+area/editor:
+  - changed-files:
+      - any-glob-to-any-file:
+          - crates/nexus-editor/**
+
+area/cli:
+  - changed-files:
+      - any-glob-to-any-file:
+          - crates/nexus-cli/**
+
+area/scripts:
+  - changed-files:
+      - any-glob-to-any-file:
+          - scripts/**
+
+area/docs:
+  - changed-files:
+      - any-glob-to-any-file:
+          - docs/**
+
+area/ci:
+  - changed-files:
+      - any-glob-to-any-file:
+          - .github/**
+
+area/genres:
+  - changed-files:
+      - any-glob-to-any-file:
+          - crates/genres/**
+
+area/games:
+  - changed-files:
+      - any-glob-to-any-file:
+          - games/**
+
+area/tools:
+  - changed-files:
+      - any-glob-to-any-file:
+          - tools/**
+
+area/sdks:
+  - changed-files:
+      - any-glob-to-any-file:
+          - crates/sdks/**
