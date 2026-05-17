@@ -159,6 +159,9 @@ jobs:
           retention-days: 14
 
   # ─── Rust: cargo-deny ───────────────────────────────────────────────────────
+  # Note: we install rust + cargo-deny directly instead of using
+  # EmbarkStudios/cargo-deny-action@v2, because that action's musl container
+  # rejects our gnu-target rust-toolchain.toml pin (1.95-musl not available).
   rust-deny:
     name: rust / deny
     runs-on: blacksmith-4vcpu-ubuntu-2404
@@ -167,11 +170,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: cargo deny check
-        uses: EmbarkStudios/cargo-deny-action@v2
+      - name: Setup Rust toolchain (from rust-toolchain.toml)
+        uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          command: check
-          arguments: --all-features
+          cache: false
+
+      - name: Install cargo-deny
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-deny
+
+      - name: cargo deny check
+        run: cargo deny check --all-features
 
   # ─── Rust: cargo-audit (advisory, non-blocking) ─────────────────────────────
   rust-audit:
@@ -270,8 +280,11 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: biome check (scripts/)
+        # Uses the version pinned in scripts/package.json (bun install picks it
+        # up via the root workspace), not `bun x @biomejs/biome` which fetches
+        # latest and breaks on schema-version drift.
         working-directory: scripts
-        run: bun x @biomejs/biome check .
+        run: bun x biome check .
 
   # ─── Docs: SPDX header sweep ────────────────────────────────────────────────
   docs-spdx:
@@ -301,6 +314,9 @@ jobs:
               */node_modules/*|*/target/*|*/.git/*)
                 continue ;;
               *.snap|*/snapshots/*)
+                continue ;;
+              # Single-value pins / placeholders that have no comment syntax.
+              */.placeholder|*/.bun-version|*/.keep|*/.nvmrc)
                 continue ;;
             esac
             if ! grep -q -m1 'SPDX-License-Identifier:' "$f"; then

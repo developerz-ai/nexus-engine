@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Nexus Engine contributors
+
 [package]
 name = "nexus-style-pixel"
 version.workspace = true
@@ -17,6 +20,6 @@ laws = ["2", "3", "5", "7", "11", "12", "14"]
 workspace = true
 
 [dependencies]
-nexus-core = { path = "../../nexus-core" }
-nexus-renderer = { path = "../../nexus-renderer" }
-nexus-assets = { path = "../../nexus-assets" }
+nexus-core = { path = "../../nexus-core", version = "0.1.0" }
+nexus-renderer = { path = "../../nexus-renderer", version = "0.1.0" }
+nexus-assets = { path = "../../nexus-assets", version = "0.1.0" }

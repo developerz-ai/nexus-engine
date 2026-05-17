@@ -26,11 +26,7 @@ export function telemetryStart(): TelemetryFrame {
   };
 }
 
-export function telemetryEnd(
-  frame: TelemetryFrame,
-  scriptName: string,
-  exitCode: number,
-): void {
+export function telemetryEnd(frame: TelemetryFrame, scriptName: string, exitCode: number): void {
   if (process.env.NEXUS_NO_TELEMETRY) return;
   const endedNs = process.hrtime.bigint();
   const durationMs = Number((endedNs - frame.startedAtNs) / 1_000_000n);

@@ -112,7 +112,12 @@ await defineScript(meta, async (args) => {
 
   const summary = { results, parallel };
   if (overall !== 0) {
-    nxThrow({ tag: 'GateFailed', gate: 'scenario', exitCode: 5, message: 'one or more scenarios failed' });
+    nxThrow({
+      tag: 'GateFailed',
+      gate: 'scenario',
+      exitCode: 5,
+      message: 'one or more scenarios failed',
+    });
   }
   return { exitCode: 0, summary };
 });

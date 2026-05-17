@@ -35,8 +35,12 @@ describe('bootstrap', () => {
   });
 
   it('idempotent: second --dry-run run reports the same plan length', async () => {
-    const a = parseEnvelope((await runShim('bootstrap', ['--dry-run', '--json', '--minimal'])).stdout);
-    const b = parseEnvelope((await runShim('bootstrap', ['--dry-run', '--json', '--minimal'])).stdout);
+    const a = parseEnvelope(
+      (await runShim('bootstrap', ['--dry-run', '--json', '--minimal'])).stdout,
+    );
+    const b = parseEnvelope(
+      (await runShim('bootstrap', ['--dry-run', '--json', '--minimal'])).stdout,
+    );
     const lenA = (a.data.planned as unknown[]).length + (a.data.skipped as unknown[]).length;
     const lenB = (b.data.planned as unknown[]).length + (b.data.skipped as unknown[]).length;
     expect(lenA).toBe(lenB);

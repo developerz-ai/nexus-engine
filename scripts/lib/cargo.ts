@@ -4,7 +4,7 @@
 // scripts/lib/cargo.ts — `cargo` wrapper. Single source of truth for sccache
 // activation and target-dir resolution.
 
-import { hasTool, run, type RunResult } from './bun';
+import { type RunResult, hasTool, run } from './bun';
 
 export function cargoTargetDir(): string {
   const fromEnv = process.env.CARGO_TARGET_DIR;
@@ -17,7 +17,10 @@ export function cargoTargetDir(): string {
  * Run `cargo <args>` with sccache enabled if available. Returns the captured
  * `RunResult`. Caller maps exit codes to `NxError` variants.
  */
-export async function cargo(args: readonly string[], opts: { cwd?: string } = {}): Promise<RunResult> {
+export async function cargo(
+  args: readonly string[],
+  opts: { cwd?: string } = {},
+): Promise<RunResult> {
   const env: Record<string, string> = {};
   if (await hasTool('sccache')) {
     env.RUSTC_WRAPPER = 'sccache';
