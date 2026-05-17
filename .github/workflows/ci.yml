@@ -25,11 +25,11 @@
 #   useblacksmith/setup-rust + useblacksmith/setup-bun are ARCHIVED. Blacksmith
 #   cache works automatically with GitHub's native cache action on Blacksmith
 #   runners, so we use the upstream setup actions:
-#     - actions-rust-lang/setup-rust-toolchain@v1
-#     - oven-sh/setup-bun@v2
+#     - actions-rust-lang/setup-rust-toolchain@46268bd060767258de96ed93c1251119784f2ab6 # v1.16.1
+#     - oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
 #   and Blacksmith's drop-in cache replacements where they still add value:
-#     - useblacksmith/rust-cache@v3   (replaces Swatinem/rust-cache@v2)
-#     - useblacksmith/cache@v5        (replaces actions/cache@v4)
+#     - useblacksmith/rust-cache@f53e7f127245d2a269b3d90879ccf259876842d5 # v3.0.1   (replaces Swatinem/rust-cache@v2)
+#     - useblacksmith/cache@c5fe29eb0efdf1cf4186b9f7fcbbcbc0cf025662 # v5.0.2        (replaces actions/cache@v4)
 
 name: ci
 
@@ -41,9 +41,9 @@ on:
   workflow_dispatch:
 
 permissions:
+  # Workflow-level default: read-only. Individual jobs elevate when they need
+  # to write (none currently do — artifact upload uses GITHUB_TOKEN with read).
   contents: read
-  pull-requests: write
-  checks: write
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
@@ -63,10 +63,10 @@ jobs:
     timeout-minutes: 20
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
       - name: Setup Rust toolchain (from rust-toolchain.toml)
-        uses: actions-rust-lang/setup-rust-toolchain@v1
+        uses: actions-rust-lang/setup-rust-toolchain@46268bd060767258de96ed93c1251119784f2ab6 # v1.16.1
         with:
           components: rustfmt
           cache: false
@@ -81,16 +81,16 @@ jobs:
     timeout-minutes: 20
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
       - name: Setup Rust toolchain (from rust-toolchain.toml)
-        uses: actions-rust-lang/setup-rust-toolchain@v1
+        uses: actions-rust-lang/setup-rust-toolchain@46268bd060767258de96ed93c1251119784f2ab6 # v1.16.1
         with:
           components: clippy
           cache: false
 
       - name: Cache cargo registry + target (Blacksmith)
-        uses: useblacksmith/rust-cache@v3
+        uses: useblacksmith/rust-cache@f53e7f127245d2a269b3d90879ccf259876842d5 # v3.0.1
         with:
           shared-key: clippy
           cache-on-failure: true
@@ -105,15 +105,15 @@ jobs:
     timeout-minutes: 20
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
       - name: Setup Rust toolchain (from rust-toolchain.toml)
-        uses: actions-rust-lang/setup-rust-toolchain@v1
+        uses: actions-rust-lang/setup-rust-toolchain@46268bd060767258de96ed93c1251119784f2ab6 # v1.16.1
         with:
           cache: false
 
       - name: Cache cargo registry + target (Blacksmith)
-        uses: useblacksmith/rust-cache@v3
+        uses: useblacksmith/rust-cache@f53e7f127245d2a269b3d90879ccf259876842d5 # v3.0.1
         with:
           shared-key: check
           cache-on-failure: true
@@ -128,21 +128,21 @@ jobs:
     timeout-minutes: 20
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
       - name: Setup Rust toolchain (from rust-toolchain.toml)
-        uses: actions-rust-lang/setup-rust-toolchain@v1
+        uses: actions-rust-lang/setup-rust-toolchain@46268bd060767258de96ed93c1251119784f2ab6 # v1.16.1
         with:
           cache: false
 
       - name: Cache cargo registry + target (Blacksmith)
-        uses: useblacksmith/rust-cache@v3
+        uses: useblacksmith/rust-cache@f53e7f127245d2a269b3d90879ccf259876842d5 # v3.0.1
         with:
           shared-key: test
           cache-on-failure: true
 
       - name: Install cargo-nextest
-        uses: taiki-e/install-action@v2
+        uses: taiki-e/install-action@7be9fd86bd1707236395105d6e9329dd1511a7e1 # v2.79.0
         with:
           tool: cargo-nextest
 
@@ -151,7 +151,7 @@ jobs:
 
       - name: Upload nextest junit report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: nextest-junit-${{ github.run_id }}
           path: logs/test/nextest-junit.xml
@@ -168,15 +168,15 @@ jobs:
     timeout-minutes: 20
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
       - name: Setup Rust toolchain (from rust-toolchain.toml)
-        uses: actions-rust-lang/setup-rust-toolchain@v1
+        uses: actions-rust-lang/setup-rust-toolchain@46268bd060767258de96ed93c1251119784f2ab6 # v1.16.1
         with:
           cache: false
 
       - name: Install cargo-deny
-        uses: taiki-e/install-action@v2
+        uses: taiki-e/install-action@7be9fd86bd1707236395105d6e9329dd1511a7e1 # v2.79.0
         with:
           tool: cargo-deny
 
@@ -195,15 +195,15 @@ jobs:
     continue-on-error: true
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
       - name: Setup Rust toolchain (from rust-toolchain.toml)
-        uses: actions-rust-lang/setup-rust-toolchain@v1
+        uses: actions-rust-lang/setup-rust-toolchain@46268bd060767258de96ed93c1251119784f2ab6 # v1.16.1
         with:
           cache: false
 
       - name: Install cargo-audit
-        uses: taiki-e/install-action@v2
+        uses: taiki-e/install-action@7be9fd86bd1707236395105d6e9329dd1511a7e1 # v2.79.0
         with:
           tool: cargo-audit
 
@@ -220,19 +220,19 @@ jobs:
     timeout-minutes: 20
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
       - name: Read pinned Bun version
         id: bun-version
         run: echo "version=$(cat scripts/.bun-version)" >> "$GITHUB_OUTPUT"
 
       - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version: ${{ steps.bun-version.outputs.version }}
 
       - name: Cache bun install (Blacksmith)
-        uses: useblacksmith/cache@v5
+        uses: useblacksmith/cache@c5fe29eb0efdf1cf4186b9f7fcbbcbc0cf025662 # v5.0.2
         with:
           path: |
             node_modules
@@ -256,19 +256,19 @@ jobs:
     timeout-minutes: 20
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
       - name: Read pinned Bun version
         id: bun-version
         run: echo "version=$(cat scripts/.bun-version)" >> "$GITHUB_OUTPUT"
 
       - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version: ${{ steps.bun-version.outputs.version }}
 
       - name: Cache bun install (Blacksmith)
-        uses: useblacksmith/cache@v5
+        uses: useblacksmith/cache@c5fe29eb0efdf1cf4186b9f7fcbbcbc0cf025662 # v5.0.2
         with:
           path: |
             node_modules
@@ -295,7 +295,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
       - name: Verify SPDX headers on tracked files
         # Law 7: MIT forever. Every source/docs/script file must carry an
@@ -321,7 +321,9 @@ jobs:
               */.placeholder|*/.bun-version|*/.keep|*/.nvmrc)
                 continue ;;
             esac
-            if ! grep -q -m1 'SPDX-License-Identifier:' "$f"; then
+            # Law 7 intent: header must be near top-of-file, not buried in a
+            # blob somewhere. Restrict to first 15 lines.
+            if ! head -n 15 "$f" | grep -q -m1 'SPDX-License-Identifier:'; then
               missing+=("$f")
             fi
           done < <(git ls-files -z -- 'crates/**' 'scripts/**' 'docs/**' '.github/**')

@@ -1,0 +1,17 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Nexus Engine contributors
+#
+# actionlint config — register custom self-hosted runner labels so the linter
+# stops flagging them as unknown. Consumed by `actionlint` locally and by
+# CodeRabbit's actionlint integration.
+#
+# Docs: https://github.com/rhysd/actionlint/blob/main/docs/config.md
+
+self-hosted-runner:
+  labels:
+    # Blacksmith managed runners (Phase 1 — Linux only)
+    - blacksmith-4vcpu-ubuntu-2404
+    - blacksmith-4vcpu-ubuntu-2204
+    - blacksmith-2vcpu-ubuntu-2404
+    - blacksmith-8vcpu-ubuntu-2404
+    - blacksmith-16vcpu-ubuntu-2404
