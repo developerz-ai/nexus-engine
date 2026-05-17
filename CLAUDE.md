@@ -69,7 +69,7 @@ Invoke via `Agent({ subagent_type: "<name>", prompt: "<task>" })`.
 | `spec-author` | new `docs/specs/**` file or large spec rewrite |
 | `contract-author` | new or revised `docs/contracts/<a>-<b>.md` |
 | `adr-author` | log a Nygard-format ADR under `docs/architecture/05-adr/` |
-| `principle-keeper` | audit a PR/file against the 12 laws |
+| `principle-keeper` | audit a PR/file against the 15 laws |
 
 ### Engine domain specialists (one per spec subtree)
 | domain | subagent(s) |
@@ -274,7 +274,7 @@ Full rules: `docs/guides/mastermind-pr-loop.md`. Workflow narrative + SLOs: `doc
 ### CodeRabbit config
 - `/.coderabbit.yaml` — schema: `https://coderabbit.ai/integrations/schema.v2.json`
 - Profile: `assertive`. `request_changes_workflow: true`. Auto-review on `main`.
-- Tone: enforces 12 Laws; rejects suggestions that violate them.
+- Tone: enforces 15 Laws; rejects suggestions that violate them.
 - Path-instructions cover `docs/specs/**`, `docs/contracts/**`, `docs/architecture/05-adr/**`, `crates/**/src/**/*.rs`, `**/*.wgsl`, `crates/**/benches/**`, configs, `.github/workflows/**`.
 - Tools on: shellcheck · markdownlint · github-checks · gitleaks · actionlint · yamllint · hadolint · biome · ruff.
 

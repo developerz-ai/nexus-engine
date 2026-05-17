@@ -4,7 +4,7 @@
 #
 # Spec-driven, AI-first, MIT-forever, Rust monorepo.
 # Constitution: docs/architecture/00-vision.md
-# 12 Laws:      docs/architecture/01-principles.md
+# 15 Laws:      docs/architecture/01-principles.md
 #
 # Companion: docs/guides/coderabbit.md  ·  .claude/skills/coderabbit-*
 
@@ -12,7 +12,7 @@ language: en-US
 early_access: false           # stable schema only; this repo lands ≥100 PRs/day
 enable_free_tier: true        # MIT, public, no paid surface
 
-# Tone — every review is judged against the 12 Laws.
+# Tone — every review is judged against the 15 Laws.
 # CR may be wrong; .claude/skills/coderabbit-triage/SKILL.md allows reject with principle cite.
 tone_instructions: |
   Nexus Engine: MIT, spec-driven, AI-first Rust engine. Authority: docs/architecture/01-principles.md (15 Laws) > docs/specs/** > docs/contracts/**. Reject suggestions violating a Law; cite the Law. Prefer concrete diffs. Skip nits.
@@ -107,7 +107,7 @@ reviews:
         Reject otherwise. This file is the constitution.
     - path: "docs/architecture/01-principles.md"
       instructions: |
-        Any change to the 12 Laws requires a paired ADR. Reject otherwise. The Laws are
+        Any change to the 15 Laws requires a paired ADR. Reject otherwise. The Laws are
         the binding contract the merge system enforces.
 
     # ── Other docs ────────────────────────────────────────────────────
