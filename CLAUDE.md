@@ -339,3 +339,7 @@ A new Claude Code session opening this repo should:
 5. Cross-check `docs/architecture/cross-agent-flags.md` if the task touches a file that was authored by multiple agents.
 
 Engine source does not exist yet — the next session is still docs-driven. Engine implementation begins after the open-decisions list is small enough to pick a v1.0 crate boundary and start coding under the spec-first workflow (Law 2).
+
+## Note
+
+Do not use git worktrees — work directly in this checkout. See `.claude/commands/feature.md` and `.claude/commands/planx.md`.
