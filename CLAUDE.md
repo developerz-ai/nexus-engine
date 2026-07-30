@@ -151,7 +151,7 @@ Subagent fleet total: **118** files in `.claude/agents/`.
 ## Parallel-Work Doctrine
 - Default: dispatch N subagents in **one message** whenever N tasks are independent.
 - Serialize only when a downstream task literally needs an upstream artifact (e.g., impl needs the contract file written first).
-- Long-running parallel work → use `isolation: worktree` on the subagent so file conflicts vanish.
+- **Never `isolation: worktree`.** Parallel subagents share this one checkout (see `## Note`); give each a disjoint file set — crate boundaries are the natural lock — and shared roots (workspace `Cargo.toml`, `Nexus.toml`, docs indexes) stay with the coordinator.
 - After every parallel batch, dispatch `integration-resolver` to reconcile cross-refs.
 - Full doctrine: `docs/guides/parallelism-doctrine.md`.
 
