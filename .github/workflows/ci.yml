@@ -9,27 +9,19 @@
 #   - .config/nextest.toml              ([profile.ci] retries=2, junit out)
 #
 # Runner:
-#   Blacksmith 4vcpu Linux  — runs-on: blacksmith-4vcpu-ubuntu-2404
-#
-# Cost (founder spec):
-#   Blacksmith 4vcpu Linux  ≈ $0.008 / minute
-#   Avg PR wall time        ≈ 8–12 minutes across all jobs (parallel)
-#   Avg PR cost             ≈ $0.10 / PR
+#   GitHub-hosted ubuntu-latest (org rule: private repos on Ubicloud, public on
+#   GitHub-hosted — free for a public repo).
 #
 # Matrix scope:
 #   Linux only for Phase 1. Windows / macOS / WASM are DEFERRED to a later
 #   phase (founder directive — ci-engineer charter §"Non-negotiables: Matrix"
 #   is intentionally NOT met here; a follow-up PR widens the matrix).
 #
-# Blacksmith notes (verified 2026-05):
-#   useblacksmith/setup-rust + useblacksmith/setup-bun are ARCHIVED. Blacksmith
-#   cache works automatically with GitHub's native cache action on Blacksmith
-#   runners, so we use the upstream setup actions:
+# Actions (upstream, SHA-pinned):
 #     - actions-rust-lang/setup-rust-toolchain@46268bd060767258de96ed93c1251119784f2ab6 # v1.16.1
 #     - oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
-#   and Blacksmith's drop-in cache replacements where they still add value:
-#     - useblacksmith/rust-cache@f53e7f127245d2a269b3d90879ccf259876842d5 # v3.0.1   (replaces Swatinem/rust-cache@v2)
-#     - useblacksmith/cache@c5fe29eb0efdf1cf4186b9f7fcbbcbc0cf025662 # v5.0.2        (replaces actions/cache@v4)
+#     - Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+#     - actions/cache@8b402f58fbc84540c8b491a91e594a4576fec3d7 # v5.0.2
 
 name: ci
 
@@ -59,7 +51,8 @@ jobs:
   # ─── Rust: fmt ──────────────────────────────────────────────────────────────
   rust-fmt:
     name: rust / fmt
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    # GitHub-hosted runner (org rule: private repos on Ubicloud, public on GitHub-hosted).
+    runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
       - name: Checkout
@@ -77,7 +70,7 @@ jobs:
   # ─── Rust: clippy ───────────────────────────────────────────────────────────
   rust-clippy:
     name: rust / clippy
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
       - name: Checkout
@@ -89,8 +82,8 @@ jobs:
           components: clippy
           cache: false
 
-      - name: Cache cargo registry + target (Blacksmith)
-        uses: useblacksmith/rust-cache@f53e7f127245d2a269b3d90879ccf259876842d5 # v3.0.1
+      - name: Cache cargo registry + target
+        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
         with:
           shared-key: clippy
           cache-on-failure: true
@@ -101,7 +94,7 @@ jobs:
   # ─── Rust: check ────────────────────────────────────────────────────────────
   rust-check:
     name: rust / check
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
       - name: Checkout
@@ -112,8 +105,8 @@ jobs:
         with:
           cache: false
 
-      - name: Cache cargo registry + target (Blacksmith)
-        uses: useblacksmith/rust-cache@f53e7f127245d2a269b3d90879ccf259876842d5 # v3.0.1
+      - name: Cache cargo registry + target
+        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
         with:
           shared-key: check
           cache-on-failure: true
@@ -124,7 +117,7 @@ jobs:
   # ─── Rust: test (nextest, ci profile, junit) ────────────────────────────────
   rust-test:
     name: rust / test
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
       - name: Checkout
@@ -135,8 +128,8 @@ jobs:
         with:
           cache: false
 
-      - name: Cache cargo registry + target (Blacksmith)
-        uses: useblacksmith/rust-cache@f53e7f127245d2a269b3d90879ccf259876842d5 # v3.0.1
+      - name: Cache cargo registry + target
+        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
         with:
           shared-key: test
           cache-on-failure: true
@@ -164,7 +157,7 @@ jobs:
   # rejects our gnu-target rust-toolchain.toml pin (1.95-musl not available).
   rust-deny:
     name: rust / deny
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
       - name: Checkout
@@ -188,7 +181,7 @@ jobs:
   # ─── Rust: cargo-audit (advisory, non-blocking) ─────────────────────────────
   rust-audit:
     name: rust / audit
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: ubuntu-latest
     timeout-minutes: 20
     # Advisory-level — never fails the build; tracks RustSec advisories so the
     # security-reviewer subagent can triage. Hard gate lives in rust-deny.
@@ -216,7 +209,7 @@ jobs:
   # at the root, then `cd scripts/` for the suite-specific commands.
   scripts-test:
     name: scripts / test
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
       - name: Checkout
@@ -231,8 +224,8 @@ jobs:
         with:
           bun-version: ${{ steps.bun-version.outputs.version }}
 
-      - name: Cache bun install (Blacksmith)
-        uses: useblacksmith/cache@c5fe29eb0efdf1cf4186b9f7fcbbcbc0cf025662 # v5.0.2
+      - name: Cache bun install
+        uses: actions/cache@8b402f58fbc84540c8b491a91e594a4576fec3d7 # v5.0.2
         with:
           path: |
             node_modules
@@ -252,7 +245,7 @@ jobs:
   # ─── Scripts: biome lint ────────────────────────────────────────────────────
   scripts-lint:
     name: scripts / lint
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
       - name: Checkout
@@ -267,8 +260,8 @@ jobs:
         with:
           bun-version: ${{ steps.bun-version.outputs.version }}
 
-      - name: Cache bun install (Blacksmith)
-        uses: useblacksmith/cache@c5fe29eb0efdf1cf4186b9f7fcbbcbc0cf025662 # v5.0.2
+      - name: Cache bun install
+        uses: actions/cache@8b402f58fbc84540c8b491a91e594a4576fec3d7 # v5.0.2
         with:
           path: |
             node_modules
@@ -291,7 +284,7 @@ jobs:
   # ─── Docs: SPDX header sweep ────────────────────────────────────────────────
   docs-spdx:
     name: docs / spdx
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - name: Checkout
