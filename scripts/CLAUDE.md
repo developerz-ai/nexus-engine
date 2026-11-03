@@ -1,3 +1,6 @@
+<!-- SPDX-License-Identifier: MIT -->
+<!-- Copyright (c) 2026 Nexus Engine contributors -->
+
 # developerz-ai/nexus-engine — scripts
 
 > Workspace brain — established by dz-runner setup mode from this workspace, then owned by
