@@ -1,0 +1,117 @@
+#!/usr/bin/env bash
+# one-command setup — established by dz-runner setup mode. One command; adjust as the repo grows.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+# Ensure bun (a CI runner image carries none). The floor is .bun-version, else the lowest
+# package.json engines.bun admits; on CI a missing or older bun is installed, verified.
+bun_floor=""
+bun_source=""
+if [ -s .bun-version ]; then
+  bun_pin_text="$(head -n1 .bun-version | tr -d '[:space:]' | sed -e 's/^bun-v//' -e 's/^v//')"
+  if printf '%s' "$bun_pin_text" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+    bun_floor="$bun_pin_text"
+    bun_source=".bun-version"
+  else
+    echo "bin/setup: .bun-version holds '$bun_pin_text', not an exact x.y.z: no bun floor declared" >&2
+  fi
+elif [ -f package.json ]; then
+  bun_range="$(tr -d '\n' < package.json | sed -n 's/.*"engines"[[:space:]]*:[[:space:]]*{[^}]*"bun"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')"
+  bun_floor="$(printf '%s\n' "$bun_range" | sed -E 's/(>=|<=|>|<|\^|~|=)[[:space:]]+/\1/g' | awk '
+    function part(p) { return (p == "" || p ~ /^[xX*]$/) ? 0 : p }
+    function cmp(a, b,   x, y, i) {
+      split(a, x, "."); split(b, y, ".")
+      for (i = 1; i <= 3; i++) { if (x[i] + 0 < y[i] + 0) return -1; if (x[i] + 0 > y[i] + 0) return 1 }
+      return 0
+    }
+    {
+      if ($0 ~ /^[ \t]*$/) exit
+      n = split($0, alts, /\|\|/); min = ""
+      for (a = 1; a <= n; a++) {
+        m = split(alts[a], comps, " "); low = ""
+        for (c = 1; c <= m; c++) {
+          t = comps[c]
+          if (t ~ /^</) continue
+          if (t !~ /^(>=|\^|~|=)?v?[0-9]+(\.([0-9]+|[xX*]))?(\.([0-9]+|[xX*]))?$/) exit
+          sub(/^(>=|\^|~|=)?v?/, "", t)
+          split(t, p, ".")
+          v = p[1] "." part(p[2]) "." part(p[3])
+          if (low == "" || cmp(v, low) > 0) low = v
+        }
+        if (low == "") exit
+        if (min == "" || cmp(low, min) < 0) min = low
+      }
+      print min
+    }')"
+  if [ -n "$bun_floor" ]; then bun_source="package.json engines.bun '$bun_range'"; fi
+fi
+# True when version $1 is below the release $2 (x.y.z): numeric parts, and a prerelease
+# (1.4.4-canary.1) below its own release. Pure bash: BSD sort has no version mode.
+bun_older() {
+  local have_rel have_pre=0 h1 h2 h3 h_rest f1 f2 f3 f_rest
+  have_rel="$(printf '%s' "$1" | sed -e 's/+.*//')"
+  case "$have_rel" in
+    *-*) have_pre=1; have_rel="$(printf '%s' "$have_rel" | sed -e 's/-.*//')" ;;
+  esac
+  IFS=. read -r h1 h2 h3 h_rest <<< "$have_rel"
+  IFS=. read -r f1 f2 f3 f_rest <<< "$2"
+  if (( h1 != f1 )); then (( h1 < f1 )); return; fi
+  if (( h2 != f2 )); then (( h2 < f2 )); return; fi
+  if (( h3 != f3 )); then (( h3 < f3 )); return; fi
+  (( have_pre == 1 ))
+}
+bun_have="$(bun --version 2>/dev/null || true)"
+bun_short=""
+if [ -z "$bun_have" ]; then
+  bun_short="missing"
+elif [ -n "$bun_floor" ] && bun_older "$bun_have" "$bun_floor"; then
+  bun_short="old"
+fi
+if [ -n "$bun_short" ]; then
+  bun_target="$bun_floor"
+  if [ -z "$bun_target" ]; then bun_target="1.4.4"; fi
+  if [ -z "$(printenv GITHUB_ACTIONS CI 2>/dev/null || true)" ]; then
+    if [ "$bun_short" = "missing" ]; then
+      echo "bin/setup: bun is not on PATH; install bun $bun_target or newer (https://bun.sh)" >&2
+    else
+      echo "bin/setup: $bun_source requires bun $bun_floor or newer; install it (https://bun.sh)" >&2
+      echo "Bun $bun_have is older than the required $bun_floor" >&2
+    fi
+    exit 69
+  fi
+  case "$(uname -s)" in
+    Linux) bun_os="linux" ;;
+    Darwin) bun_os="darwin" ;;
+    *) echo "bin/setup: no bun release for $(uname -s)" >&2; exit 69 ;;
+  esac
+  case "$(uname -m)" in
+    x86_64 | amd64) bun_arch="x64" ;;
+    aarch64 | arm64) bun_arch="aarch64" ;;
+    *) echo "bin/setup: no bun release for $(uname -m)" >&2; exit 69 ;;
+  esac
+  if command -v sha256sum >/dev/null 2>&1; then
+    bun_sha="sha256sum"
+  elif command -v shasum >/dev/null 2>&1; then
+    bun_sha="shasum -a 256"
+  else
+    echo "bin/setup: neither sha256sum nor shasum is here to verify bun; not installing it" >&2
+    exit 69
+  fi
+  bun_name="bun-$bun_os-$bun_arch"
+  bun_zip="$bun_name.zip"
+  bun_url="https://github.com/oven-sh/bun/releases/download/bun-v$bun_target"
+  bun_tmp="$(mktemp -d)"
+  curl -fsSL -o "$bun_tmp/$bun_zip" "$bun_url/$bun_zip"
+  curl -fsSL -o "$bun_tmp/SHASUMS256.txt" "$bun_url/SHASUMS256.txt"
+  grep " $bun_zip$" "$bun_tmp/SHASUMS256.txt" > "$bun_tmp/expected"
+  (cd "$bun_tmp" && $bun_sha -c expected)
+  unzip -q -o "$bun_tmp/$bun_zip" -d "$bun_tmp"
+  mkdir -p "$HOME/.bun/bin"
+  install -m 755 "$bun_tmp/$bun_name/bun" "$HOME/.bun/bin/bun"
+  ln -sf bun "$HOME/.bun/bin/bunx"
+  rm -rf "$bun_tmp"
+  export PATH="$HOME/.bun/bin:$PATH"
+  bun_gh_path="$(printenv GITHUB_PATH || true)"
+  if [ -n "$bun_gh_path" ]; then echo "$HOME/.bun/bin" >> "$bun_gh_path"; fi
+  echo "bin/setup: installed bun $(bun --version) from $bun_url" >&2
+fi
+mise use -g rust@1.95 && cargo install cargo-nextest cargo-deny naga-cli --locked && bun install --frozen-lockfile
