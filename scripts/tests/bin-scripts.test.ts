@@ -92,6 +92,41 @@ printf 'curl %s\\n' "$*" >> "$STUB_LOG"
 exit 1
 `;
 
+// stub curl — serves a real tar.gz holding an executable named after the gate
+// tool in the requested URL, so the prebuilt path runs end to end offline.
+// Checksum probes fail, like a release without a published .sha256.
+const OK_CURL = `#!/bin/sh
+printf 'curl %s\\n' "$*" >> "$STUB_LOG"
+case "$*" in
+  *sha256*) exit 1 ;;
+esac
+out=""
+prev=""
+for a in "$@"; do
+  if [ "$prev" = "-o" ]; then out="$a"; fi
+  prev="$a"
+done
+if [ -z "$out" ]; then exit 1; fi
+name="\${out##*/}"
+name="\${name%.tar.gz}"
+name="\${name%%-[0-9]*}"
+dir="\$(dirname "$out")"
+mkdir -p "$dir/pkg"
+printf '#!/bin/sh\\nexit 0\\n' > "$dir/pkg/$name"
+chmod 755 "$dir/pkg/$name"
+tar czf "$out" -C "$dir" "pkg/$name"
+rm -rf "$dir/pkg"
+exit 0
+`;
+
+// stub install — always fails, the stand-in for a full disk or a read-only
+// target directory. bin/setup must report the failure, never swallow it.
+const FAIL_INSTALL = `#!/bin/sh
+printf 'install %s\\n' "$*" >> "$STUB_LOG"
+echo 'install: stub: no space left on device' >&2
+exit 1
+`;
+
 interface Sandbox {
   root: string;
   home: string;
@@ -106,6 +141,10 @@ interface FixtureOptions {
   cargoFail?: string;
   /** install a curl stub whose downloads always fail */
   failCurl?: boolean;
+  /** install a curl stub that serves a real archive for the requested tool */
+  okCurl?: boolean;
+  /** install an `install` stub that always fails — a full disk */
+  failInstall?: boolean;
 }
 
 interface RunResult {
@@ -139,6 +178,8 @@ function sharedContext(options: FixtureOptions = {}): Sandbox {
   if (!omit.includes('cargo-deny')) writeStub(join(cargoBin, 'cargo-deny'), STUB_DENY);
   if (!omit.includes('bun')) writeStub(join(bunBin, 'bun'), STUB_BUN);
   if (options.failCurl) writeStub(join(cargoBin, 'curl'), STUB_CURL);
+  if (options.okCurl) writeStub(join(cargoBin, 'curl'), OK_CURL);
+  if (options.failInstall) writeStub(join(cargoBin, 'install'), FAIL_INSTALL);
 
   const env: Record<string, string> = {
     ...(process.env as Record<string, string>),
@@ -278,6 +319,41 @@ describe('bin scripts', () => {
       expect(r.stderr).toContain('0.9.85');
       expect(r.stderr).toContain('github.com/nextest-rs/nextest');
       expect(calls(sandbox).some((call) => call.startsWith('cargo install'))).toBe(false);
+    } finally {
+      rmSync(sandbox.root, { recursive: true, force: true });
+    }
+  });
+
+  it('bin/setup exits 69 when writing a downloaded gate tool fails', async () => {
+    const sandbox = sharedContext({
+      omit: ['cargo-nextest', 'cargo-deny'],
+      okCurl: true,
+      failInstall: true,
+    });
+    try {
+      const r = await runScript('setup', sandbox);
+      expect(r.exitCode).toBe(69);
+      expect(r.stderr).toContain('could not write');
+      expect(r.stderr).toContain('could not install cargo-nextest');
+      expect(r.stderr).not.toContain('installed cargo-nextest');
+      expect(calls(sandbox).some((call) => call.startsWith('install '))).toBe(true);
+    } finally {
+      rmSync(sandbox.root, { recursive: true, force: true });
+    }
+  });
+
+  it('bin/setup exits 69 when copying a PATH tool next to the cargo shims fails', async () => {
+    const sandbox = sharedContext({ omit: ['cargo-nextest'], failInstall: true });
+    try {
+      // A plain (non-symlink) cargo-nextest elsewhere on PATH sends
+      // ensure_gate_tool down its copy branch — with the failing install
+      // stub as the disk that cannot take the copy.
+      writeStub(join(sandbox.home, '.bun', 'bin', 'cargo-nextest'), STUB_NEXTTEST);
+      const r = await runScript('setup', sandbox);
+      expect(r.exitCode).toBe(69);
+      expect(r.stderr).toContain('already on PATH');
+      expect(r.stderr).toContain('could not write');
+      expect(r.stderr).not.toContain('installed cargo-nextest');
     } finally {
       rmSync(sandbox.root, { recursive: true, force: true });
     }

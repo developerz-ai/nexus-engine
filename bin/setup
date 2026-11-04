@@ -215,7 +215,9 @@ sha256_of() {
 }
 
 # Install one gate tool from its prebuilt release archive. Non-zero when the
-# download, the checksum or the extraction fails.
+# download, the checksum, the extraction or the install into $CARGO_BIN_DIR
+# fails — every step is checked explicitly, because this function runs under a
+# suspended errexit (its caller invokes it in an if condition).
 install_prebuilt() {
   local tool="$1" version="$2" url="$3"
   local tmp archive expected actual matches bin sha_url
@@ -255,8 +257,18 @@ install_prebuilt() {
     rm -rf "$tmp"
     return 1
   fi
-  mkdir -p "$CARGO_BIN_DIR"
-  install -m 755 "$bin" "$CARGO_BIN_DIR/$tool"
+  # Errexit is suspended inside this function, so a failed write would land
+  # here silently and still "succeed" without the tool. Propagate both steps.
+  if ! mkdir -p "$CARGO_BIN_DIR"; then
+    echo "bin/setup: cannot create $CARGO_BIN_DIR to install $tool" >&2
+    rm -rf "$tmp"
+    return 1
+  fi
+  if ! install -m 755 "$bin" "$CARGO_BIN_DIR/$tool"; then
+    echo "bin/setup: could not write $CARGO_BIN_DIR/$tool" >&2
+    rm -rf "$tmp"
+    return 1
+  fi
   rm -rf "$tmp"
   return 0
 }
@@ -278,8 +290,16 @@ ensure_gate_tool() {
     # Keep the gate's tool location stable: a plain file can be copied next to
     # the cargo shims; a shim (symlink) is left where it is.
     if [ -f "$found" ] && [ ! -L "$found" ]; then
-      mkdir -p "$CARGO_BIN_DIR"
-      install -m 755 "$found" "$dest"
+      # Same suspended-errexit rule as install_prebuilt: a failed write here
+      # must reach the caller's `|| exit 69`, not vanish.
+      if ! mkdir -p "$CARGO_BIN_DIR"; then
+        echo "bin/setup: cannot create $CARGO_BIN_DIR to install $tool" >&2
+        return 1
+      fi
+      if ! install -m 755 "$found" "$dest"; then
+        echo "bin/setup: could not write $dest" >&2
+        return 1
+      fi
     fi
     return 0
   fi
