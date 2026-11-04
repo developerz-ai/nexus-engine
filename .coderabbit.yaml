@@ -125,7 +125,8 @@ reviews:
         the "done" criterion. Headless run target: nexus run --headless games/<name>/scenario.toml.
 
     # ── Rust source ───────────────────────────────────────────────────
-    - path: "crates/**/src/**/*.rs"
+    # {crates,packages} — nexus-physics moved from crates/ to packages/; Rust rules track both trees.
+    - path: "{crates,packages}/**/src/**/*.rs"
       instructions: |
         clippy clean (`cargo clippy --all-targets -- -D warnings`) and rustfmt clean.
         No unwrap/expect/panic! outside `#[cfg(test)]` (Law 6, Law 10).
@@ -137,13 +138,13 @@ reviews:
         `unsafe` block REQUIRES a `// SAFETY:` paragraph proving the invariants (Law 6).
         Cite the spec implemented in commit body: `docs/specs/<system>/<file>.md`.
 
-    - path: "crates/**/benches/**"
+    - path: "{crates,packages}/**/benches/**"
       instructions: |
         Criterion only. Benchmark must define a baseline and target from the spec's
         Performance Contract. Output goes to target/criterion/ — committing baseline JSON
         under benches/baselines/ is fine.
 
-    - path: "crates/**/examples/**"
+    - path: "{crates,packages}/**/examples/**"
       instructions: |
         Examples are user-facing — must compile, be runnable headlessly when possible, and
         link to the spec they demonstrate.

@@ -35,7 +35,6 @@ nexus-engine/
 │   ├── nexus-hal/
 │   ├── nexus-assets/
 │   ├── nexus-renderer/
-│   ├── nexus-physics/
 │   ├── nexus-audio/
 │   ├── nexus-net/
 │   ├── nexus-script/
@@ -70,6 +69,8 @@ nexus-engine/
 │   └── sdks/
 │       ├── nexus-agent-sdk-rs/      # Rust SDK
 │       └── nexus-agent-sdk-py/      # Python bindings via pyo3
+├── packages/                        # workspace packages outside crates/
+│   └── nexus-physics/
 ├── games/                           # demo games — integration tests
 │   ├── nexus-fps/
 │   ├── nexus-rpg/
@@ -96,7 +97,7 @@ members = [
   "crates/nexus-hal",
   "crates/nexus-assets",
   "crates/nexus-renderer",
-  "crates/nexus-physics",
+  "packages/nexus-physics",
   "crates/nexus-audio",
   "crates/nexus-net",
   "crates/nexus-script",

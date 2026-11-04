@@ -12,7 +12,7 @@ members = [
   "crates/nexus-hal",
   "crates/nexus-assets",
   "crates/nexus-renderer",
-  "crates/nexus-physics",
+  "packages/nexus-physics",
   "crates/nexus-audio",
   "crates/nexus-net",
   "crates/nexus-script",
