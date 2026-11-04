@@ -41,7 +41,6 @@ nexus-engine/
 │   ├── nexus-script/
 │   ├── nexus-agent/
 │   ├── nexus-editor/
-│   ├── nexus-cli/
 │   ├── nexus-merge/                 # the AI maintainer's lint/check library
 │   ├── nexus-engine/                # facade re-export crate (the public umbrella)
 │   ├── styles/
@@ -70,6 +69,8 @@ nexus-engine/
 │   └── sdks/
 │       ├── nexus-agent-sdk-rs/      # Rust SDK
 │       └── nexus-agent-sdk-py/      # Python bindings via pyo3
+├── packages/                        # standalone tooling packages
+│   └── nexus-cli/                    # nexus CLI (Cargo package nexus-cli)
 ├── games/                           # demo games — integration tests
 │   ├── nexus-fps/
 │   ├── nexus-rpg/
@@ -102,7 +103,7 @@ members = [
   "crates/nexus-script",
   "crates/nexus-agent",
   "crates/nexus-editor",
-  "crates/nexus-cli",
+  "packages/nexus-cli",
   "crates/nexus-merge",
   "crates/nexus-engine",
   "crates/styles/*",
@@ -265,7 +266,7 @@ Every crate lists: **purpose**, **spec**, **public surface**, **internal deps**,
 - **External deps.** `egui` (immediate-mode UI) [DECISION NEEDED — alt: `iced`, `dioxus`], `wgpu`, `winit`.
 - **Features.** `live-reload`, `debug-overlays`, `shader-graph`.
 
-### `nexus-cli`
+### `nexus-cli` (`packages/nexus-cli`)
 
 - **Purpose.** `nexus new`, `nexus add`, `nexus generate`, `nexus build`, `nexus test`, `nexus deploy`, `nexus agent`. Rails-style scaffolder.
 - **Spec.** `docs/game-template/cli.md`.

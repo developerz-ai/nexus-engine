@@ -245,7 +245,7 @@ Exit codes per `cli.md`:
 `nexus add` runs fully headless. No GUI, no GPU, no audio device. Verified by:
 
 - CI runs `nexus add` against a fixture registry in headless containers.
-- Test `nexus_add_headless_smoke` in `crates/nexus-cli/tests/`.
+- Test `nexus_add_headless_smoke` in `packages/nexus-cli/tests/`.
 
 Failure mode if a transitive dep requires GPU at build time: `cargo check` errors propagate as `E_CRATE_BUILD` with the upstream message in `context.cargo_diagnostics`. No silent skip.
 

@@ -244,7 +244,7 @@ This spec is a single, focused gate: **don't modify engine-core source for a fea
 ## Open questions
 
 - `[DECISION NEEDED]` Should the bot rejection auto-close after 30 days of no contributor response, or stay open forever? Default proposal: stay open; contributors come back.
-- `[DECISION NEEDED]` Whether to also gate `crates/nexus-cli/src/**`. Default proposal: NO — CLI is a tool, not engine surface; ordinary review applies.
+- `[DECISION NEEDED]` Whether to also gate `packages/nexus-cli/src/**`. Default proposal: NO — CLI is a tool, not engine surface; ordinary review applies.
 - `[VERIFY]` Glob list above against the final workspace layout in `docs/architecture/04-workspace-layout.md`.
 
 ## Mastermind routing note

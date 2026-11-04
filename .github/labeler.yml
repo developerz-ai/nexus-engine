@@ -52,7 +52,7 @@ area/editor:
 area/cli:
   - changed-files:
       - any-glob-to-any-file:
-          - crates/nexus-cli/**
+          - packages/nexus-cli/**
 
 area/scripts:
   - changed-files:

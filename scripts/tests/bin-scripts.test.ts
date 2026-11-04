@@ -9,7 +9,15 @@
 // Rust toolchain, no node_modules.
 
 import { describe, expect, it } from 'bun:test';
-import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  chmodSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { REPO_ROOT } from './helpers';
@@ -20,7 +28,7 @@ const BIN_DIR = join(REPO_ROOT, 'bin');
 // find those tools in the fake $HOME on their own.
 const BARE_PATH = '/usr/bin:/bin';
 
-// The JSON crates/nexus-cli prints (crates/nexus-cli/src/main.rs).
+// The JSON nexus-cli prints (packages/nexus-cli/src/main.rs).
 const NEXUS_CLI_JSON =
   '{"tool":"nexus","version":"0.1.0","status":"stub","spec":"docs/game-template/cli.md"}';
 
@@ -216,6 +224,47 @@ function calls(sandbox: Sandbox): string[] {
     .map((line) => line.trim())
     .filter((line) => line.length > 0);
 }
+
+describe('CLI workspace layout', () => {
+  const cliRoot = 'packages/nexus-cli';
+  const oldRoot = join('crates', 'nexus-cli');
+  const read = (path: string) => readFileSync(join(REPO_ROOT, path), 'utf8');
+
+  it('keeps the Rust-only CLI at its new root', () => {
+    expect(existsSync(join(REPO_ROOT, oldRoot))).toBe(false);
+    for (const file of ['Cargo.toml', 'README.md', 'src/main.rs', 'tests/smoke.rs']) {
+      expect(existsSync(join(REPO_ROOT, cliRoot, file))).toBe(true);
+    }
+    expect(existsSync(join(REPO_ROOT, cliRoot, 'package.json'))).toBe(false);
+  });
+
+  it('registers the CLI in Cargo and Bun without dropping scripts', () => {
+    const cargo = Bun.TOML.parse(read('Cargo.toml')) as { workspace: { members: string[] } };
+    expect(cargo.workspace.members).toContain(cliRoot);
+    expect(cargo.workspace.members).not.toContain(oldRoot.replaceAll('\\', '/'));
+    const root = JSON.parse(read('package.json')) as { workspaces: string[] };
+    expect(root.workspaces).toEqual(['scripts', cliRoot]);
+  });
+
+  it('retains CLI label, coverage, SPDX and Rust review coverage', () => {
+    expect(read('.github/labeler.yml')).toMatch(
+      /area\/cli:\s*\n\s*- changed-files:\s*\n\s*- any-glob-to-any-file:\s*\n\s*- packages\/nexus-cli\/\*\*/,
+    );
+    expect(read('codecov.yml')).toMatch(
+      /editor_cli:\s*\n\s*paths:\s*\n\s*- crates\/nexus-editor\/\s*\n\s*- packages\/nexus-cli\//,
+    );
+    expect(read('.github/workflows/ci.yml')).toMatch(
+      /git ls-files -z --[^\n]*'packages\/nexus-cli\/\*\*'/,
+    );
+    const review = read('.coderabbit.yaml');
+    const rules = (path: string) => {
+      const block = review.split(`- path: "${path}"\n      instructions: |\n`)[1];
+      expect(block).toBeDefined();
+      return block?.split('\n\n')[0];
+    };
+    expect(rules('packages/nexus-cli/src/**/*.rs')).toBe(rules('crates/**/src/**/*.rs'));
+  });
+});
 
 describe('bin scripts', () => {
   it('bin/check finds the gate tools in $HOME and runs the whole gate list', async () => {
