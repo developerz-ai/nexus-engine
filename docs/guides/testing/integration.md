@@ -12,7 +12,7 @@ Multiple crates wired together. Real internal APIs. Mocked external boundaries o
 | Two engine crates exchanging data | `tests/<topic>.rs` in the consumer crate |
 | Engine + asset pipeline (real files, real import) | `crates/nexus-assets/tests/import_*.rs` |
 | Engine + script VM | `crates/nexus-scripting/tests/` |
-| Client + server (in-process, two `tokio` runtimes) | `crates/nexus-net/tests/` |
+| Client + server (in-process, two `tokio` runtimes) | `packages/nexus-net/tests/` |
 | CLI + engine | `crates/nexus-cli/tests/` |
 | Editor host + engine | `crates/nexus-editor/tests/` |
 | Game template + engine | `nexus-game-template/tests/scaffold.rs` |
