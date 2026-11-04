@@ -443,39 +443,34 @@ describe('bin scripts', () => {
     }
   });
 
-  it('KNOWN BUG bin/check exits 0 when a blocking gate fails (bin/check swallows the && chain failure)', async () => {
-    // This test PINS a known-bad behaviour; it does not bless it.
+  it('bin/check fails the gate when a blocking gate command fails', async () => {
+    // Regression for the swallowed && chain failure.
     //
     // `set -e` does NOT abort the script when a command in a non-final
     // position of an && list fails (POSIX: errexit is ignored for every
     // command of an && list except the last one). The blocking chain in
-    // bin/check therefore loses its failure, the advisory audit block runs
-    // anyway and its exit 0 becomes the script's exit status: a red gate is
-    // reported as a green one.
+    // bin/check therefore used to lose its failure, the advisory audit block
+    // ran anyway and its exit 0 became the script's exit status: a red gate
+    // was reported as a green one.
     //
-    // The fix — capture the chain's status and propagate it before the audit
-    // runs — belongs in bin/check, the repository's own gate, which this
-    // lane's land refuses to change (write_locked). The patch, the
-    // reproduction and the reasoning are in tmp/dz/no-change.md.
-    //
-    // When that patch lands, this test fails with 'expected 0, received 1':
-    // flip the two assertions below to the fixed behaviour and drop the
-    // KNOWN BUG name.
+    // The gate must capture the chain's status and propagate it BEFORE the
+    // advisory audit runs: a failed gate exits non-zero, says so, and never
+    // reaches the advisory block.
     const gate = 'fmt --all -- --check';
     const sandbox = sharedContext({ cargoFail: gate });
     try {
       const r = await runScript('check', sandbox);
-      // The failing gate never reaches the exit status.
-      expect(r.exitCode).toBe(0);
-      // The chain stops at the failing gate, the advisory audit still runs,
-      // and the failure is never reported.
+      // The failing gate reaches the exit status.
+      expect(r.exitCode).not.toBe(0);
+      // The failure is reported, not swallowed.
+      expect(r.stderr).toContain('the gate failed');
+      // The chain stops at the failing gate and the advisory audit never runs.
       expect(calls(sandbox)).toEqual([
         'cargo fmt --version',
         'cargo clippy --version',
         'cargo fmt --all -- --check',
-        'cargo-audit',
       ]);
-      expect(r.stderr).not.toContain('the gate failed');
+      expect(calls(sandbox)).not.toContain('cargo-audit');
     } finally {
       rmSync(sandbox.root, { recursive: true, force: true });
     }
