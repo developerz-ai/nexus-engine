@@ -45,15 +45,16 @@ cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warni
 ## Structure
 | Path | Count | Contents |
 |---|---|---|
-| `crates/` | 35 | 13 system + `crates/styles/` 5 + `crates/genres/` 16 + `crates/sdks/nexus-agent-sdk-rs` 1 · 70 `.rs` files |
-| system crates | 13 | `crates/nexus-core` `crates/nexus-hal` `crates/nexus-assets` `crates/nexus-renderer` `crates/nexus-physics` `crates/nexus-audio` `crates/nexus-net` `crates/nexus-script` `crates/nexus-agent` `crates/nexus-editor` `crates/nexus-cli` `crates/nexus-merge` `crates/nexus-engine` |
+| `crates/` | 34 | 12 system + `crates/styles/` 5 + `crates/genres/` 16 + `crates/sdks/nexus-agent-sdk-rs` 1 · 68 `.rs` files |
+| system crates | 13 | `crates/nexus-core` `crates/nexus-hal` `crates/nexus-assets` `crates/nexus-renderer` `crates/nexus-physics` `packages/nexus-audio` `crates/nexus-net` `crates/nexus-script` `crates/nexus-agent` `crates/nexus-editor` `crates/nexus-cli` `crates/nexus-merge` `crates/nexus-engine` |
+| `packages/` | 1 | `packages/nexus-audio` (moved from `crates/nexus-audio`) |
 | `games/` | 4 | `games/nexus-fps` `games/nexus-platformer` `games/nexus-rpg` `games/nexus-rts` |
 | `tools/` | 2 | `tools/nexus-codegen` `tools/nexus-scenario` |
 | `scripts/` | 62 | Bun workspace · 14 scripts under `scripts/bin/` · one test per bin · count excludes `scripts/CLAUDE.md` |
 | `docs/` | 413 `.md` | `docs/architecture/` · `docs/specs/` · `docs/contracts/` · `docs/guides/` · `docs/prior-art/` · `docs/game-template/` · `docs/games/` |
 | `.claude/` | 119 / 14 / 15 | agents / commands / skills |
 
-Cargo workspace = `crates/` + `games/` + `tools/` (`Cargo.toml:10-30`). Bun workspace = `scripts/` (`package.json:5`).
+Cargo workspace = `crates/` + `packages/` + `games/` + `tools/` (`Cargo.toml:10-30`). Bun workspace = `scripts/` (`package.json:5`).
 
 ## Conventions
 | Rule | Where |

@@ -18,7 +18,7 @@ Related specs:
 |---|---|---|
 | Provider (ECS, events) | `nexus-core` | `crates/core/src/lib.rs` |
 | Provider (audio device) | `nexus-hal` | `crates/hal/src/audio.rs` (CPAL wrapper) |
-| Consumer / mixer | `nexus-audio` | `crates/audio/src/lib.rs` (impl `Plugin`) |
+| Consumer / mixer | `nexus-audio` | `packages/nexus-audio/src/lib.rs` (impl `Plugin`) |
 
 Pattern reference: CPAL stream callback model (`RustAudio/cpal`) + Kira's lock-free command queue (`tesselode/kira`). Audio thread MUST NEVER block or allocate.
 
