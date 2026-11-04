@@ -84,7 +84,7 @@ Invoke via `Agent({ subagent_type: "<name>", prompt: "<task>" })`.
 | agent API | `agent-api-engineer` `headless-sim-specialist` `telemetry-specialist` `scenario-author` `replay-engineer` `semantic-api-specialist` `agent-sdk-specialist` `mcp-server-engineer` |
 | editor | `editor-engineer` `editor-debug-specialist` `live-reload-specialist` `editor-rpc-parity-auditor` `ide-extension-engineer` |
 
-### Genre specialists (own `docs/specs/genres/<g>.md` + the `crates/genres/<g>` crate)
+### Genre specialists (own `docs/specs/genres/<g>.md` + the `packages/genres/<g>` crate)
 `fps-genre` `rpg-genre` `mmorpg-genre` `rts-genre` `moba-genre` `platformer-genre` `racing-genre` `survival-genre` `horror-genre` `fighting-genre` `battleroyal-genre` `roguelike-genre` `towdef-genre` `puzzle-genre` `visualnovel-genre` `openworld-genre`
 
 ### Quality & process

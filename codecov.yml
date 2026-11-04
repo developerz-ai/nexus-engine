@@ -67,7 +67,7 @@ flags:
       - crates/nexus-cli/
   genres_styles:
     paths:
-      - crates/genres/
+      - packages/genres/
       - crates/styles/
 
 ignore:

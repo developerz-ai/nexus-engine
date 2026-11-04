@@ -50,26 +50,27 @@ nexus-engine/
 │   │   ├── nexus-style-pixel/
 │   │   ├── nexus-style-2d/
 │   │   └── nexus-style-mixed/
-│   ├── genres/
-│   │   ├── nexus-genre-fps/
-│   │   ├── nexus-genre-rpg/
-│   │   ├── nexus-genre-mmorpg/
-│   │   ├── nexus-genre-rts/
-│   │   ├── nexus-genre-moba/
-│   │   ├── nexus-genre-platformer/
-│   │   ├── nexus-genre-racing/
-│   │   ├── nexus-genre-survival/
-│   │   ├── nexus-genre-horror/
-│   │   ├── nexus-genre-fighting/
-│   │   ├── nexus-genre-battleroyal/
-│   │   ├── nexus-genre-roguelike/
-│   │   ├── nexus-genre-towdef/
-│   │   ├── nexus-genre-puzzle/
-│   │   ├── nexus-genre-visualnovel/
-│   │   └── nexus-genre-openworld/
 │   └── sdks/
 │       ├── nexus-agent-sdk-rs/      # Rust SDK
 │       └── nexus-agent-sdk-py/      # Python bindings via pyo3
+├── packages/                        # engine packages — genre modules (outside crates/)
+│   └── genres/
+│       ├── nexus-genre-fps/
+│       ├── nexus-genre-rpg/
+│       ├── nexus-genre-mmorpg/
+│       ├── nexus-genre-rts/
+│       ├── nexus-genre-moba/
+│       ├── nexus-genre-platformer/
+│       ├── nexus-genre-racing/
+│       ├── nexus-genre-survival/
+│       ├── nexus-genre-horror/
+│       ├── nexus-genre-fighting/
+│       ├── nexus-genre-battleroyal/
+│       ├── nexus-genre-roguelike/
+│       ├── nexus-genre-towdef/
+│       ├── nexus-genre-puzzle/
+│       ├── nexus-genre-visualnovel/
+│       └── nexus-genre-openworld/
 ├── games/                           # demo games — integration tests
 │   ├── nexus-fps/
 │   ├── nexus-rpg/
@@ -106,7 +107,7 @@ members = [
   "crates/nexus-merge",
   "crates/nexus-engine",
   "crates/styles/*",
-  "crates/genres/*",
+  "packages/genres/*",
   "crates/sdks/*",
   "games/*",
   "tools/*",
@@ -297,7 +298,7 @@ Every crate lists: **purpose**, **spec**, **public surface**, **internal deps**,
 - **External deps.** WGSL files; minimal Rust.
 - **Forbidden.** mutual deps between styles.
 
-### `crates/genres/nexus-genre-*`
+### `packages/genres/nexus-genre-*`
 
 - **Purpose.** Genre modules (FPS, RPG, RTS, …). Bundle of ECS components, systems, prefabs, and Lua scripts.
 - **Spec.** `docs/specs/genres/<g>.md`.

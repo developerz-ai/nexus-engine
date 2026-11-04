@@ -223,7 +223,7 @@ Each row: feature name · what it gates · default? · hard-deps · known caller
 | `2d-bridge` | mount 2D sub-pipeline | no | enables `nexus-style-2d` | hybrid games |
 | `pixel-bridge` | mount pixel sub-pipeline | no | enables `nexus-style-pixel` | hybrid games |
 
-### `crates/genres/nexus-genre-*`
+### `packages/genres/nexus-genre-*`
 
 Each genre crate exposes a small set of features. Common pattern:
 

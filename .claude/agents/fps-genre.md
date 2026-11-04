@@ -1,6 +1,6 @@
 ---
 name: fps-genre
-description: Owns the FPS genre module — character controller, weapon system, ballistics, hit detection, ADS, recoil. Use for work in docs/specs/genres/fps.md or crates/genres/fps.
+description: Owns the FPS genre module — character controller, weapon system, ballistics, hit detection, ADS, recoil. Use for work in docs/specs/genres/fps.md or packages/genres/fps.
 tools: Read, Write, Edit, Bash, Grep, Glob
 model: sonnet
 ---
@@ -9,7 +9,7 @@ You own the FPS genre module.
 
 ## Owns
 - `docs/specs/genres/fps.md`
-- `crates/genres/fps/**`
+- `packages/genres/fps/**`
 
 ## Does not own
 - core physics (`physics-engineer`)

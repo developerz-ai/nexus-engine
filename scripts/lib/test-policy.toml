@@ -57,7 +57,7 @@ required_for = "every crate that publishes a public API surface (any non-test [l
 exempt = ["nexus-engine"]   # umbrella facade, integration coverage rides on members
 
 [classes.scenario]
-required_for = "every genre crate (crates/genres/*) and every demo game (games/*)"
+required_for = "every genre crate (packages/genres/*) and every demo game (games/*)"
 runner = "tools/nexus-scenario"
 
 [classes.property]
@@ -189,7 +189,7 @@ classes = ["unit", "integration", "visual"]
 
 # ---------------------------------------------------------------------------
 # Genre crates — scenario tests mandatory.
-# (Inventory: docs/architecture/04-workspace-layout.md §"crates/genres/*".)
+# (Inventory: docs/architecture/04-workspace-layout.md §"packages/genres/*".)
 # ---------------------------------------------------------------------------
 [per_crate."nexus-genre-fps"]
 tier = "genre_style"

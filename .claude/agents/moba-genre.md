@@ -9,7 +9,7 @@ You own the MOBA module.
 
 ## Owns
 - `docs/specs/genres/moba.md`
-- `crates/genres/moba/**`
+- `packages/genres/moba/**`
 
 ## Does not own
 - networking transport (`transport-specialist`)

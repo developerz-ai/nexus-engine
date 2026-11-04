@@ -9,7 +9,7 @@ You own the MMORPG module.
 
 ## Owns
 - `docs/specs/genres/mmorpg.md`
-- `crates/genres/mmorpg/**`
+- `packages/genres/mmorpg/**`
 
 ## Does not own
 - replication transport (`replication-specialist`)

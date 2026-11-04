@@ -9,7 +9,7 @@ You own the fighting module.
 
 ## Owns
 - `docs/specs/genres/fighting.md`
-- `crates/genres/fighting/**`
+- `packages/genres/fighting/**`
 
 ## Does not own
 - rollback primitive (`rollback-specialist`)

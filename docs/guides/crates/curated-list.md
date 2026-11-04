@@ -24,22 +24,22 @@ A consumer who picks any of these knows: it works, it's audited, it stays mainta
 ### Genres
 | Crate | Mirrors | Purpose |
 |---|---|---|
-| `nexus-genre-fps` | engine `crates/genres/nexus-genre-fps` | First-person shooter |
-| `nexus-genre-rpg` | engine `crates/genres/nexus-genre-rpg` | Single-player RPG |
-| `nexus-genre-mmorpg` | engine `crates/genres/nexus-genre-mmorpg` | Massively-multiplayer RPG |
-| `nexus-genre-rts` | engine `crates/genres/nexus-genre-rts` | Real-time strategy |
-| `nexus-genre-moba` | engine `crates/genres/nexus-genre-moba` | MOBA |
-| `nexus-genre-platformer` | engine `crates/genres/nexus-genre-platformer` | Platformer |
-| `nexus-genre-racing` | engine `crates/genres/nexus-genre-racing` | Racing |
-| `nexus-genre-survival` | engine `crates/genres/nexus-genre-survival` | Survival |
-| `nexus-genre-horror` | engine `crates/genres/nexus-genre-horror` | Horror |
-| `nexus-genre-fighting` | engine `crates/genres/nexus-genre-fighting` | Fighting |
-| `nexus-genre-battleroyal` | engine `crates/genres/nexus-genre-battleroyal` | Battle royale |
-| `nexus-genre-roguelike` | engine `crates/genres/nexus-genre-roguelike` | Roguelike |
-| `nexus-genre-towdef` | engine `crates/genres/nexus-genre-towdef` | Tower defense |
-| `nexus-genre-puzzle` | engine `crates/genres/nexus-genre-puzzle` | Puzzle |
-| `nexus-genre-visualnovel` | engine `crates/genres/nexus-genre-visualnovel` | Visual novel |
-| `nexus-genre-openworld` | engine `crates/genres/nexus-genre-openworld` | Open-world template |
+| `nexus-genre-fps` | engine `packages/genres/nexus-genre-fps` | First-person shooter |
+| `nexus-genre-rpg` | engine `packages/genres/nexus-genre-rpg` | Single-player RPG |
+| `nexus-genre-mmorpg` | engine `packages/genres/nexus-genre-mmorpg` | Massively-multiplayer RPG |
+| `nexus-genre-rts` | engine `packages/genres/nexus-genre-rts` | Real-time strategy |
+| `nexus-genre-moba` | engine `packages/genres/nexus-genre-moba` | MOBA |
+| `nexus-genre-platformer` | engine `packages/genres/nexus-genre-platformer` | Platformer |
+| `nexus-genre-racing` | engine `packages/genres/nexus-genre-racing` | Racing |
+| `nexus-genre-survival` | engine `packages/genres/nexus-genre-survival` | Survival |
+| `nexus-genre-horror` | engine `packages/genres/nexus-genre-horror` | Horror |
+| `nexus-genre-fighting` | engine `packages/genres/nexus-genre-fighting` | Fighting |
+| `nexus-genre-battleroyal` | engine `packages/genres/nexus-genre-battleroyal` | Battle royale |
+| `nexus-genre-roguelike` | engine `packages/genres/nexus-genre-roguelike` | Roguelike |
+| `nexus-genre-towdef` | engine `packages/genres/nexus-genre-towdef` | Tower defense |
+| `nexus-genre-puzzle` | engine `packages/genres/nexus-genre-puzzle` | Puzzle |
+| `nexus-genre-visualnovel` | engine `packages/genres/nexus-genre-visualnovel` | Visual novel |
+| `nexus-genre-openworld` | engine `packages/genres/nexus-genre-openworld` | Open-world template |
 
 ### Styles
 | Crate | Mirrors | Purpose |
@@ -134,11 +134,11 @@ A consumer who picks any of these knows: it works, it's audited, it stays mainta
 
 ## Why the engine re-publishes its own crates
 
-Engine-internal crates live in the monorepo (`crates/styles/*`, `crates/genres/*`). They're consumed by demo games via `path = "..."` deps. For external consumers who want the same crate without checking out the engine repo, we re-publish to crates.io under the same name.
+Engine-internal crates live in the monorepo (`crates/styles/*`, `packages/genres/*`). They're consumed by demo games via `path = "..."` deps. For external consumers who want the same crate without checking out the engine repo, we re-publish to crates.io under the same name.
 
 Effect:
 - Game projects depend on `nexus-genre-fps = "1.0"` from crates.io.
-- Engine workspace depends on `nexus-genre-fps = { path = "crates/genres/nexus-genre-fps" }` internally.
+- Engine workspace depends on `nexus-genre-fps = { path = "packages/genres/nexus-genre-fps" }` internally.
 - Both sources are byte-identical at each release tag.
 
 `nexus crate publish-internal` ships the re-publishing automation. Driven by `release-engineer` subagent at every engine release.

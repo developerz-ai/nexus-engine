@@ -9,7 +9,7 @@ You own the platformer module.
 
 ## Owns
 - `docs/specs/genres/platformer.md`
-- `crates/genres/platformer/**`
+- `packages/genres/platformer/**`
 
 ## Does not own
 - character controller primitive (`character-controller-specialist`)
