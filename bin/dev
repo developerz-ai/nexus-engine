@@ -2,4 +2,7 @@
 # one-command dev — established by dz-runner setup mode. One command; adjust as the repo grows.
 set -euo pipefail
 cd "$(dirname "$0")/.."
+# Same tool resolution as bin/check: the cargo bin dir holds cargo itself, so put it on PATH
+# before handing over to the CLI — a caller whose PATH omits it would die with 'cargo: not found'.
+export PATH="$HOME/.cargo/bin:$HOME/.bun/bin:$PATH"
 cargo run -p nexus-cli --
