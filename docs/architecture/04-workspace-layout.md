@@ -30,9 +30,10 @@ nexus-engine/
 │   ├── game-template/
 │   ├── games/
 │   └── initial/
-├── crates/                          # all engine crates (one per system + sub-crates)
+├── packages/                        # partial migration: HAL only
+│   └── nexus-hal/                    # Rust crate + private Bun workspace adapter
+├── crates/                          # remaining engine crates (systems + sub-crates)
 │   ├── nexus-core/
-│   ├── nexus-hal/
 │   ├── nexus-assets/
 │   ├── nexus-renderer/
 │   ├── nexus-physics/
@@ -85,6 +86,12 @@ nexus-engine/
 
 ---
 
+Only `nexus-hal` has moved to `packages/`; all other crates retain their existing
+locations and dependency boundaries. The root Cargo workspace explicitly includes
+`packages/nexus-hal`. The Bun workspace includes `scripts` and a private,
+dependency-free `@nexus-engine/nexus-hal` adapter at `packages/nexus-hal`; the
+adapter registers the Rust package without adding a JavaScript implementation.
+
 ## Workspace root `Cargo.toml` (shape only)
 
 ```toml
@@ -93,7 +100,7 @@ nexus-engine/
 resolver = "2"
 members = [
   "crates/nexus-core",
-  "crates/nexus-hal",
+  "packages/nexus-hal",
   "crates/nexus-assets",
   "crates/nexus-renderer",
   "crates/nexus-physics",
