@@ -53,7 +53,7 @@ cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warni
 | `docs/` | 413 `.md` | `docs/architecture/` · `docs/specs/` · `docs/contracts/` · `docs/guides/` · `docs/prior-art/` · `docs/game-template/` · `docs/games/` |
 | `.claude/` | 119 / 14 / 15 | agents / commands / skills |
 
-Cargo workspace = `crates/` + `games/` + `tools/` (`Cargo.toml:10-30`). Bun workspace = `scripts/` (`package.json:5`).
+Cargo workspace = `crates/` + `packages/` + `games/` + `tools/` (`Cargo.toml:10-30`). Bun workspace = `scripts/` (`package.json:5`).
 
 ## Conventions
 | Rule | Where |

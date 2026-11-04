@@ -204,8 +204,10 @@ jobs:
         run: cargo audit
 
   # ─── Scripts: bun test ──────────────────────────────────────────────────────
-  # Note: package.json at repo root declares `workspaces: ["scripts", "packages/nexus-net"]`, so
-  # `bun install` and the lockfile (bun.lock) live at the repo root. We install
+  # Note: package.json at repo root declares `workspaces: ["scripts"]` (the bun
+  # workspace is the scripts toolchain only — packages/nexus-net is a Cargo
+  # workspace member, not a bun one), so `bun install` and the lockfile
+  # (bun.lock) live at the repo root. We install
   # at the root, then `cd scripts/` for the suite-specific commands.
   scripts-test:
     name: scripts / test
