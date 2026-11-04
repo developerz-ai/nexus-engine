@@ -1,3 +1,6 @@
+<!-- SPDX-License-Identifier: MIT -->
+<!-- Copyright (c) 2026 Nexus Engine contributors -->
+
 # Nexus Engine — Mastermind
 
 Open source, AI-first, cross-platform game engine. Built BY AI, maintained BY AI, FOR AI agents + humans. MIT forever. Spec-driven. 100M LOC target.
@@ -11,7 +14,63 @@ Open source, AI-first, cross-platform game engine. Built BY AI, maintained BY AI
 - Terse. Fragments OK. Drop articles, filler, hedging.
 - Code/commands/paths verbatim. Only prose gets compressed.
 
-## Non-Negotiables (the 15 Laws — `docs/architecture/01-principles.md`)
+## Stack
+| Tool | Version | Pin |
+|---|---|---|
+| Rust | 1.95 | `rust-toolchain.toml:6` (channel + rustfmt/clippy) |
+| Bun | 1.4.4 | `scripts/.bun-version:1` |
+| Biome | 1.9.4 | `scripts/package.json:14` |
+| TypeScript | ^5.6.3 | `scripts/package.json:15` |
+| cargo-nextest | 0.9.85 | `scripts/lib/versions.toml:11` |
+| cargo-deny | 0.16.2 | `scripts/lib/versions.toml:12` |
+
+Rust 1.95 · edition 2021 · MSRV 1.95 (`Cargo.toml:33,38`) — key deps, pinned to minor (`Cargo.toml:49-85`): wgpu 29 · rapier2d/3d 0.32 · glam 0.32 · mlua 0.11 · rune 0.14 · thiserror 2 · tokio 1 · quinn 0.11 · serde/serde_json · bincode 3 · toml 1.1 · tracing-subscriber 0.3 (json) · naga 29 · criterion 0.8 · proptest 1 · clap 4 · syn 2 · image 0.25 · gltf 1.4 · zstd 0.13.
+
+## Commands
+| Command | Effect |
+|---|---|
+| `./bin/setup` | rustup + channel from `rust-toolchain.toml`, bun (floor `scripts/.bun-version`), cargo-nextest/cargo-deny from `scripts/lib/versions.toml`, `bun install --frozen-lockfile`. Exit 69 = tool missing. |
+| `./bin/check` | THE gate. Exit 69 = gate tool missing. |
+| `./bin/dev` | `cargo run -p nexus-cli --` (`bin/dev:8`) |
+| `./bin/stop` | no-op (`bin/stop:7`) |
+| `bun run scripts/check` | TS gate set (`scripts/bin/check.ts:33`) |
+| `bun test` | script tests (`package.json:8`) |
+
+`./bin/check` chain (`bin/check:30`), verbatim:
+```
+cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings && cargo check --workspace --all-targets && cargo nextest run --workspace --profile ci && cargo deny check && (cd scripts && bun test && bun x biome check .)
+```
+`bun run scripts/check` gates (`scripts/bin/check.ts:33`): fmt · clippy · biome · ruff · shellcheck · deny. naga is opt-in via `--only naga`, not in the default set.
+
+## Structure
+| Path | Count | Contents |
+|---|---|---|
+| `crates/` | 35 | 13 system + `crates/styles/` 5 + `crates/genres/` 16 + `crates/sdks/nexus-agent-sdk-rs` 1 · 70 `.rs` files |
+| system crates | 13 | `crates/nexus-core` `crates/nexus-hal` `crates/nexus-assets` `crates/nexus-renderer` `crates/nexus-physics` `crates/nexus-audio` `crates/nexus-net` `crates/nexus-script` `crates/nexus-agent` `crates/nexus-editor` `crates/nexus-cli` `crates/nexus-merge` `crates/nexus-engine` |
+| `games/` | 4 | `games/nexus-fps` `games/nexus-platformer` `games/nexus-rpg` `games/nexus-rts` |
+| `tools/` | 2 | `tools/nexus-codegen` `tools/nexus-scenario` |
+| `scripts/` | 62 | Bun workspace · 14 scripts under `scripts/bin/` · one test per bin · count excludes `scripts/CLAUDE.md` |
+| `docs/` | 413 `.md` | `docs/architecture/` · `docs/specs/` · `docs/contracts/` · `docs/guides/` · `docs/prior-art/` · `docs/game-template/` · `docs/games/` |
+| `.claude/` | 119 / 14 / 15 | agents / commands / skills |
+
+Cargo workspace = `crates/` + `games/` + `tools/` (`Cargo.toml:10-30`). Bun workspace = `scripts/` (`package.json:5`).
+
+## Conventions
+| Rule | Where |
+|---|---|
+| SPDX MIT header, first two lines, no blank line before | `docs/guides/file-conventions.md:12-21` · CI scans `crates/`, `scripts/`, `docs/`, `.github/` (`.github/workflows/ci.yml:322`) |
+| Rust: `#![forbid(unsafe_code)]`; every `unsafe` needs a `// SAFETY:` paragraph | `Cargo.toml:41` · Law 6 |
+| Errors & logs: thiserror only; `anyhow` banned in `nexus-*`; no string-only errors; structured JSON to stderr, never `println!` outside `examples/`/`tests/` | `docs/architecture/03-tech-stack.md:185` · Law 10 · Law 11 |
+| Rust hygiene: `cargo fmt --all` + `cargo clippy --all-targets -- -D warnings` before commit | `bin/check:30` |
+| TS/JS: Biome is the only linter — `bun x biome check .` from `scripts/` | `scripts/CLAUDE.md:37` |
+| WGSL: `naga` validates manually; the repo ships no shader sources and no gate runs one | `bin/setup:176` |
+| Commit `<system>: <imperative>` · 50/72 | `CONTRIBUTING.md:21` |
+| Branch `<system>/<short-desc>` | `CONTRIBUTING.md:17` |
+| Never commit red — `cargo check --workspace` green | Law 4 · `Cargo.toml:5` |
+
+## Non-Negotiables
+The 15 Laws — `docs/architecture/01-principles.md`.
+
 | # | Law | One-line test |
 |---|---|---|
 | 1 | AI-first | structured errors + JSON telemetry + headless drivable |
@@ -27,133 +86,48 @@ Open source, AI-first, cross-platform game engine. Built BY AI, maintained BY AI
 | 11 | Telemetry by default | every system emits per-frame structured trace |
 | 12 | Tests ship with code | PR adds impl → PR adds unit + integration + scenario |
 | 13 | Agent–Editor RPC parity | every editor button = one agent RPC; auditor blocks orphans |
-| 14 | Opt-in modularity | no game compiles code it does not declare in `Nexus.toml` |
+| 14 | Opt-in modularity | no game compiles code it does not declare in `Nexus.toml` (manifest spec: `docs/game-template/nexus-toml.md`) |
 | 15 | Extend, don't fork | engine-core src untouched without an ADR; use a crate / plugin / mod / script / RPC / editor override |
 
 A PR that violates a law is rejected by `nexus-merge` without human review.
 
-**Editor scope, MCP, and parity.** Editor narrow on purpose — quick-load + place + inspect + scrub + telemetry. NOT a code editor. NOT a long-form authoring suite. Every editor operation = one agent JSON-RPC method; CI auditor (`scripts/check-rpc-parity`) blocks orphan buttons and orphan editor-surface RPCs (Law 13). The MCP server (`docs/specs/agent/mcp-server.md`) is the public interop layer — one server, every MCP host. Code editing lives in VS Code / Cursor / Zed via post-v1.0 extensions (`docs/specs/editor/{vscode,zed}-extension.md`).
+**Editor scope, MCP, and parity.** Editor narrow on purpose — quick-load + place + inspect + scrub + telemetry. NOT a code editor. NOT a long-form authoring suite. Every editor operation = one agent JSON-RPC method; the CI auditor that blocks orphan buttons and orphan editor-surface RPCs (Law 13) is **PLANNED, not installed** — `scripts/check-rpc-parity` is absent from this checkout, the `scripts/check` gate set has no parity gate (`scripts/bin/check.ts:33`), and the spec that promises the binary (`docs/specs/editor/rpc-parity.md:98`) describes a tool the repo has not landed. The MCP server (`docs/specs/agent/mcp-server.md`) is the public interop layer — one server, every MCP host. Code editing lives in VS Code / Cursor / Zed via post-v1.0 extensions (`docs/specs/editor/vscode-extension.md`, `docs/specs/editor/zed-extension.md`).
 
 ## The Four-Stage Pipeline (NEVER skip a stage)
-```
-spec  →  contract  →  impl  →  test
- ↑          ↑          ↑        ↑
-spec-     contract-  domain-   test-
-author    author     engineer  author
-```
-1. **Spec.** New behavior → `docs/specs/<system>/<file>.md` first. Use `docs/guides/spec-format.md`.
-2. **Contract.** Crosses a system boundary → `docs/contracts/<a>-<b>.md` first.
+`spec → contract → impl → test` · spec-author → contract-author → domain-engineer → test-author
+
+1. **Spec.** New behavior → a spec under `docs/specs/` first. Use `docs/guides/spec-format.md`.
+2. **Contract.** Crosses a system boundary → a contract under `docs/contracts/` first.
 3. **Impl.** Domain engineer reads spec + contract, writes code in the crate the spec names.
 4. **Test.** `test-author` adds unit + integration + scenario + property + visual (where applicable). Coverage floor per `docs/guides/testing/coverage.md`.
 
-## Where Docs Live
-| Path | Contents |
-|---|---|
-| `docs/architecture/` | vision, principles, system map, tech stack, workspace layout, ADRs |
-| `docs/specs/` | per-system specs (core, renderer, physics, audio, networking, scripting, assets, styles, genres, agent, editor, coder) |
-| `docs/contracts/` | exact A↔B interface boundaries |
-| `docs/guides/` | onboarding, PR protocol, merge system, style guide, glossary, testing, deploy, release, liveops, subagent-fleet, parallelism-doctrine |
-| `docs/prior-art/` | per-engine synthesis (bevy, godot, ue5, …) |
-| `docs/game-template/` | the `nexus new` scaffold spec |
-| `docs/games/` | demo-game specs (integration tests) |
+## Subagent Fleet
+119 agents · 14 commands · 15 skills. Every task routes to a subagent; the routing table below names all 119. Independent tasks → dispatch N subagents in **one message**. Never serialize unless a downstream task literally needs an upstream artifact (impl needs the contract file written first).
+
+Invoke via `Agent({ subagent_type: "<name>", prompt: "<task>" })`. The frontmatter `description` is the routing key (`docs/guides/subagent-fleet.md:68`).
+
+**Never `isolation: worktree`.** Parallel subagents share this one checkout; give each a disjoint file set — crate boundaries are the natural lock — and keep shared roots (workspace `Cargo.toml`, docs indexes, and the per-game manifest `Nexus.toml` — schema `docs/game-template/nexus-toml.md`) with the coordinator. After every parallel batch → `integration-resolver`. Full doctrine: `docs/guides/parallelism-doctrine.md`.
 
 ## Subagent Fleet — Routing Table
-**Rule:** every task routes to a subagent. If a task touches N independent specs/crates, dispatch N subagents in **one message**. Never serialize unless a dependency forces it.
-
-Invoke via `Agent({ subagent_type: "<name>", prompt: "<task>" })`.
-
-### Architecture & spec authoring
-| name | when to delegate |
+| group | agents — when to delegate |
 |---|---|
-| `architect` | top-level architecture, system-map edits, ADR-worthy decisions |
-| `spec-author` | new `docs/specs/**` file or large spec rewrite |
-| `contract-author` | new or revised `docs/contracts/<a>-<b>.md` |
-| `adr-author` | log a Nygard-format ADR under `docs/architecture/05-adr/` |
-| `principle-keeper` | audit a PR/file against the 15 laws |
-
-### Engine domain specialists (one per spec subtree)
-| domain | subagent(s) |
-|---|---|
-| core | `ecs-engineer` `memory-engineer` `jobs-engineer` `hal-engineer` `math-engineer` `events-engineer` |
-| renderer | `renderer-engineer` `shader-engineer` `pbr-specialist` `npr-specialist` `pixel-art-specialist` `twod-specialist` `mixed-style-specialist` |
+| architecture & spec authoring | `architect` (top-level architecture, ADR-worthy) · `spec-author` (new spec file or rewrite) · `contract-author` (new/revised contract) · `adr-author` (Nygard-format ADR) · `principle-keeper` (audit against the 15 laws) |
+| core | `ecs-engineer` `memory-engineer` `jobs-engineer` `hal-engineer` `math-engineer` `events-engineer` · `massive-scale-engineer` (10k-100k RTS, seamless MMO) · `cellular-automata-engineer` (falling-sand, fluid pixels) · `voxel-engineer` (chunk, greedy mesh, light propagation) |
+| renderer | `renderer-engineer` `shader-engineer` `pbr-specialist` `npr-specialist` `pixel-art-specialist` `twod-specialist` `mixed-style-specialist` · `two-and-a-half-d-specialist` (HD-2D, parallax-2D, billboard-3D) · `heavy-particles-specialist` (10M-100M GPU particles) |
 | physics | `physics-engineer` `character-controller-specialist` `soft-body-specialist` `fluid-specialist` `determinism-auditor` |
 | audio | `audio-engineer` `dsp-specialist` `spatial-audio-specialist` |
 | networking | `network-engineer` `rollback-specialist` `replication-specialist` `transport-specialist` `anticheat-specialist` |
-| scripting | `scripting-engineer` `lua-specialist` `rune-specialist` `hot-reload-specialist` `mod-sandbox-specialist` |
+| scripting | `scripting-engineer` `lua-specialist` `rune-specialist` `hot-reload-specialist` · `mod-sandbox-specialist` (engine-side capability registry) |
 | assets | `asset-pipeline-engineer` `asset-import-specialist` `asset-streaming-specialist` `asset-compression-specialist` `ai-asset-gen-specialist` `asset-registry-specialist` |
 | agent API | `agent-api-engineer` `headless-sim-specialist` `telemetry-specialist` `scenario-author` `replay-engineer` `semantic-api-specialist` `agent-sdk-specialist` `mcp-server-engineer` |
-| editor | `editor-engineer` `editor-debug-specialist` `live-reload-specialist` `editor-rpc-parity-auditor` `ide-extension-engineer` |
-
-### Genre specialists (own `docs/specs/genres/<g>.md` + the `crates/genres/<g>` crate)
-`fps-genre` `rpg-genre` `mmorpg-genre` `rts-genre` `moba-genre` `platformer-genre` `racing-genre` `survival-genre` `horror-genre` `fighting-genre` `battleroyal-genre` `roguelike-genre` `towdef-genre` `puzzle-genre` `visualnovel-genre` `openworld-genre`
-
-### Quality & process
-| name | when to delegate |
-|---|---|
-| `code-reviewer` | final-gate review before merge |
-| `security-reviewer` | sandbox, anti-cheat, supply-chain, secrets |
-| `test-author` | unit, integration, scenario, property, visual tests |
-| `perf-engineer` | criterion benches + perf regression check |
-| `fuzz-engineer` | cargo-fuzz harnesses (packets, asset import, script VM) |
-| `visual-regression-engineer` | golden-image pixel diff |
-| `coverage-auditor` | per-crate coverage floor |
-| `merge-bot` | run the full `nexus-merge` pipeline and verdict |
-| `ci-engineer` | GitHub Actions matrices, caches, runners |
-| `docs-style-enforcer` | claude-code-bible ch.11 conformance sweep |
-| `glossary-keeper` | sync `docs/guides/glossary.md` with repo usage |
-| `prior-art-researcher` | WebSearch heavy; update `docs/prior-art/**` |
-
-### Coding agent, deploy, live-ops
-| name | when to delegate |
-|---|---|
-| `nexus-coder-architect` | own `docs/specs/coder/**` (Vercel AI SDK + OpenRouter) |
-| `deploy-engineer` | Fly/AWS/GCP/Azure/Render/Vercel/CF/self-host/Agones |
-| `release-engineer` | Steam/itch/Epic/GOG/MS Store/App Store/Play Store/Web/consoles |
-| `codesigning-specialist` | Authenticode, notarize, Play App Signing, iOS provisioning |
-| `liveops-engineer` | Sentry/Bugsnag/GlitchTip, dashboards, alerts |
-| `crash-triager` | cluster incoming crashes, rank, draft fix PRs |
-| `feature-flag-specialist` | GrowthBook / LaunchDarkly / Unleash wiring |
-| `canary-and-rollback-engineer` | staged rollout + auto-rollback |
-| `hotfix-engineer` | live-content + OTA delivery |
-| `one-month-game-shepherd` | end-to-end solo-dev 1-month playbook |
-
-### Template & DX
-| name | when to delegate |
-|---|---|
-| `nexus-cli-engineer` | `nexus new / add / generate / build / test / deploy / agent` |
-| `game-template-engineer` | `docs/game-template/**` + scaffold contents |
-| `onboarding-coach` | walk a new contributor through spec-first workflow |
-| `ts-script-author` | owns `scripts/**` — Bun TypeScript scripts + tests |
-
-### Meta / orchestration
-| name | when to delegate |
-|---|---|
-| `orchestrator` | plan a task → split into parallel subagent invocations (NEVER writes code) |
-| `integration-resolver` | resolve `[AGENT: XX]` cross-refs after a parallel batch |
-| `decision-log-keeper` | sweep `[DECISION NEEDED]` → `docs/architecture/decisions-open.md` |
-| `benchmark-coordinator` | sweep `[BENCHMARK NEEDED]` → `docs/architecture/benchmarks-pending.md` |
-
-### Modding & hub
-| name | when to delegate |
-|---|---|
-| `mod-author` | author a `.nxmod` end-to-end (manifest + scripts + tests + publish) |
-| `mod-curator` | audit a mod submission; capability + script review |
-| `mod-sandbox-specialist` | engine-side sandbox surface, capability registry |
-| `nexus-hub-operator` | run / operate a hub instance (deployment, capacity, incidents, key rotation) |
-| `hub-mirror-operator` | federation protocol changes (mirror sync, identity-key TOFU, sneakernet) |
-| `hub-crawler-engineer` | ingestion adapters for crates.io / marketplaces / asset libs |
-| `hub-curator` | moderation queue, badges, abuse handling |
-| `hub-recommender` | ranking / discovery surface |
-| `wasm-mod-author` | [DEFERRED v2.0] WASM-component mods — until then routes to `mod-author` or `crate-author` |
-
-Subagent fleet total: **118** files in `.claude/agents/`.
-
-## Parallel-Work Doctrine
-- Default: dispatch N subagents in **one message** whenever N tasks are independent.
-- Serialize only when a downstream task literally needs an upstream artifact (e.g., impl needs the contract file written first).
-- **Never `isolation: worktree`.** Parallel subagents share this one checkout (see `## Note`); give each a disjoint file set — crate boundaries are the natural lock — and shared roots (workspace `Cargo.toml`, `Nexus.toml`, docs indexes) stay with the coordinator.
-- After every parallel batch, dispatch `integration-resolver` to reconcile cross-refs.
-- Full doctrine: `docs/guides/parallelism-doctrine.md`.
+| editor | `editor-engineer` `editor-debug-specialist` `live-reload-specialist` `ide-extension-engineer` · `editor-rpc-parity-auditor` (Law 13 — never approves a FAIL) |
+| genres | `fps-genre` `rpg-genre` `mmorpg-genre` `rts-genre` `moba-genre` `platformer-genre` `racing-genre` `survival-genre` `horror-genre` `fighting-genre` `battleroyal-genre` `roguelike-genre` `towdef-genre` `puzzle-genre` `visualnovel-genre` `openworld-genre` — each owns its `docs/specs/genres/` spec + `crates/genres/` crate |
+| quality & process | `code-reviewer` (final gate) · `security-reviewer` · `test-author` · `perf-engineer` · `fuzz-engineer` · `visual-regression-engineer` · `coverage-auditor` · `merge-bot` (full `nexus-merge` verdict) · `ci-engineer` · `docs-style-enforcer` · `glossary-keeper` · `prior-art-researcher` |
+| coding agent, deploy, live-ops | `nexus-coder-architect` (owns `docs/specs/coder/`) · `deploy-engineer` · `release-engineer` · `codesigning-specialist` · `liveops-engineer` · `crash-triager` · `feature-flag-specialist` · `canary-and-rollback-engineer` · `hotfix-engineer` · `one-month-game-shepherd` |
+| template & DX | `nexus-cli-engineer` (`nexus new/add/generate/build/test/deploy/agent`) · `game-template-engineer` · `onboarding-coach` · `quickstart-recipe-author` (`docs/guides/recipes/`) · `ts-script-author` (owns `scripts/`) |
+| crates & supply chain | `crate-author` (author + publish on crates.io) · `crate-consumer-advisor` (pick a crate; build-vs-adopt) · `crate-curator` (audit + tier) · `license-compat-auditor` (`cargo deny` + `cargo audit`) |
+| meta / orchestration | `orchestrator` (plan → parallel dispatch; never writes code) · `integration-resolver` (`[AGENT: XX]` cross-refs) · `decision-log-keeper` (`[DECISION NEEDED]`) · `benchmark-coordinator` (`[BENCHMARK NEEDED]`) |
+| modding & hub | `mod-author` (`.nxmod` end-to-end) · `mod-curator` (submission audit) · `nexus-hub-operator` (run/operate a hub) · `hub-mirror-operator` (federation, identity-key TOFU) · `hub-crawler-engineer` (ingestion adapters) · `hub-curator` (moderation, badges) · `hub-recommender` (ranking) · `wasm-mod-author` ([DEFERRED v2.0] → `mod-author`/`crate-author`) |
 
 ## Project Slash Commands (`.claude/commands/`)
 | command | purpose |
@@ -161,6 +135,8 @@ Subagent fleet total: **118** files in `.claude/agents/`.
 | `/spec <system>` | route to `spec-author` for that system |
 | `/contract <a-b>` | route to `contract-author` |
 | `/impl <spec-path>` | read spec → route to right engineer → impl + tests |
+| `/feature <ask>` | end-to-end feature/bug sweep: understand → slice by crate → build → gate → PR → merge |
+| `/planx <ask>` | write a self-contained execution plan for another AI — plan only, no implementation |
 | `/scenario <name>` | author or run a TOML scenario |
 | `/bench <crate>` | `perf-engineer` bench + baseline compare |
 | `/triage` | `crash-triager` clusters + opens fix PRs |
@@ -171,81 +147,19 @@ Subagent fleet total: **118** files in `.claude/agents/`.
 | `/deploy <env> <target>` | `deploy-engineer` runs per-target recipe |
 | `/onboard` | `onboarding-coach` walks the user through |
 
-## File-Edit Hygiene
-- Rust: `cargo fmt --all` + `cargo clippy --all-targets -- -D warnings` before commit.
-- TS/JS: `biome check --write` before commit.
-- WGSL: `naga` validates before commit.
-- Markdown: SPDX header on every file under `docs/`. Style: claude-code-bible ch.11.
-- Never commit red (`cargo check --workspace` MUST pass).
-- Every commit message: `<system>: <imperative>` · 50/72.
-
-## Extending the Engine — Crate or Mod?
-
-| User wants | Route to | Lane |
-|---|---|---|
-| A new engine extension that compiles in (genre, style, physics, netcode, telemetry, asset source, feature flag, …) | `crate-author` | Third-party crate on crates.io. → `docs/specs/crates/overview.md` |
-| A new community crate evaluated before adoption | `crate-consumer-advisor` | Recipes 1-3 in `docs/guides/crates/agent-recipes.md` |
-| A community crate audit (Verified tier promotion) | `crate-curator` | 15-step playbook in `docs/specs/crates/quality-bar.md` |
-| License / supply-chain check across the dep tree | `license-compat-auditor` | `cargo deny` + `cargo audit` per `docs/specs/crates/licensing.md` |
-| Runtime content end users install in their copy of the game (skins, gameplay tweaks, total conversion) | `mod-sandbox-specialist` + relevant `mod-*` agent | Sandboxed `.nxmod` packages → `docs/specs/mods/overview.md` |
-
-Rule of thumb: **dev installs at build time → crate. Player installs at runtime → mod.**
-
-## Forbidden Behaviors
-- Inventing performance numbers. Unknown target → write `[BENCHMARK NEEDED]`.
-- Skipping the contract step when the change crosses a system boundary.
-- Writing impl before the spec exists.
-- Generic errors (`anyhow::anyhow!("...")` in shipped code, or string-only error returns).
-- Unstructured logs (`println!`, `eprintln!`) outside `examples/` and `tests/`.
-- `unsafe` without a `// SAFETY:` paragraph that proves the invariants.
-- Editing `docs/architecture/00-vision.md` or `01-principles.md` without an ADR.
-- Single-threaded execution when work is parallelizable. Default is N subagents in flight.
-
-## Quickstart for a New Task
-1. Read the relevant spec under `docs/specs/`.
-2. If crossing a boundary, read the contract.
-3. Choose subagent from the table above.
-4. If multiple specs touched → `/parallel <task>` (or dispatch the subagents directly in one message).
-5. After impl: dispatch `test-author`, `perf-engineer`, `code-reviewer`, `security-reviewer` in parallel.
-6. `merge-bot` gives the verdict.
-
-## When in Doubt
-- Vision question → `docs/architecture/00-vision.md`.
-- Law question → `docs/architecture/01-principles.md`.
-- Spec format → `docs/guides/spec-format.md`.
-- How to write a subagent → `docs/guides/subagent-fleet-style.md`.
-- How many subagents to spawn → `docs/guides/parallelism-doctrine.md`.
-- AI dev onboarding → `docs/guides/ai-dev-onboarding.md`.
-
 ## PR Pipeline (skills)
-
 Every PR is driven end-to-end by `.claude/skills/babysit-pr/`. The mastermind invokes it and walks away — fixes, replies, CR-thread resolution, re-runs, merge all happen autonomously. Escalates to human only on kill-switch conditions (`docs/guides/mastermind-pr-loop.md`).
 
-### Canonical invocation order
-```
-/babysit-pr [PR#]
-  └── /open-pr                    # title from Conventional Commits; body cites spec; draft until green
-  └── /wait-for-ci                # gh pr checks --watch; required vs optional; flaky tolerated
-  └── /pr-rebase-and-recover      # on red: rebase main, scoped tests, force-with-lease, restart CI
-  └── /wait-for-coderabbit        # poll coderabbitai[bot]; re-trigger via @coderabbitai review
-  └── /coderabbit-triage          # GraphQL reviewThreads → classify accept/reject/discuss/resolve
-  └── /fix-from-coderabbit        # route by path → domain subagent; scoped build+test; one commit per thread
-  └── /coderabbit-reply           # addPullRequestReviewThreadReply; reject MUST cite docs/architecture/01-principles.md#law-N
-  └── /coderabbit-resolve         # GraphQL resolveReviewThread (REST cannot)
-  └── /wait-for-ci                # again, after fixes
-  └── /pr-merge                   # refuses if any open thread or missing spec ref
-  └── /pr-changelog               # Keep-a-Changelog entry; spec ref required
-```
+Canonical order: `/babysit-pr [PR#]` → `/open-pr` → `/wait-for-ci` → `/pr-rebase-and-recover` → `/wait-for-coderabbit` → `/coderabbit-triage` → `/fix-from-coderabbit` → `/coderabbit-reply` → `/coderabbit-resolve` → `/wait-for-ci` → `/pr-merge` → `/pr-changelog`.
 
-### Skill catalogue
 | Skill | Purpose |
 |---|---|
-| `open-pr` | open PR from current branch (CC title + spec body + scenario list + bench deltas) |
+| `open-pr` | open PR from current branch (CC title + spec body + scenario list + bench deltas); draft until green |
 | `wait-for-ci` | block until checks finish; emit JSON verdict; handle reruns + timeout |
-| `wait-for-coderabbit` | block until `coderabbitai[bot]` posts review; re-trigger if missing |
+| `wait-for-coderabbit` | block until `coderabbitai[bot]` posts review; re-trigger via @coderabbitai review |
 | `coderabbit-triage` | classify each CR thread; emit accept/reject/discuss/resolve plan |
 | `coderabbit-reply` | post threaded replies; rejection template cites principle anchor |
-| `coderabbit-resolve` | mark threads resolved via GraphQL `resolveReviewThread` |
+| `coderabbit-resolve` | mark threads resolved via GraphQL `resolveReviewThread` (REST cannot) |
 | `fix-from-coderabbit` | apply accepted fixes via domain subagent; commit; push; resolve |
 | `respond-to-cr-commands` | cheat sheet for `@coderabbitai review/full review/resolve/pause/summary` |
 | `babysit-pr` | end-to-end driver; emits status JSON per tick for mastermind to parse |
@@ -256,47 +170,28 @@ Every PR is driven end-to-end by `.claude/skills/babysit-pr/`. The mastermind in
 | `coderabbit-config` | when/how to evolve `.coderabbit.yaml` |
 | `branch-conventions` | naming, base, draft, auto-merge, force-push policy (table-driven) |
 
-### Bot identity & GraphQL note
-- CodeRabbit posts as `coderabbitai[bot]` (or `coderabbitai` in some API surfaces — both checked).
-- **REST cannot resolve review threads.** Use GraphQL `resolveReviewThread` (see `.claude/skills/gh-graphql-helpers/SKILL.md` recipe #3).
-- `nexus-merge` bot may approve in lieu of human review per `docs/guides/merge-system.md`.
+CodeRabbit posts as `coderabbitai[bot]` (or `coderabbitai` on some API surfaces — both checked). **REST cannot resolve review threads** — use GraphQL `resolveReviewThread` (`.claude/skills/gh-graphql-helpers/SKILL.md` recipe #3). `nexus-merge` bot may approve in lieu of human review (`docs/guides/merge-system.md`).
 
-### Kill-switch (auto-escalation to human)
-| Condition | Effect |
-|---|---|
-| 3 CR rounds without convergence | open `[ESCALATE]` issue; exit loop |
-| CI red 2× same root cause | route to `ci-engineer`; pause pushes |
-| Merge conflict 2× same loop | route to `architect`; tag `needs-design-review` |
-| Touches `00-vision.md` or `01-principles.md` | require human + ADR; no auto-merge |
+Kill-switch (auto-escalation to human): 3 CR rounds without convergence → open `[ESCALATE]` issue, exit loop · CI red 2× same root cause → route to `ci-engineer`, pause pushes · merge conflict 2× same loop → route to `architect`, tag `needs-design-review` · touches `docs/architecture/00-vision.md` or `docs/architecture/01-principles.md` → require human + ADR, no auto-merge.
 
-Full rules: `docs/guides/mastermind-pr-loop.md`. Workflow narrative + SLOs: `docs/guides/pr-workflow.md`. CR reference: `docs/guides/coderabbit.md`. GraphQL recipes: `docs/guides/github-graphql-cookbook.md`.
+Full rules: `docs/guides/mastermind-pr-loop.md`. Workflow + SLOs: `docs/guides/pr-workflow.md`. CR reference: `docs/guides/coderabbit.md`. GraphQL recipes: `docs/guides/github-graphql-cookbook.md`.
 
-### CodeRabbit config
-- `/.coderabbit.yaml` — schema: `https://coderabbit.ai/integrations/schema.v2.json`
-- Profile: `assertive`. `request_changes_workflow: true`. Auto-review on `main`.
-- Tone: enforces 15 Laws; rejects suggestions that violate them.
-- Path-instructions cover `docs/specs/**`, `docs/contracts/**`, `docs/architecture/05-adr/**`, `crates/**/src/**/*.rs`, `**/*.wgsl`, `crates/**/benches/**`, configs, `.github/workflows/**`.
-- Tools on: shellcheck · markdownlint · github-checks · gitleaks · actionlint · yamllint · hadolint · biome · ruff.
+CodeRabbit config: `.coderabbit.yaml` — schema `https://coderabbit.ai/integrations/schema.v2.json`; profile `assertive`; `request_changes_workflow: true`; auto-review on `main`; tone enforces the 15 Laws. Path-instructions cover `docs/specs/`, `docs/contracts/`, `docs/architecture/05-adr/`, `crates/**/src/**/*.rs`, `*.wgsl`, `crates/**/benches/`, configs, `.github/workflows/`. Tools: shellcheck · markdownlint · github-checks · gitleaks · actionlint · yamllint · hadolint · biome · ruff.
 
 ## Crates ecosystem
-
-Rust-native, compile-time extension lane. The bulk of Nexus's surface area at maturity lives in third-party crates on crates.io. Categories canonical in `docs/specs/crates/categories.md` (26 categories at integration: 14 original + 12 added by Agent 32). Discovery: `docs/specs/crates/discovery.md` (primary: crates.io + lib.rs; secondary: `nexus-hub` v1.0). Plugin trait + Rails analogy: `docs/specs/crates/plugin-trait.md`, `docs/specs/crates/rails-plugin-model.md`. Overview: `docs/specs/crates/overview.md`. Manifesto for opt-in compile-time modularity (Law 14): `docs/architecture/06-modularity.md`. Manifesto for closed-source-open-extension (Law 15): `docs/architecture/07-extend-dont-fork.md`.
+Rust-native, compile-time extension lane (Law 14). Categories canonical in `docs/specs/crates/categories.md` (26 at integration: 14 original + 12 added by Agent 32). Discovery: `docs/specs/crates/discovery.md` (crates.io + lib.rs; secondary `nexus-hub` v1.0). Plugin trait + Rails analogy: `docs/specs/crates/plugin-trait.md`, `docs/specs/crates/rails-plugin-model.md`. Overview: `docs/specs/crates/overview.md`. Manifestos: `docs/architecture/06-modularity.md` (Law 14), `docs/architecture/07-extend-dont-fork.md` (Law 15).
 
 ## nexus-hub
-
-Federated **index + curation + verification** layer. Not storage — crates live on crates.io, mods on marketplaces, assets on CC0 libraries. Hub indexes them all, adds Nexus-specific metadata, hosts signed verification attestations, serves JSON-first API. Ships **v1.0** (resolved 2026-05-17). Spec: `docs/specs/hub/overview.md`. Federation protocol: `docs/specs/hub/federation.md`. Self-host: `docs/guides/hub/self-hosting.md`. Operator subagent: `nexus-hub-operator`. Federation subagent: `hub-mirror-operator`.
+Federated **index + curation + verification** layer — not storage. Crates live on crates.io, mods on marketplaces, assets on CC0 libraries. Hub indexes them all, adds Nexus-specific metadata, hosts signed verification attestations, serves JSON-first API. Ships **v1.0** (resolved 2026-05-17). Spec: `docs/specs/hub/overview.md`. Federation protocol: `docs/specs/hub/federation.md`. Self-host: `docs/guides/hub/self-hosting.md`.
 
 ## Scripts convention
-
-Every CLI under `scripts/` is tested, parameterized, JSON-emitting, and registered in `scripts/manifest.toml`. The agent-readable index is `scripts/index.json` (regenerate with `scripts/index-scripts`). Overview spec: `docs/specs/scripts/overview.md`. Crate-resolution pipeline (`nexus add`): `docs/specs/scripts/nexus-add-resolution.md`. Lint / new-script / sync-docs-index workflow lives in `scripts/`.
+Every CLI under `scripts/` is tested, parameterized, JSON-emitting, registered in `scripts/manifest.toml`. The agent-readable index is `scripts/index.json` (regenerate with `scripts/index-scripts`). Overview: `docs/specs/scripts/overview.md`. `nexus add` is **declared, not implemented** — manifest entry `scripts/manifest.toml:341` + `scripts/index.json:1283`; no shim and no `bin/` script in this checkout. Pipeline spec: `docs/specs/scripts/nexus-add-resolution.md`.
 
 ## Solved-problems catalog
-
-The hard problems of engine construction (voxel, falling-sand, 100k-unit RTS, seamless MMO, GPU fluid, destruction, deformable terrain, weather, procgen, sim, rhythm, text-heavy, 4X, 2.5D, heavy particles) are SOLVED, modular, composable. The dev composes; the engine work is already done. Catalog + cost equation + decision tree: `docs/architecture/08-compose-dont-build.md`. Quick-start recipes: `docs/guides/recipes/`. Mastermind rule: "I want to make a game like X" routes to `onboarding-coach` → match recipe → `nexus-cli-engineer` runs `nexus new --template`. Never greenfield engine code; always compose.
+Voxel, falling-sand, 100k-unit RTS, seamless MMO, GPU fluid, destruction, deformable terrain, weather, procgen, sim, rhythm, text-heavy, 4X, 2.5D, heavy particles — SOLVED, modular, composable. The dev composes; the engine work is already done. Catalog + cost equation + decision tree: `docs/architecture/08-compose-dont-build.md`. Recipes: `docs/guides/recipes/`. "I want a game like X" → `onboarding-coach` → match recipe → `nexus-cli-engineer` runs `nexus new --template`. Never greenfield engine code; always compose.
 
 ## Modding
-
-Every Nexus game ships moddable to 100% by default. → `docs/specs/mods/overview.md`.
+Every Nexus game ships moddable to 100% by default → `docs/specs/mods/overview.md`. Docs map: `docs/specs/mods/` (format, manifest, SDK, lifecycle, sandbox, save compat, MP sync, TC, hot reload, native v2.0, permissions, anti-cheat, accessibility, NSFW, telemetry) · `docs/guides/mods/marketplaces/` (steam-workshop, mod-io, thunderstore, nexus-mods, curseforge, itch-io, self-hosted, nexus-hub, decision-matrix) · `docs/guides/mods/authoring/` (quickstart, templates, editor, test-harness, debugging, perf, i18n, ai-assisted, packaging, publishing, versioning) · `docs/guides/mods/players/` (install, profiles, conflicts, permissions-ui, safety, sharing-saves) · `docs/guides/mods/economy/` (overview, free-mods, paid-mods, marketplace-cut-comparison, legal) · `docs/guides/mods/famous-mods-as-tests.md` (aspirational bar) · `docs/guides/mods/agent-recipes.md` (decision tables for `nexus-coder` mod-authoring) · `docs/guides/mods/integrations-matrix.md` (per-marketplace × per-capability).
 
 | Rule | Test |
 |---|---|
@@ -309,37 +204,45 @@ Every Nexus game ships moddable to 100% by default. → `docs/specs/mods/overvie
 | Deterministic with mods loaded | Same mod-set + seed + input = byte-identical state |
 | 100% mod power offline solo | Zero-friction install; auto-grant on user action; multiplayer is the strict path |
 
-### Power tiers (declared in `mod.toml::[mod].tier`)
+Power tiers — declared in `mod.toml::[mod].tier`:
 | Tier | Touches | Default caps |
 |---|---|---|
 | Skin | Assets only | `AssetRead`, asset-overlay write |
 | Behavior | Scripts (Rune VM) + assets | Skin + `WorldRead/Write`, `EventEmit/Subscribe`, `Rng`, `Persist`, `Log` |
 | Total Conversion | Replaces base game wholesale | All Behavior + `SemanticSpawn` + entry-point override; own ladder/saves |
 
-### Where mod docs live
-| Path | Contents |
-|---|---|
-| `docs/specs/mods/` | Format, manifest, SDK, lifecycle, sandbox extension, save compat, MP sync, TC, hot reload, native (v2.0), permissions, anti-cheat, accessibility, NSFW, telemetry |
-| `docs/guides/mods/marketplaces/` | Per-store recipes: steam-workshop, mod-io, thunderstore, nexus-mods, curseforge, itch-io-mods, self-hosted, nexus-hub (decision pending), decision-matrix |
-| `docs/guides/mods/authoring/` | quickstart, templates, editor, test-harness, debugging, perf, i18n, ai-assisted, packaging, publishing, versioning |
-| `docs/guides/mods/players/` | install, profiles, conflicts, permissions-ui, safety, sharing-saves |
-| `docs/guides/mods/economy/` | overview, free-mods, paid-mods, marketplace-cut-comparison, legal |
-| `docs/guides/mods/famous-mods-as-tests.md` | Aspirational bar: every famous-mod precedent → required engine capability |
-| `docs/guides/mods/agent-recipes.md` | Decision tables (JSON) for `nexus-coder` mod-authoring |
-| `docs/guides/mods/integrations-matrix.md` | Per-marketplace × per-capability table (JSON variant included) |
+## Extending the Engine — Crate or Mod?
+- New engine extension that compiles in (genre, style, physics, netcode, telemetry, asset source, feature flag, …) → `crate-author`; third-party crate on crates.io → `docs/specs/crates/overview.md`.
+- New community crate evaluated before adoption → `crate-consumer-advisor`; Recipes 1-3 in `docs/guides/crates/agent-recipes.md`.
+- Community crate audit (Verified tier promotion) → `crate-curator`; 15-step playbook in `docs/specs/crates/quality-bar.md`.
+- License / supply-chain check across the dep tree → `license-compat-auditor`; `cargo deny` + `cargo audit` per `docs/specs/crates/licensing.md`.
+- Runtime content end users install in their copy of the game (skins, gameplay tweaks, total conversion) → `mod-sandbox-specialist` + the relevant `mod-*` agent; sandboxed `.nxmod` packages → `docs/specs/mods/overview.md`.
+
+Rule of thumb: **dev installs at build time → crate. Player installs at runtime → mod.**
+
+## Forbidden Behaviors
+- Inventing performance numbers. Unknown target → write `[BENCHMARK NEEDED]`.
+- Skipping the contract step when the change crosses a system boundary.
+- Writing impl before the spec exists.
+- Generic errors (`anyhow::anyhow!("...")` in shipped code, or string-only error returns).
+- Unstructured logs (`println!`, `eprintln!`) outside `examples/` and `tests/`.
+- `unsafe` without a `// SAFETY:` paragraph that proves the invariants.
+- Editing `docs/architecture/00-vision.md` or `docs/architecture/01-principles.md` without an ADR.
+- Single-threaded execution when work is parallelizable. Default is N subagents in flight.
+
+## Quickstart for a New Task
+1. Read the relevant spec under `docs/specs/`; if the change crosses a boundary, read the contract.
+2. Choose the subagent from the routing table; multiple specs touched → `/parallel <task>` (or dispatch the subagents directly in one message).
+3. After impl: dispatch `test-author`, `perf-engineer`, `code-reviewer`, `security-reviewer` in parallel; `merge-bot` gives the verdict.
+
+When in doubt: vision → `docs/architecture/00-vision.md` · law → `docs/architecture/01-principles.md` · spec format → `docs/guides/spec-format.md` · writing a subagent → `docs/guides/subagent-fleet-style.md` · how many subagents → `docs/guides/parallelism-doctrine.md` · onboarding → `docs/guides/ai-dev-onboarding.md`.
 
 ## Next-session bootstrap
+1. Read `CLAUDE.md` end-to-end, then `docs/INTEGRATION-REPORT.md` (post-32-agent state — what was reconciled, where stubs/conflicts remain).
+2. Pick from `docs/architecture/decisions-open.md` (`[DECISION NEEDED]`) and `docs/architecture/benchmarks-pending.md` (`[BENCHMARK NEEDED]`); spawn the relevant subagent from the routing table above.
+3. Cross-check `docs/architecture/cross-agent-flags.md` if the task touches a file authored by multiple agents.
 
-A new Claude Code session opening this repo should:
-
-1. Read `CLAUDE.md` (this file) end-to-end.
-2. Read `docs/INTEGRATION-REPORT.md` for the post-32-agent state, what was reconciled, and where stubs/conflicts remain.
-3. Pick from `docs/architecture/decisions-open.md` (unresolved `[DECISION NEEDED]`) and `docs/architecture/benchmarks-pending.md` (open `[BENCHMARK NEEDED]`).
-4. Spawn the relevant subagent from the routing tables above.
-5. Cross-check `docs/architecture/cross-agent-flags.md` if the task touches a file that was authored by multiple agents.
-
-Engine source does not exist yet — the next session is still docs-driven. Engine implementation begins after the open-decisions list is small enough to pick a v1.0 crate boundary and start coding under the spec-first workflow (Law 2).
+Engine source exists but is Phase 0 scaffold — 35 crates, 70 `.rs` files under `crates/`, 4 games, 2 tools; every crate, game and tool declares `Status: stub (Phase 0 scaffold)` (`crates/nexus-core/src/lib.rs:7`). The tree stays spec-driven (Law 2): new behavior starts at a spec.
 
 ## Note
-
-Do not use git worktrees — work directly in this checkout. If a task is big enough to need subagents, run them as a team in this same checkout: split the work into disjoint pieces so no two agents touch the same files.
+No git worktrees — work directly in this checkout. If a task needs subagents, run them as a team in this same checkout: split the work into disjoint pieces so no two agents touch the same files.
