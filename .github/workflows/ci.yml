@@ -204,8 +204,7 @@ jobs:
         run: cargo audit
 
   # ─── Scripts: bun test ──────────────────────────────────────────────────────
-  # Note: package.json at repo root declares `workspaces: ["scripts",
-  # "packages/nexus-physics"]`, so
+  # Note: package.json at repo root declares `workspaces: ["scripts"]`, so
   # `bun install` and the lockfile (bun.lock) live at the repo root. We install
   # at the root, then `cd scripts/` for the suite-specific commands.
   scripts-test:
