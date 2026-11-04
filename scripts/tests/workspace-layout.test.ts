@@ -159,7 +159,9 @@ function staleLocationRefs(): string[] {
     if (statSync(file).size > 512_000) continue;
     const text = readFileSync(file, 'utf8');
     if (text.includes('\0')) continue;
-    const rel = relative(REPO_ROOT, file);
+    // `relative()` yields backslash separators on Windows; normalize so the
+    // SELF comparison and every reported hit are forward-slash repo-relative.
+    const rel = relative(REPO_ROOT, file).replaceAll('\\', '/');
     if (rel === SELF) continue;
     if (text.includes(OLD_ROOT)) hits.push(rel);
   }
