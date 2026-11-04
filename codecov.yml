@@ -59,7 +59,7 @@ flags:
       - crates/nexus-script/
   agent:
     paths:
-      - crates/nexus-agent/
+      - packages/nexus-agent/
       - crates/sdks/
   editor_cli:
     paths:

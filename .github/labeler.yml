@@ -42,7 +42,7 @@ area/scripting:
 area/agent:
   - changed-files:
       - any-glob-to-any-file:
-          - crates/nexus-agent/**
+          - packages/nexus-agent/**
 
 area/editor:
   - changed-files:
