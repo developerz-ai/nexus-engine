@@ -1,0 +1,25 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Nexus Engine contributors
+
+[package]
+name = "nexus-audio"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+description = "Audio graph, spatial audio, DSP, streaming, adaptive music, voice."
+readme = "README.md"
+
+[package.metadata.nexus]
+spec = "docs/specs/audio/overview.md"
+laws = ["1", "2", "3", "5", "7", "8", "10", "11", "12"]
+
+[lints]
+workspace = true
+
+[dependencies]
+nexus-core = { path = "../../crates/nexus-core", version = "0.1.0" }
+nexus-hal = { path = "../../crates/nexus-hal", version = "0.1.0" }
+nexus-assets = { path = "../../crates/nexus-assets", version = "0.1.0" }
