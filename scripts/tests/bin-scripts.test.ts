@@ -443,6 +443,44 @@ describe('bin scripts', () => {
     }
   });
 
+  it('KNOWN BUG bin/check exits 0 when a blocking gate fails (bin/check swallows the && chain failure)', async () => {
+    // This test PINS a known-bad behaviour; it does not bless it.
+    //
+    // `set -e` does NOT abort the script when a command in a non-final
+    // position of an && list fails (POSIX: errexit is ignored for every
+    // command of an && list except the last one). The blocking chain in
+    // bin/check therefore loses its failure, the advisory audit block runs
+    // anyway and its exit 0 becomes the script's exit status: a red gate is
+    // reported as a green one.
+    //
+    // The fix — capture the chain's status and propagate it before the audit
+    // runs — belongs in bin/check, the repository's own gate, which this
+    // lane's land refuses to change (write_locked). The patch, the
+    // reproduction and the reasoning are in tmp/dz/no-change.md.
+    //
+    // When that patch lands, this test fails with 'expected 0, received 1':
+    // flip the two assertions below to the fixed behaviour and drop the
+    // KNOWN BUG name.
+    const gate = 'fmt --all -- --check';
+    const sandbox = sharedContext({ cargoFail: gate });
+    try {
+      const r = await runScript('check', sandbox);
+      // The failing gate never reaches the exit status.
+      expect(r.exitCode).toBe(0);
+      // The chain stops at the failing gate, the advisory audit still runs,
+      // and the failure is never reported.
+      expect(calls(sandbox)).toEqual([
+        'cargo fmt --version',
+        'cargo clippy --version',
+        'cargo fmt --all -- --check',
+        'cargo-audit',
+      ]);
+      expect(r.stderr).not.toContain('the gate failed');
+    } finally {
+      rmSync(sandbox.root, { recursive: true, force: true });
+    }
+  });
+
   it('bin/check treats a failing cargo audit as advisory and still passes', async () => {
     const sandbox = sharedContext({ auditFail: true });
     try {

@@ -9,6 +9,8 @@
 
 Rust + Cargo + Bun. The gate is `bin/check`: an SPDX header sweep (`bash "$bin_dir/check-spdx"`), then `cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings && cargo check --workspace --all-targets && cargo nextest run --workspace --profile ci && cargo deny check && (cd scripts && bun test && bun x biome check .)`, then an advisory `cargo audit` that never fails the gate (a failing audit is reported on stderr and the gate still passes; when cargo-audit is absent, `bin/check` prints a notice naming `cargo audit` and continues). A change that does not pass the blocking part of it is not proven, whatever its description says.
 
+KNOWN DEFECT (open finding on this PR): a failure inside that blocking chain never reaches `bin/check`'s exit status — `set -e` is ignored for a command in a non-final `&&` position, so the advisory block's exit 0 becomes the script's status. A green `bin/check` therefore does NOT prove the blocking part passed; read the gate's own output for the failing command until the finding is fixed.
+
 ## Review conventions
 
 - TODO(setup): the conventions a reviewer must hold this repo to (from CLAUDE.md / CONTRIBUTING), each as a rule.
