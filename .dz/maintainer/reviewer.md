@@ -7,7 +7,7 @@
 
 ## Stack
 
-Rust + Cargo + Bun. The gate is `bin/check` (`cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings && cargo check --workspace --all-targets && cargo nextest run --workspace --profile ci && cargo deny check && (cd scripts && bun test && bun x biome check .)`): a change that does not pass it is not proven, whatever its description says.
+Rust + Cargo + Bun. The gate is `bin/check`: an SPDX header sweep (`bash "$bin_dir/check-spdx"`), then `cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings && cargo check --workspace --all-targets && cargo nextest run --workspace --profile ci && cargo deny check && (cd scripts && bun test && bun x biome check .)`, then an advisory `cargo audit` that never fails the gate (a failing audit is reported on stderr and the gate still passes; when cargo-audit is absent, `bin/check` prints a notice naming `cargo audit` and continues). A change that does not pass the blocking part of it is not proven, whatever its description says.
 
 ## Review conventions
 

@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 # one-command check (typecheck + lint + test) — established by dz-runner setup mode. One command; adjust as the repo grows.
 set -euo pipefail
+# The SPDX sweep is a sibling script in this directory. Resolve it to an
+# absolute path BEFORE the cd below: afterwards a relative 'bin/check-spdx'
+# would resolve to bin/bin/check-spdx.
+bin_dir="$(cd "$(dirname "$0")" && pwd)"
 cd "$(dirname "$0")/.."
 # bin/setup puts the gate tools in the cargo and bun bin dirs but leaves them off PATH, so a
 # caller whose PATH omits them would die mid-gate with 'no such command: nextest'. Put them on
@@ -27,4 +31,21 @@ if ! cargo clippy --version >/dev/null 2>&1; then
   echo "bin/check: the clippy component is missing; run ./bin/setup first" >&2
   exit 69
 fi
+# SPDX header sweep (Law 7: MIT forever) — the same check CI runs as `docs / spdx`,
+# implemented once in bin/check-spdx. It runs before the cargo chain: it is the
+# cheapest gate, and a missing licence header must not wait on a full build.
+bash "$bin_dir/check-spdx"
 cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings && cargo check --workspace --all-targets && cargo nextest run --workspace --profile ci && cargo deny check && (cd scripts && bun test && bun x biome check .)
+# cargo audit is advisory: CI runs it as a continue-on-error job, so a failing
+# audit must not fail this gate. It runs last and its exit status is reported,
+# never propagated.
+if command -v cargo-audit >/dev/null 2>&1; then
+  audit_status=0
+  cargo audit || audit_status=$?
+  if [ "$audit_status" -ne 0 ]; then
+    echo "bin/check: cargo audit reported advisories (exit ${audit_status}); advisory only, the gate still passes" >&2
+  fi
+else
+  echo "bin/check: cargo audit not found on PATH; skipping the advisory RustSec audit" >&2
+  echo "bin/check: install it with 'cargo install cargo-audit' to run the advisory dependency audit" >&2
+fi

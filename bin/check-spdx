@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+# SPDX header sweep — the gate half of the CI job `docs / spdx`
+# (.github/workflows/ci.yml). Law 7: MIT forever. Every tracked file under
+# crates/, scripts/, docs/ and .github/ must carry an `SPDX-License-Identifier:`
+# header within its first 15 lines.
+#
+# This is the canonical implementation of that sweep: bin/check calls it as a
+# hard gate; CI keeps its inline copy. Both must agree on the scanned set and
+# the exemption list.
+#
+# Contract:
+#   exit 0  — every scanned file carries the header; prints a line containing
+#             `SPDX headers OK` on stderr.
+#   exit 1  — one or more files lack it; prints every offending path, one per
+#             line, on stderr.
+#   exit 70 — git is not available, so the tracked-file list cannot be built;
+#             prints a message naming git. NOT 69: in bin/check, 69 means
+#             EX_UNAVAILABLE, "a missing tool is a setup problem, run
+#             ./bin/setup first" — and bin/setup never installs git, so that
+#             exit code would point the caller at a remedy that cannot help.
+set -uo pipefail
+cd "$(dirname "$0")/.."
+
+if ! command -v git >/dev/null 2>&1; then
+  echo "bin/check-spdx: git not found; the SPDX sweep needs git to list tracked files" >&2
+  exit 70
+fi
+
+# Build the tracked-file list first and check the SCM status: a failure here
+# would otherwise yield an empty list and a false 'SPDX headers OK'.
+list_file="$(mktemp)"
+trap 'rm -f "$list_file"' EXIT
+if ! git ls-files -z -- 'crates/**' 'scripts/**' 'docs/**' '.github/**' >"$list_file"; then
+  echo "bin/check-spdx: git ls-files failed; cannot build the tracked-file list" >&2
+  exit 1
+fi
+
+missing=()
+# Use NUL-delimited ls-files so paths with spaces are safe.
+while IFS= read -r -d '' f; do
+  case "$f" in
+    # Exemptions: lockfiles, binaries, JSON without comments, indexes.
+    *.lock|*.png|*.jpg|*.jpeg|*.webp|*.ico|*.gif|*.svg|*.wasm|*.bin)
+      continue ;;
+    *.json|*/bun.lock|*/Cargo.lock|*/package-lock.json)
+      continue ;;
+    */node_modules/*|*/target/*|*/.git/*)
+      continue ;;
+    *.snap|*/snapshots/*)
+      continue ;;
+    # Single-value pins / placeholders that have no comment syntax.
+    */.placeholder|*/.bun-version|*/.keep|*/.nvmrc)
+      continue ;;
+  esac
+  # Law 7 intent: header must be near top-of-file, not buried in a
+  # blob somewhere. Restrict to first 15 lines.
+  if ! head -n 15 "$f" | grep -q -m1 'SPDX-License-Identifier:'; then
+    missing+=("$f")
+  fi
+done <"$list_file"
+
+if [[ ${#missing[@]} -gt 0 ]]; then
+  printf 'Missing SPDX header in %d file(s):\n' "${#missing[@]}" >&2
+  printf '  %s\n' "${missing[@]}" >&2
+  exit 1
+fi
+echo "SPDX headers OK on all tracked files under crates/, scripts/, docs/, .github/" >&2
