@@ -4,7 +4,7 @@
 # Proposed Law #14 — Extend, Don't Fork
 
 > **Status: Ratified as Law #15 — see ADR `docs/architecture/05-adr/0010-ratify-laws-13-and-14.md`.**
-> Renumbered from "proposed #14" to **Law #15** at ratification because Agent 27 had already taken the #13 slot for Agent–Editor RPC Parity, pushing both this proposal and the Opt-in Modularity proposal by one. Conformance text and enforcement rules below are unchanged from the proposal.
+> Renumbered from "proposed #14" to **Law #15** at ratification because Agent 27 had already taken the #13 slot for Agent–Editor RPC Parity, pushing both this proposal and the Opt-in Modularity proposal by one. Conformance obligations and enforcement rules below are unchanged; assets paths are maintained per [ADR 0011](05-adr/0011-amend-law-15.md), which remains Proposed and requires human and integration approval before merge.
 >
 > The canonical, ratified law text now lives in `docs/architecture/01-principles.md` §"Law 15 — Extend, Don't Fork". This file survives as the long-form rationale doc per ADR 0010 step 3.
 >
@@ -31,7 +31,7 @@ Original drafting status: `[DECISION NEEDED]` — proposed for architect council
 
 **Test of conformance.**
 
-- (a) No PR touches `crates/nexus-{core,renderer,physics,audio,networking,scripting,assets,agent,editor}/src/**` without a linked `Status: Accepted` ADR. Enforced by `nexus-merge` rule `no-engine-source-mod-without-rationale` (`docs/specs/merge-policy/no-engine-source-mod-without-rationale.md`).
+- (a) No PR touches `crates/nexus-{core,renderer,physics,audio,networking,scripting,agent,editor}/src/**` or `packages/nexus-assets/src/**` without a linked `Status: Accepted` ADR. Enforced by `nexus-merge` rule `no-engine-source-mod-without-rationale` (`docs/specs/merge-policy/no-engine-source-mod-without-rationale.md`).
 - (b) Every extension surface is documented as such: trait declared in its system spec, registered in `docs/specs/crates/categories.md`, stability tier in `docs/specs/crates/stable-api.md`.
 - (c) Every common forking motivation has a cookbook entry (`docs/guides/extend-not-fork-cookbook.md`); the cookbook has ≥14 entries at v1.0.
 - (d) Engine majors ship a compat shim crate (`nexus-engine-compat-(N-1)`) for one-major back, per `docs/specs/crates/stable-api.md` § "The Compat Shim Pattern".
@@ -51,7 +51,7 @@ Mirrors the format of Laws 1–12. Each conformance bullet maps to a check that 
 
 | Conformance | Check | Enforcer |
 |---|---|---|
-| (a) No engine-core mod without ADR | Glob match on `crates/nexus-{core,renderer,...}/src/**` + ADR-link check | `nexus-merge` rule `no-engine-source-mod-without-rationale` |
+| (a) No engine-core mod without ADR | Glob match on `crates/nexus-{core,renderer,physics,audio,networking,scripting,agent,editor}/src/**` or `packages/nexus-assets/src/**` + ADR-link check | `nexus-merge` rule `no-engine-source-mod-without-rationale` |
 | (b) Surfaces documented | `docs/specs/crates/categories.md` table row exists for every public trait | `principle-keeper` review + CI lint `category_documented` |
 | (c) Cookbook coverage | Cookbook row count ≥ 14 + every row has REASON/SURFACE/EXAMPLE/LINK | CI lint `cookbook_complete` |
 | (d) Compat shim present | At major bump, `crates/nexus-engine-compat-(N-1)/` exists and re-exports prior major's public surface | Release pipeline gate |

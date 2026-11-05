@@ -260,11 +260,13 @@ which requires a documented Context, Decision, and Consequences entry.
 **Statement.** Nexus is closed for source modification, open for extension. Every public engine API is a stable extension surface. Every common need has a sanctioned plugin lane (compile-time crate, Cargo feature, runtime plugin, mod, script, agent RPC, editor override). A PR that modifies engine-core source for a feature expressible as an extension is rejected without human review.
 
 **Test of conformance.**
-- No PR touches `crates/nexus-{core,renderer,physics,audio,networking,scripting,assets,agent,editor}/src/**` without a linked `Status: Accepted` ADR. Enforced by `nexus-merge` rule `no-engine-source-mod-without-rationale` (`docs/specs/merge-policy/no-engine-source-mod-without-rationale.md`).
+- No PR touches `crates/nexus-{core,renderer,physics,audio,networking,scripting,agent,editor}/src/**` or `packages/nexus-assets/src/**` without a linked `Status: Accepted` ADR. Enforced by `nexus-merge` rule `no-engine-source-mod-without-rationale` (`docs/specs/merge-policy/no-engine-source-mod-without-rationale.md`).
 - Every extension surface is documented as such: trait declared in its system spec, registered in `docs/specs/crates/categories.md`, stability tier in `docs/specs/crates/stable-api.md`.
 - Every common forking motivation has a cookbook entry (`docs/guides/extend-not-fork-cookbook.md`); ≥ 14 entries at v1.0.
 - Engine majors ship a compat shim crate (`nexus-engine-compat-(N-1)`) for one-major back, per `docs/specs/crates/stable-api.md` §"The Compat Shim Pattern".
 - Whitelist exceptions (bug fix, perf fix, docstring, deps bump, test-only, compat-shim) are mechanically detected and bypass the gate.
+
+Path-only maintenance: [ADR 0011](05-adr/0011-amend-law-15.md) remains Proposed; human and integration approval is required before merge. Source protection and exceptions are unchanged.
 
 **Rationale.** Every game engine fork in history died: Quake source-mods fragmented; Source SDK derivatives froze when Valve pivoted; UE5 fork-merge cost is engineer-weeks per kloc per year. The Open/Closed Principle (Meyer 1988; Martin 1996) is the structural answer. Full manifesto: `docs/architecture/07-extend-dont-fork.md`. Vision §"The Nexus Thesis", §"The Flywheel".
 

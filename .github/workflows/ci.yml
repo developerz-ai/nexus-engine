@@ -204,7 +204,7 @@ jobs:
         run: cargo audit
 
   # ─── Scripts: bun test ──────────────────────────────────────────────────────
-  # Note: package.json at repo root declares `workspaces: ["scripts"]`, so
+  # Note: package.json at repo root declares the Bun workspace members, so
   # `bun install` and the lockfile (bun.lock) live at the repo root. We install
   # at the root, then `cd scripts/` for the suite-specific commands.
   scripts-test:
@@ -293,7 +293,8 @@ jobs:
       - name: Verify SPDX headers on tracked files
         # Law 7: MIT forever. Every source/docs/script file must carry an
         # `SPDX-License-Identifier:` header. We scan only tracked files under
-        # the four owning subtrees and exempt generated / lockfile-style paths.
+        # crates/, packages/nexus-assets/, scripts/, docs/ and .github/;
+        # exempt generated / lockfile-style paths.
         shell: bash
         run: |
           set -euo pipefail
@@ -319,10 +320,10 @@ jobs:
             if ! head -n 15 "$f" | grep -q -m1 'SPDX-License-Identifier:'; then
               missing+=("$f")
             fi
-          done < <(git ls-files -z -- 'crates/**' 'scripts/**' 'docs/**' '.github/**')
+          done < <(git ls-files -z -- 'crates/**' 'packages/nexus-assets/**' 'scripts/**' 'docs/**' '.github/**')
           if [[ ${#missing[@]} -gt 0 ]]; then
             printf 'Missing SPDX header in %d file(s):\n' "${#missing[@]}" >&2
             printf '  %s\n' "${missing[@]}" >&2
             exit 1
           fi
-          echo "SPDX headers OK on all tracked files under crates/, scripts/, docs/, .github/"
+          echo "SPDX headers OK on all tracked files under crates/, packages/nexus-assets/, scripts/, docs/, .github/"

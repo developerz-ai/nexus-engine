@@ -10,7 +10,7 @@ Multiple crates wired together. Real internal APIs. Mocked external boundaries o
 | Boundary | Tested in |
 |----------|-----------|
 | Two engine crates exchanging data | `tests/<topic>.rs` in the consumer crate |
-| Engine + asset pipeline (real files, real import) | `crates/nexus-assets/tests/import_*.rs` |
+| Engine + asset pipeline (real files, real import) | `packages/nexus-assets/tests/import_*.rs` |
 | Engine + script VM | `crates/nexus-scripting/tests/` |
 | Client + server (in-process, two `tokio` runtimes) | `crates/nexus-net/tests/` |
 | CLI + engine | `crates/nexus-cli/tests/` |
@@ -19,7 +19,8 @@ Multiple crates wired together. Real internal APIs. Mocked external boundaries o
 
 ## Rust
 
-`crates/<name>/tests/` directory. One file per scenario family.
+Each crate's `tests/` directory (for example, `crates/<name>/tests/` or
+`packages/nexus-assets/tests/`). One file per scenario family.
 
 ```
 crates/nexus-renderer/

@@ -317,9 +317,9 @@ ensure_gate_tool "cargo-deny" "$deny_version" \
   "https://github.com/EmbarkStudios/cargo-deny/releases/download/$deny_version/cargo-deny-$deny_version-$deny_triple.tar.gz" || exit 69
 
 # ── scripts workspace ───────────────────────────────────────────────────────
-# The bun workspace root is the repo root (the root package.json declares
-# workspaces: ["scripts"] and bun.lock lives there), so one frozen install
-# provisions the scripts workspace too.
+# The Bun workspace root is the repo root: package.json declares its members
+# (including scripts) and bun.lock lives there, so one frozen install
+# provisions all declared workspace packages.
 if ! bun install --frozen-lockfile; then
   echo "bin/setup: bun install --frozen-lockfile failed" >&2
   exit 1

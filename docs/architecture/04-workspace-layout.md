@@ -30,10 +30,9 @@ nexus-engine/
 │   ├── game-template/
 │   ├── games/
 │   └── initial/
-├── crates/                          # all engine crates (one per system + sub-crates)
+├── crates/                          # engine systems, genres and SDKs (see packages too)
 │   ├── nexus-core/
 │   ├── nexus-hal/
-│   ├── nexus-assets/
 │   ├── nexus-renderer/
 │   ├── nexus-physics/
 │   ├── nexus-audio/
@@ -64,7 +63,8 @@ nexus-engine/
 │   └── sdks/
 │       ├── nexus-agent-sdk-rs/      # Rust SDK
 │       └── nexus-agent-sdk-py/      # Python bindings via pyo3
-├── packages/                        # member groups outside the engine tree
+├── packages/                        # additional engine workspace members
+│   ├── nexus-assets/                 # asset pipeline (Law 15 protected)
 │   └── styles/                      # style modules (PBR, NPR, pixel, 2D, mixed)
 │       ├── nexus-style-pbr/
 │       ├── nexus-style-npr/
@@ -88,6 +88,14 @@ nexus-engine/
 
 ## Workspace root `Cargo.toml` (shape only)
 
+Only `nexus-assets` moves in [ADR 0011](05-adr/0011-amend-law-15.md) (Proposed;
+human and integration approval required before merge). Existing styles stay in
+`packages/styles/`; other members and dependency boundaries are unchanged.
+The root Bun workspace explicitly includes `packages/nexus-assets` alongside
+`scripts` and `packages/styles/*`. Its dependency-free, private `package.json`
+names `@nexus-engine/nexus-assets` version `0.1.0`, license MIT; it adds no build
+scripts or runtime implementation. Cargo remains authoritative for Rust builds.
+
 ```toml
 # Cargo.toml
 [workspace]
@@ -95,7 +103,7 @@ resolver = "2"
 members = [
   "crates/nexus-core",
   "crates/nexus-hal",
-  "crates/nexus-assets",
+  "packages/nexus-assets",
   "crates/nexus-renderer",
   "crates/nexus-physics",
   "crates/nexus-audio",

@@ -38,6 +38,11 @@ fail-under = 70
 # Files to exclude from coverage measurement.
 # Mirrors docs/guides/testing/coverage.md §"Excludes".
 exclude-files = [
+  "packages/nexus-assets/examples/*",
+  "packages/nexus-assets/benches/*",
+  "packages/nexus-assets/tests/integration/*",
+  "packages/nexus-assets/fuzz/*",
+  "packages/nexus-assets/build.rs",
   "crates/*/examples/*",
   "crates/*/benches/*",
   "crates/*/tests/integration/*",
@@ -73,6 +78,11 @@ workspace = true
 engine = "llvm"
 fail-under = 70
 exclude-files = [
+  "packages/nexus-assets/examples/*",
+  "packages/nexus-assets/benches/*",
+  "packages/nexus-assets/tests/integration/*",
+  "packages/nexus-assets/fuzz/*",
+  "packages/nexus-assets/build.rs",
   "crates/*/examples/*",
   "crates/*/benches/*",
   "crates/*/tests/integration/*",

@@ -13,12 +13,14 @@
 
 A pull request that:
 
-1. Modifies any file under `crates/nexus-{core,renderer,physics,audio,networking,scripting,assets,agent,editor}/src/**` AND
+1. Modifies any file under `crates/nexus-{core,renderer,physics,audio,networking,scripting,agent,editor}/src/**` or `packages/nexus-assets/src/**` AND
 2. Does NOT link to an approved RFC/ADR (`docs/architecture/05-adr/NNNN-*.md` with Status: Accepted)
 
 is **auto-rejected** by `nexus-merge` with a structured rejection payload (below) before any other reviewer sees it.
 
 Auto-rejection is a **soft block**: PR remains open, bot comments, label `policy:needs-adr` applied, CI is skipped. The contributor follows the appeal path or rewrites the PR as an extension.
+
+Path-only maintenance: [ADR 0011](../../architecture/05-adr/0011-amend-law-15.md) remains Proposed; human and integration approval is required before merge. No exception or other protected path changes.
 
 ---
 
@@ -130,7 +132,7 @@ The JSON block always precedes the markdown. Automation parses the JSON; humans 
 | `crates/nexus-audio/src/**` | Audio core — use `AudioBackend` / `DspPack` |
 | `crates/nexus-networking/src/**` | Net stack — use `NetTransport` |
 | `crates/nexus-scripting/src/**` | VM glue — use `ScriptVm` |
-| `crates/nexus-assets/src/**` | Pipeline — use `AssetSource` / `AssetImporter` |
+| `packages/nexus-assets/src/**` | Pipeline — use `AssetSource` / `AssetImporter` |
 | `crates/nexus-agent/src/**` | Agent RPC — wire-stable, requires ADR for any addition |
 | `crates/nexus-editor/src/**` | Editor core — use editor extensions |
 

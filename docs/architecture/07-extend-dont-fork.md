@@ -168,13 +168,15 @@ Recipe-per-reason mapping: → `docs/guides/extend-not-fork-cookbook.md`.
 
 ## Merge-bot enforcement
 
-A PR that modifies engine-core source (`crates/nexus-{core,renderer,physics,audio,networking,scripting,assets,agent,editor}/src/**`) for a feature expressible as an extension is **auto-rejected**. The bot comment redirects the contributor to:
+A PR that modifies engine-core source (`crates/nexus-{core,renderer,physics,audio,networking,scripting,agent,editor}/src/**` or `packages/nexus-assets/src/**`) for a feature expressible as an extension is **auto-rejected**. The bot comment redirects the contributor to:
 
 1. The migration cookbook entry for their use case.
 2. The right extension surface (crate / plugin / mod / script / agent RPC).
 3. The `principle-keeper` subagent if they believe the rejection is wrong.
 
 Full rule + JSON payload + appeal path: → `docs/specs/merge-policy/no-engine-source-mod-without-rationale.md`.
+
+Path-only maintenance: [ADR 0011](05-adr/0011-amend-law-15.md) remains Proposed; human and integration approval is required before merge. Extension policy is unchanged.
 
 Routed through `nexus-merge`. Authored by `principle-keeper` (subagent in `docs/guides/subagent-fleet.md`).
 

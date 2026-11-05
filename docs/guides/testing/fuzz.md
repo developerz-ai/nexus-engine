@@ -26,6 +26,10 @@ Cite: rust-fuzz/cargo-fuzz · github.com/CodeIntelligenceTesting/jazzer.js · gi
 
 ## Fuzz targets
 
+Targets live in each crate's `fuzz/` directory, including
+`packages/nexus-assets/fuzz/` for assets. The parser and crash snippets below
+illustrate the intended implementation; the assets crate is still a scaffold.
+
 ```
 crates/<crate>/fuzz/
 ├── Cargo.toml                 # fuzz target manifest
@@ -220,7 +224,7 @@ crashes/
   "target":   "parse_gltf",
   "input":    "crashes/parse_gltf-abc123.bin",
   "panic":    "index out of bounds: 0..=0 / 5",
-  "location": { "file": "crates/nexus-assets/src/gltf/parse.rs", "line": 142 },
+  "location": { "file": "packages/nexus-assets/src/gltf/parse.rs", "line": 142 },
   "minimized": true,
   "size_bytes": 12
 }
