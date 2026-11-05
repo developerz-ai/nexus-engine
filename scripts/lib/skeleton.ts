@@ -26,11 +26,11 @@ import { type FlagSpec, type ParsedArgs, parseArgs } from './args';
 import { loadDotEnv } from './env';
 import {
   type ExitCodeValue,
-  type NxError,
-  NxThrown,
   errorEnvelope,
   errorToExitCode,
   errorToMessage,
+  type NxError,
+  NxThrown,
 } from './errors';
 import { logError } from './log';
 import { type TelemetryFrame, telemetryEnd, telemetryStart } from './telemetry';

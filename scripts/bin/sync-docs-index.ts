@@ -9,7 +9,7 @@
 //   wall_time   < 5 s    (filesystem walk)
 //   mem_peak    < 64 MB
 
-import { existsSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { basename, join, relative } from 'node:path';
 
 import { nxThrow } from '../lib/errors';
