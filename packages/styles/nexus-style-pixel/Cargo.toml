@@ -2,24 +2,24 @@
 # Copyright (c) 2026 Nexus Engine contributors
 
 [package]
-name = "nexus-style-npr"
+name = "nexus-style-pixel"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 authors.workspace = true
 repository.workspace = true
 rust-version.workspace = true
-description = "Non-photorealistic rendering style module (cel/toon, hatching, painterly)."
+description = "Pixel-art style module (low-res, palette-locked, dithered)."
 readme = "README.md"
 
 [package.metadata.nexus]
-spec = "docs/specs/styles/npr.md"
+spec = "docs/specs/styles/pixel.md"
 laws = ["2", "3", "5", "7", "11", "12", "14"]
 
 [lints]
 workspace = true
 
 [dependencies]
-nexus-core = { path = "../../nexus-core", version = "0.1.0" }
-nexus-renderer = { path = "../../nexus-renderer", version = "0.1.0" }
-nexus-assets = { path = "../../nexus-assets", version = "0.1.0" }
+nexus-core = { path = "../../../crates/nexus-core", version = "0.1.0" }
+nexus-renderer = { path = "../../../crates/nexus-renderer", version = "0.1.0" }
+nexus-assets = { path = "../../../crates/nexus-assets", version = "0.1.0" }

@@ -30,8 +30,14 @@ nexus-engine/
 │   ├── game-template/
 │   ├── games/
 │   └── initial/
-├── packages/                        # partial migration: HAL only
-│   └── nexus-hal/                    # Rust crate + private Bun workspace adapter
+├── packages/                        # migrated HAL and style modules
+│   ├── nexus-hal/                    # Rust crate + private Bun workspace adapter
+│   └── styles/                      # style modules (PBR, NPR, pixel, 2D, mixed)
+│       ├── nexus-style-pbr/
+│       ├── nexus-style-npr/
+│       ├── nexus-style-pixel/
+│       ├── nexus-style-2d/
+│       └── nexus-style-mixed/
 ├── crates/                          # remaining engine crates (systems + sub-crates)
 │   ├── nexus-core/
 │   ├── nexus-assets/
@@ -45,12 +51,6 @@ nexus-engine/
 │   ├── nexus-cli/
 │   ├── nexus-merge/                 # the AI maintainer's lint/check library
 │   ├── nexus-engine/                # facade re-export crate (the public umbrella)
-│   ├── styles/
-│   │   ├── nexus-style-pbr/
-│   │   ├── nexus-style-npr/
-│   │   ├── nexus-style-pixel/
-│   │   ├── nexus-style-2d/
-│   │   └── nexus-style-mixed/
 │   ├── genres/
 │   │   ├── nexus-genre-fps/
 │   │   ├── nexus-genre-rpg/
@@ -86,11 +86,13 @@ nexus-engine/
 
 ---
 
-Only `nexus-hal` has moved to `packages/`; all other crates retain their existing
-locations and dependency boundaries. The root Cargo workspace explicitly includes
-`packages/nexus-hal`. The Bun workspace includes `scripts` and a private,
-dependency-free `@nexus-engine/nexus-hal` adapter at `packages/nexus-hal`; the
-adapter registers the Rust package without adding a JavaScript implementation.
+`nexus-hal` and the five style modules have moved to `packages/`; all other crates
+retain their existing locations, and dependency boundaries are unchanged. The root
+Cargo workspace includes `packages/nexus-hal` and `packages/styles/*`. The Bun
+workspace includes `scripts`, `packages/nexus-hal`, and `packages/styles/*`. HAL's
+private, dependency-free `@nexus-engine/nexus-hal` adapter registers the Rust
+package without adding a JavaScript implementation; the style crates remain
+Rust-only, without Bun adapters.
 
 ## Workspace root `Cargo.toml` (shape only)
 
@@ -112,7 +114,7 @@ members = [
   "crates/nexus-cli",
   "crates/nexus-merge",
   "crates/nexus-engine",
-  "crates/styles/*",
+  "packages/styles/*",
   "crates/genres/*",
   "crates/sdks/*",
   "games/*",
@@ -296,7 +298,7 @@ Every crate lists: **purpose**, **spec**, **public surface**, **internal deps**,
 - **Internal deps.** all `nexus-*` engine crates.
 - **External deps.** none direct.
 
-### `crates/styles/nexus-style-*`
+### `packages/styles/nexus-style-*`
 
 - **Purpose.** Style modules (PBR, NPR, pixel, 2D, mixed). Plug into renderer.
 - **Spec.** `docs/specs/styles/<style>.md`.
