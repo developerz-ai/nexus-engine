@@ -45,20 +45,21 @@ cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warni
 ## Structure
 | Path | Count | Contents |
 |---|---|---|
-| `crates/` | 35 | 13 system + `crates/styles/` 5 + `crates/genres/` 16 + `crates/sdks/nexus-agent-sdk-rs` 1 · 70 `.rs` files |
-| system crates | 13 | `crates/nexus-core` `crates/nexus-hal` `crates/nexus-assets` `crates/nexus-renderer` `crates/nexus-physics` `crates/nexus-audio` `crates/nexus-net` `crates/nexus-script` `crates/nexus-agent` `crates/nexus-editor` `crates/nexus-cli` `crates/nexus-merge` `crates/nexus-engine` |
+| `crates/` | 34 | 12 system + `crates/styles/` 5 + `crates/genres/` 16 + `crates/sdks/nexus-agent-sdk-rs` 1 · 68 `.rs` files |
+| `packages/` | 1 | `packages/nexus-merge` |
+| system crates | 12 | `crates/nexus-core` `crates/nexus-hal` `crates/nexus-assets` `crates/nexus-renderer` `crates/nexus-physics` `crates/nexus-audio` `crates/nexus-net` `crates/nexus-script` `crates/nexus-agent` `crates/nexus-editor` `crates/nexus-cli` `crates/nexus-engine` |
 | `games/` | 4 | `games/nexus-fps` `games/nexus-platformer` `games/nexus-rpg` `games/nexus-rts` |
 | `tools/` | 2 | `tools/nexus-codegen` `tools/nexus-scenario` |
 | `scripts/` | 62 | Bun workspace · 14 scripts under `scripts/bin/` · one test per bin · count excludes `scripts/CLAUDE.md` |
 | `docs/` | 413 `.md` | `docs/architecture/` · `docs/specs/` · `docs/contracts/` · `docs/guides/` · `docs/prior-art/` · `docs/game-template/` · `docs/games/` |
 | `.claude/` | 119 / 14 / 15 | agents / commands / skills |
 
-Cargo workspace = `crates/` + `games/` + `tools/` (`Cargo.toml:10-30`). Bun workspace = `scripts/` (`package.json:5`).
+Cargo workspace = `crates/` + `packages/` + `games/` + `tools/` (`Cargo.toml:10-30`). Bun workspace = `scripts/` + `packages/nexus-merge` (`package.json:5`).
 
 ## Conventions
 | Rule | Where |
 |---|---|
-| SPDX MIT header, first two lines, no blank line before | `docs/guides/file-conventions.md:12-21` · CI scans `crates/`, `scripts/`, `docs/`, `.github/` (`.github/workflows/ci.yml:322`) |
+| SPDX MIT header, first two lines, no blank line before | `docs/guides/file-conventions.md:12-21` · CI scans `crates/`, `packages/`, `scripts/`, `docs/`, `.github/` (`.github/workflows/ci.yml:322`) |
 | Rust: `#![forbid(unsafe_code)]`; every `unsafe` needs a `// SAFETY:` paragraph | `Cargo.toml:41` · Law 6 |
 | Errors & logs: thiserror only; `anyhow` banned in `nexus-*`; no string-only errors; structured JSON to stderr, never `println!` outside `examples/`/`tests/` | `docs/architecture/03-tech-stack.md:185` · Law 10 · Law 11 |
 | Rust hygiene: `cargo fmt --all` + `cargo clippy --all-targets -- -D warnings` before commit | `bin/check:30` |
@@ -176,7 +177,7 @@ Kill-switch (auto-escalation to human): 3 CR rounds without convergence → open
 
 Full rules: `docs/guides/mastermind-pr-loop.md`. Workflow + SLOs: `docs/guides/pr-workflow.md`. CR reference: `docs/guides/coderabbit.md`. GraphQL recipes: `docs/guides/github-graphql-cookbook.md`.
 
-CodeRabbit config: `.coderabbit.yaml` — schema `https://coderabbit.ai/integrations/schema.v2.json`; profile `assertive`; `request_changes_workflow: true`; auto-review on `main`; tone enforces the 15 Laws. Path-instructions cover `docs/specs/`, `docs/contracts/`, `docs/architecture/05-adr/`, `crates/**/src/**/*.rs`, `*.wgsl`, `crates/**/benches/`, configs, `.github/workflows/`. Tools: shellcheck · markdownlint · github-checks · gitleaks · actionlint · yamllint · hadolint · biome · ruff.
+CodeRabbit config: `.coderabbit.yaml` — schema `https://coderabbit.ai/integrations/schema.v2.json`; profile `assertive`; `request_changes_workflow: true`; auto-review on `main`; tone enforces the 15 Laws. Path-instructions cover `docs/specs/`, `docs/contracts/`, `docs/architecture/05-adr/`, `crates/**/src/**/*.rs`, `packages/**/src/**/*.rs`, `*.wgsl`, `crates/**/benches/`, configs, `.github/workflows/`. Tools: shellcheck · markdownlint · github-checks · gitleaks · actionlint · yamllint · hadolint · biome · ruff.
 
 ## Crates ecosystem
 Rust-native, compile-time extension lane (Law 14). Categories canonical in `docs/specs/crates/categories.md` (26 at integration: 14 original + 12 added by Agent 32). Discovery: `docs/specs/crates/discovery.md` (crates.io + lib.rs; secondary `nexus-hub` v1.0). Plugin trait + Rails analogy: `docs/specs/crates/plugin-trait.md`, `docs/specs/crates/rails-plugin-model.md`. Overview: `docs/specs/crates/overview.md`. Manifestos: `docs/architecture/06-modularity.md` (Law 14), `docs/architecture/07-extend-dont-fork.md` (Law 15).
@@ -242,7 +243,7 @@ When in doubt: vision → `docs/architecture/00-vision.md` · law → `docs/arch
 2. Pick from `docs/architecture/decisions-open.md` (`[DECISION NEEDED]`) and `docs/architecture/benchmarks-pending.md` (`[BENCHMARK NEEDED]`); spawn the relevant subagent from the routing table above.
 3. Cross-check `docs/architecture/cross-agent-flags.md` if the task touches a file authored by multiple agents.
 
-Engine source exists but is Phase 0 scaffold — 35 crates, 70 `.rs` files under `crates/`, 4 games, 2 tools; every crate, game and tool declares `Status: stub (Phase 0 scaffold)` (`crates/nexus-core/src/lib.rs:7`). The tree stays spec-driven (Law 2): new behavior starts at a spec.
+Engine source exists but is Phase 0 scaffold — 34 crates, 68 `.rs` files under `crates/`, 1 package under `packages/` (`nexus-merge`), 4 games, 2 tools; every crate, game and tool declares `Status: stub (Phase 0 scaffold)` (`crates/nexus-core/src/lib.rs:7`). The tree stays spec-driven (Law 2): new behavior starts at a spec.
 
 ## Note
 No git worktrees — work directly in this checkout. If a task needs subagents, run them as a team in this same checkout: split the work into disjoint pieces so no two agents touch the same files.

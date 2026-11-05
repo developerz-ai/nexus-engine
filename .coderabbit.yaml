@@ -137,6 +137,18 @@ reviews:
         `unsafe` block REQUIRES a `// SAFETY:` paragraph proving the invariants (Law 6).
         Cite the spec implemented in commit body: `docs/specs/<system>/<file>.md`.
 
+    - path: "packages/**/src/**/*.rs"
+      instructions: |
+        clippy clean (`cargo clippy --all-targets -- -D warnings`) and rustfmt clean.
+        No unwrap/expect/panic! outside `#[cfg(test)]` (Law 6, Law 10).
+        Structured errors via thiserror; never anyhow in shipped code (Law 10).
+        `#[deny(missing_docs)]` on every public module.
+        Tests live next to code in `#[cfg(test)] mod tests`.
+        Every public item has a one-line doc + `# Errors` / `# Panics` / `# Safety` sections
+        where relevant. SPDX MIT header.
+        `unsafe` block REQUIRES a `// SAFETY:` paragraph proving the invariants (Law 6).
+        Cite the spec implemented in commit body: `docs/specs/<system>/<file>.md`.
+
     - path: "crates/**/benches/**"
       instructions: |
         Criterion only. Benchmark must define a baseline and target from the spec's

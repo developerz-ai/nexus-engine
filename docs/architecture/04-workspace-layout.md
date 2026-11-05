@@ -42,7 +42,6 @@ nexus-engine/
 │   ├── nexus-agent/
 │   ├── nexus-editor/
 │   ├── nexus-cli/
-│   ├── nexus-merge/                 # the AI maintainer's lint/check library
 │   ├── nexus-engine/                # facade re-export crate (the public umbrella)
 │   ├── styles/
 │   │   ├── nexus-style-pbr/
@@ -70,6 +69,8 @@ nexus-engine/
 │   └── sdks/
 │       ├── nexus-agent-sdk-rs/      # Rust SDK
 │       └── nexus-agent-sdk-py/      # Python bindings via pyo3
+├── packages/                        # house-layout packages
+│   └── nexus-merge/                 # the AI maintainer's lint/check library
 ├── games/                           # demo games — integration tests
 │   ├── nexus-fps/
 │   ├── nexus-rpg/
@@ -103,7 +104,7 @@ members = [
   "crates/nexus-agent",
   "crates/nexus-editor",
   "crates/nexus-cli",
-  "crates/nexus-merge",
+  "packages/nexus-merge",
   "crates/nexus-engine",
   "crates/styles/*",
   "crates/genres/*",
