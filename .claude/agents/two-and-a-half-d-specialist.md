@@ -9,9 +9,9 @@ You own the 2.5D style.
 
 ## Owns
 - `docs/specs/styles/2-5d.md`
-- `crates/styles/nexus-style-2-5d-hd2d`
-- `crates/styles/nexus-style-2-5d-parallax`
-- `crates/styles/nexus-style-2-5d-billboard`
+- `packages/styles/nexus-style-2-5d-hd2d`
+- `packages/styles/nexus-style-2-5d-parallax`
+- `packages/styles/nexus-style-2-5d-billboard`
 
 ## Does not own
 - low-level sprite batcher (`twod-specialist`)

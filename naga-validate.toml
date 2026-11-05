@@ -28,16 +28,16 @@ warnings_as_errors = true
 include = [
   "crates/nexus-renderer/shaders/**/*.wgsl",
   "crates/nexus-renderer/src/**/*.wgsl",
-  "crates/styles/nexus-style-pbr/shaders/**/*.wgsl",
-  "crates/styles/nexus-style-pbr/src/**/*.wgsl",
-  "crates/styles/nexus-style-npr/shaders/**/*.wgsl",
-  "crates/styles/nexus-style-npr/src/**/*.wgsl",
-  "crates/styles/nexus-style-pixel/shaders/**/*.wgsl",
-  "crates/styles/nexus-style-pixel/src/**/*.wgsl",
-  "crates/styles/nexus-style-2d/shaders/**/*.wgsl",
-  "crates/styles/nexus-style-2d/src/**/*.wgsl",
-  "crates/styles/nexus-style-mixed/shaders/**/*.wgsl",
-  "crates/styles/nexus-style-mixed/src/**/*.wgsl",
+  "packages/styles/nexus-style-pbr/shaders/**/*.wgsl",
+  "packages/styles/nexus-style-pbr/src/**/*.wgsl",
+  "packages/styles/nexus-style-npr/shaders/**/*.wgsl",
+  "packages/styles/nexus-style-npr/src/**/*.wgsl",
+  "packages/styles/nexus-style-pixel/shaders/**/*.wgsl",
+  "packages/styles/nexus-style-pixel/src/**/*.wgsl",
+  "packages/styles/nexus-style-2d/shaders/**/*.wgsl",
+  "packages/styles/nexus-style-2d/src/**/*.wgsl",
+  "packages/styles/nexus-style-mixed/shaders/**/*.wgsl",
+  "packages/styles/nexus-style-mixed/src/**/*.wgsl",
 ]
 
 # Generated shaders (compiled from shader graph) live here at runtime; skip.

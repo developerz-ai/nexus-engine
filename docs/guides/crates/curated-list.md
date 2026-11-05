@@ -44,11 +44,11 @@ A consumer who picks any of these knows: it works, it's audited, it stays mainta
 ### Styles
 | Crate | Mirrors | Purpose |
 |---|---|---|
-| `nexus-style-pbr` | engine `crates/styles/nexus-style-pbr` | Physically-based rendering |
-| `nexus-style-npr` | engine `crates/styles/nexus-style-npr` | Non-photorealistic / cel |
-| `nexus-style-pixel` | engine `crates/styles/nexus-style-pixel` | Pixel art |
-| `nexus-style-2d` | engine `crates/styles/nexus-style-2d` | 2D sprites + tilemaps |
-| `nexus-style-mixed` | engine `crates/styles/nexus-style-mixed` | PBR world + NPR characters |
+| `nexus-style-pbr` | engine `packages/styles/nexus-style-pbr` | Physically-based rendering |
+| `nexus-style-npr` | engine `packages/styles/nexus-style-npr` | Non-photorealistic / cel |
+| `nexus-style-pixel` | engine `packages/styles/nexus-style-pixel` | Pixel art |
+| `nexus-style-2d` | engine `packages/styles/nexus-style-2d` | 2D sprites + tilemaps |
+| `nexus-style-mixed` | engine `packages/styles/nexus-style-mixed` | PBR world + NPR characters |
 
 ### Physics
 | Crate | Purpose |
@@ -134,7 +134,7 @@ A consumer who picks any of these knows: it works, it's audited, it stays mainta
 
 ## Why the engine re-publishes its own crates
 
-Engine-internal crates live in the monorepo (`crates/styles/*`, `crates/genres/*`). They're consumed by demo games via `path = "..."` deps. For external consumers who want the same crate without checking out the engine repo, we re-publish to crates.io under the same name.
+Engine-internal crates live in the monorepo (`packages/styles/*`, `crates/genres/*`). They're consumed by demo games via `path = "..."` deps. For external consumers who want the same crate without checking out the engine repo, we re-publish to crates.io under the same name.
 
 Effect:
 - Game projects depend on `nexus-genre-fps = "1.0"` from crates.io.
