@@ -4,7 +4,7 @@
 // scripts/lib/gh.ts — thin `gh` CLI wrapper. Throws MissingPrerequisite if
 // the `gh` binary is not on PATH.
 
-import { type RunResult, hasTool, run } from './bun';
+import { hasTool, type RunResult, run } from './bun';
 import { nxThrow } from './errors';
 
 async function requireGh(): Promise<void> {

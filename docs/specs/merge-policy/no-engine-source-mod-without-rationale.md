@@ -134,7 +134,7 @@ The JSON block always precedes the markdown. Automation parses the JSON; humans 
 | `crates/nexus-agent/src/**` | Agent RPC — wire-stable, requires ADR for any addition |
 | `crates/nexus-editor/src/**` | Editor core — use editor extensions |
 
-Engine-shipped extension crates (`crates/styles/`, `crates/genres/`, `crates/nexus-engine-compat-*/`) are NOT in the trigger set. They are themselves extensions to the core.
+Engine-shipped extension crates (`packages/styles/`, `crates/genres/`, `crates/nexus-engine-compat-*/`) are NOT in the trigger set. They are themselves extensions to the core.
 
 ---
 

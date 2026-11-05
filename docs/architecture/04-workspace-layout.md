@@ -43,12 +43,6 @@ nexus-engine/
 │   ├── nexus-cli/
 │   ├── nexus-merge/                 # the AI maintainer's lint/check library
 │   ├── nexus-engine/                # facade re-export crate (the public umbrella)
-│   ├── styles/
-│   │   ├── nexus-style-pbr/
-│   │   ├── nexus-style-npr/
-│   │   ├── nexus-style-pixel/
-│   │   ├── nexus-style-2d/
-│   │   └── nexus-style-mixed/
 │   ├── genres/
 │   │   ├── nexus-genre-fps/
 │   │   ├── nexus-genre-rpg/
@@ -69,8 +63,14 @@ nexus-engine/
 │   └── sdks/
 │       ├── nexus-agent-sdk-rs/      # Rust SDK
 │       └── nexus-agent-sdk-py/      # Python bindings via pyo3
-├── packages/                        # house-layout migration: relocated engine crates
-│   └── nexus-net/
+├── packages/                        # house-layout migration: relocated engine crates and member groups
+│   ├── nexus-net/
+│   └── styles/                      # style modules (PBR, NPR, pixel, 2D, mixed)
+│       ├── nexus-style-pbr/
+│       ├── nexus-style-npr/
+│       ├── nexus-style-pixel/
+│       ├── nexus-style-2d/
+│       └── nexus-style-mixed/
 ├── games/                           # demo games — integration tests
 │   ├── nexus-fps/
 │   ├── nexus-rpg/
@@ -106,7 +106,7 @@ members = [
   "crates/nexus-cli",
   "crates/nexus-merge",
   "crates/nexus-engine",
-  "crates/styles/*",
+  "packages/styles/*",
   "crates/genres/*",
   "crates/sdks/*",
   "games/*",
@@ -290,7 +290,7 @@ Every crate lists: **purpose**, **spec**, **public surface**, **internal deps**,
 - **Internal deps.** all `nexus-*` engine crates.
 - **External deps.** none direct.
 
-### `crates/styles/nexus-style-*`
+### `packages/styles/nexus-style-*`
 
 - **Purpose.** Style modules (PBR, NPR, pixel, 2D, mixed). Plug into renderer.
 - **Spec.** `docs/specs/styles/<style>.md`.
