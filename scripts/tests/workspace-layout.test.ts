@@ -134,6 +134,15 @@ function cargoMembers(text: string): string[] {
     .map((line) => line.replace(/,$/, '').replace(/^"|"$/g, ''));
 }
 
+/** Read only this flag's path list, never comments or sibling coverage flags. */
+function genresStylesPaths(text: string): unknown[] {
+  const codecov = Bun.YAML.parse(text) as {
+    flags?: { genres_styles?: { paths?: unknown } };
+  } | null;
+  const paths = codecov?.flags?.genres_styles?.paths;
+  return Array.isArray(paths) ? paths : [];
+}
+
 /** This guard file — it has to name the pre-move location in order to detect it. */
 const SELF = 'scripts/tests/workspace-layout.test.ts';
 
@@ -169,6 +178,19 @@ function staleLocationRefs(): string[] {
 }
 
 describe('workspace layout', () => {
+  it.each([
+    [
+      'later sibling flag',
+      'flags:\n  genres_styles:\n    paths: [packages/styles/]\n  later_flag:\n    paths: [packages/genres/]',
+    ],
+    ['comment', 'flags:\n  genres_styles:\n    paths: [packages/styles/] # packages/genres/'],
+    ['path prefix', 'flags:\n  genres_styles:\n    paths: [packages/genres/unrelated/]'],
+    ['scalar instead of a path list', 'flags:\n  genres_styles:\n    paths: packages/genres/'],
+    ['missing flag', 'flags:\n  other:\n    paths: [packages/genres/]'],
+  ])('does not count packages/genres/ in a %s as genre coverage', (_name, yaml) => {
+    expect(genresStylesPaths(yaml)).not.toContain(`${NEW_ROOT}/`);
+  });
+
   it('keeps the crates/genres → packages/genres house-layout move complete', () => {
     const violations: string[] = [];
     const fail = (message: string): void => {
@@ -293,10 +315,8 @@ describe('workspace layout', () => {
     if (!areaGenres.includes(`${NEW_ROOT}/**`)) {
       fail('.github/labeler.yml area/genres does not glob packages/genres/**');
     }
-    const codecov = readText('codecov.yml');
-    const genresStyles = /genres_styles:([\s\S]*?)(?=\n\w[\w-]*:|\Z)/.exec(codecov)?.[1] ?? '';
-    if (!genresStyles.includes(`${NEW_ROOT}/`)) {
-      fail('codecov.yml genres_styles does not point at packages/genres/');
+    if (!genresStylesPaths(readText('codecov.yml')).includes(`${NEW_ROOT}/`)) {
+      fail('codecov.yml flags.genres_styles.paths does not contain packages/genres/');
     }
 
     // --- Docs, charters and the test policy name the new location --------
