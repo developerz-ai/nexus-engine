@@ -21,7 +21,7 @@ members = [
   "crates/nexus-cli",
   "crates/nexus-merge",
   "crates/nexus-engine",
-  "crates/styles/*",
+  "packages/styles/*",
   "crates/genres/*",
   "crates/sdks/nexus-agent-sdk-rs",
   # crates/sdks/nexus-agent-sdk-py — deferred (needs Python toolchain), see .placeholder
