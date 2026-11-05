@@ -182,7 +182,7 @@ Each row: feature name · what it gates · default? · hard-deps · known caller
 | `cargo-graph` | edge allow-list checks | yes | `cargo_metadata` | CI |
 | `coverage-gate` | llvm-cov delta gate | yes | `llvm-cov` | CI |
 
-### `crates/styles/nexus-style-pbr`
+### `packages/styles/nexus-style-pbr`
 
 | Feature | Gates | Default | Hard-deps | Callers |
 |---|---|---|---|---|
@@ -191,7 +191,7 @@ Each row: feature name · what it gates · default? · hard-deps · known caller
 | `tessellation` | hardware tessellation | no | — | AAA |
 | `subsurface-scattering` | SSS shader | no | — | character-heavy games |
 
-### `crates/styles/nexus-style-npr`
+### `packages/styles/nexus-style-npr`
 
 | Feature | Gates | Default | Hard-deps | Callers |
 |---|---|---|---|---|
@@ -199,7 +199,7 @@ Each row: feature name · what it gates · default? · hard-deps · known caller
 | `outline-postpass` | edge-detect outlines | yes | — | NPR look |
 | `hatching` | hatching pattern shader | no | — | sketch-style games |
 
-### `crates/styles/nexus-style-pixel`
+### `packages/styles/nexus-style-pixel`
 
 | Feature | Gates | Default | Hard-deps | Callers |
 |---|---|---|---|---|
@@ -207,7 +207,7 @@ Each row: feature name · what it gates · default? · hard-deps · known caller
 | `dither` | ordered dither | yes | — | retro look |
 | `crt-postfx` | CRT scanline shader | no | — | retro aesthetic |
 
-### `crates/styles/nexus-style-2d`
+### `packages/styles/nexus-style-2d`
 
 | Feature | Gates | Default | Hard-deps | Callers |
 |---|---|---|---|---|
@@ -215,7 +215,7 @@ Each row: feature name · what it gates · default? · hard-deps · known caller
 | `tilemap` | tilemap renderer | yes | — | platformer, top-down |
 | `9-slice` | 9-slice UI sprites | yes | — | UI-heavy games |
 
-### `crates/styles/nexus-style-mixed`
+### `packages/styles/nexus-style-mixed`
 
 | Feature | Gates | Default | Hard-deps | Callers |
 |---|---|---|---|---|

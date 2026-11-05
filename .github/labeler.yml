@@ -17,7 +17,7 @@ area/renderer:
   - changed-files:
       - any-glob-to-any-file:
           - crates/nexus-renderer/**
-          - crates/styles/**
+          - packages/styles/**
 
 area/physics:
   - changed-files:

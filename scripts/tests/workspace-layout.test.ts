@@ -13,7 +13,7 @@
 // the guard runs in the bun-test pass of `bin/check`.
 
 import { describe, expect, it } from 'bun:test';
-import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { extname, join, relative, resolve } from 'node:path';
 import { REPO_ROOT } from './helpers';
 
@@ -61,7 +61,7 @@ const NAMING_FILES = [
   '.claude/skills/fix-from-coderabbit/SKILL.md',
 ] as const;
 
-/** Engine subtrees that must NOT move with the genres group. */
+/** Other subtrees stay at their merged locations (styles moved independently). */
 const UNMOVED_PATHS = [
   'crates/nexus-core',
   'crates/nexus-hal',
@@ -76,7 +76,7 @@ const UNMOVED_PATHS = [
   'crates/nexus-cli',
   'crates/nexus-merge',
   'crates/nexus-engine',
-  'crates/styles',
+  'packages/styles',
   'crates/sdks',
   'games',
   'tools',
@@ -184,6 +184,10 @@ describe('workspace layout', () => {
     }
     if (members.includes(`${OLD_ROOT}/*`)) {
       fail(`root Cargo.toml members still lists "${OLD_ROOT}/*"`);
+    }
+    // Preserve main's independent style relocation alongside the genre move.
+    if (!members.includes('packages/styles/*')) {
+      fail('root Cargo.toml members does not list "packages/styles/*"');
     }
 
     // --- The old subtree is gone ----------------------------------------

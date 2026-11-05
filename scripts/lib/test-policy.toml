@@ -73,7 +73,7 @@ crates = [
 required_for = "renderer + every style crate"
 crates_glob = [
   "nexus-renderer",
-  "crates/styles/*",
+  "packages/styles/*",
 ]
 
 [classes.fuzz]
@@ -165,7 +165,7 @@ classes = ["unit"]   # facade; integration covered by member crates + games
 
 # ---------------------------------------------------------------------------
 # Style crates — visual tests mandatory, line coverage at genre/style tier.
-# (Inventory: docs/architecture/04-workspace-layout.md §"crates/styles/*".)
+# (Inventory: docs/architecture/04-workspace-layout.md §"packages/styles/*".)
 # ---------------------------------------------------------------------------
 [per_crate."nexus-style-pbr"]
 tier = "genre_style"

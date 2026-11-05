@@ -11,7 +11,7 @@
 //   wall_time   < 10 s   (biome + manifest walk)
 //   mem_peak    < 128 MB
 
-import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { hasTool, run } from '../lib/bun';
