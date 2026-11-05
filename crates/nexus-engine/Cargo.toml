@@ -27,5 +27,5 @@ nexus-renderer = { path = "../nexus-renderer", version = "0.1.0" }
 nexus-physics = { path = "../nexus-physics", version = "0.1.0" }
 nexus-audio = { path = "../nexus-audio", version = "0.1.0" }
 nexus-net = { path = "../nexus-net", version = "0.1.0" }
-nexus-script = { path = "../nexus-script", version = "0.1.0" }
+nexus-script = { path = "../../packages/nexus-script", version = "0.1.0" }
 nexus-agent = { path = "../nexus-agent", version = "0.1.0" }

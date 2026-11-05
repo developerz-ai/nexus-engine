@@ -38,7 +38,6 @@ nexus-engine/
 │   ├── nexus-physics/
 │   ├── nexus-audio/
 │   ├── nexus-net/
-│   ├── nexus-script/
 │   ├── nexus-agent/
 │   ├── nexus-editor/
 │   ├── nexus-cli/
@@ -70,6 +69,8 @@ nexus-engine/
 │   └── sdks/
 │       ├── nexus-agent-sdk-rs/      # Rust SDK
 │       └── nexus-agent-sdk-py/      # Python bindings via pyo3
+├── packages/                       # engine packages migrating from crates/ (house-layout migration in progress)
+│   └── nexus-script/
 ├── games/                           # demo games — integration tests
 │   ├── nexus-fps/
 │   ├── nexus-rpg/
@@ -99,7 +100,7 @@ members = [
   "crates/nexus-physics",
   "crates/nexus-audio",
   "crates/nexus-net",
-  "crates/nexus-script",
+  "packages/nexus-script",
   "crates/nexus-agent",
   "crates/nexus-editor",
   "crates/nexus-cli",

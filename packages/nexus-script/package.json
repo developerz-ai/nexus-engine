@@ -1,0 +1,7 @@
+{
+  "name": "@nexus-engine/nexus-script",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Nexus Engine scripting crate (Lua + Rune host bindings) — Rust sources, workspace member for manifest tooling.",
+  "license": "MIT"
+}
