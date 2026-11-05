@@ -4,7 +4,7 @@
 // scripts/lib/cargo.ts — `cargo` wrapper. Single source of truth for sccache
 // activation and target-dir resolution.
 
-import { type RunResult, hasTool, run } from './bun';
+import { hasTool, type RunResult, run } from './bun';
 
 export function cargoTargetDir(): string {
   const fromEnv = process.env.CARGO_TARGET_DIR;
