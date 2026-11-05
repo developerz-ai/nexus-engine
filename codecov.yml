@@ -68,7 +68,7 @@ flags:
   genres_styles:
     paths:
       - crates/genres/
-      - crates/styles/
+      - packages/styles/
 
 ignore:
   - "**/examples/**"

@@ -45,7 +45,7 @@ cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warni
 ## Structure
 | Path | Count | Contents |
 |---|---|---|
-| `crates/` | 35 | 13 system + `crates/styles/` 5 + `crates/genres/` 16 + `crates/sdks/nexus-agent-sdk-rs` 1 · 70 `.rs` files |
+| `crates/` | 35 | 13 system + `packages/styles/` 5 + `crates/genres/` 16 + `crates/sdks/nexus-agent-sdk-rs` 1 · 70 `.rs` files |
 | system crates | 13 | `crates/nexus-core` `crates/nexus-hal` `crates/nexus-assets` `crates/nexus-renderer` `crates/nexus-physics` `crates/nexus-audio` `crates/nexus-net` `crates/nexus-script` `crates/nexus-agent` `crates/nexus-editor` `crates/nexus-cli` `crates/nexus-merge` `crates/nexus-engine` |
 | `games/` | 4 | `games/nexus-fps` `games/nexus-platformer` `games/nexus-rpg` `games/nexus-rts` |
 | `tools/` | 2 | `tools/nexus-codegen` `tools/nexus-scenario` |
