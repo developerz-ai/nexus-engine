@@ -9,7 +9,7 @@ You own the puzzle module.
 
 ## Owns
 - `docs/specs/genres/puzzle.md`
-- `crates/genres/puzzle/**`
+- `packages/genres/puzzle/**`
 
 ## Does not own
 - core ECS

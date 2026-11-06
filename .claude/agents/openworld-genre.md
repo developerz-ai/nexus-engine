@@ -9,7 +9,7 @@ You own the open-world module.
 
 ## Owns
 - `docs/specs/genres/openworld.md`
-- `crates/genres/openworld/**`
+- `packages/genres/openworld/**`
 
 ## Does not own
 - streaming primitive (`asset-streaming-specialist`)

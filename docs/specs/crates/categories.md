@@ -125,7 +125,7 @@ Author flow: `nexus crate new nexus-style-anime --category style` → scaffolds 
 - → `docs/specs/crates/manifest.md` for the `category` enum.
 - → `docs/specs/crates/naming.md` — subname rules per category.
 - → `docs/specs/crates/quality-bar.md` — audit criteria differ by category (renderer plugin gets visual regression, telemetry plugin does not).
-- → `docs/architecture/04-workspace-layout.md` — engine-shipped category exemplars (`packages/styles/nexus-style-pbr`, `crates/genres/nexus-genre-fps`).
+- → `docs/architecture/04-workspace-layout.md` — engine-shipped category exemplars (`packages/styles/nexus-style-pbr`, `packages/genres/nexus-genre-fps`).
 
 ## Open Questions
 

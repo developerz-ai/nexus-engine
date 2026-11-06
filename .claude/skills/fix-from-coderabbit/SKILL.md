@@ -63,7 +63,7 @@ done < /tmp/cr-accept.jsonl
 | `crates/assets/**` | `asset-pipeline-engineer` |
 | `crates/agent/**` | `agent-api-engineer` |
 | `crates/editor/**` | `editor-engineer` |
-| `crates/genres/<g>/**` | `<g>-genre` |
+| `packages/genres/<g>/**` | `<g>-genre` |
 | `docs/specs/**` | `spec-author` |
 | `docs/contracts/**` | `contract-author` |
 | `docs/architecture/05-adr/**` | `adr-author` |
