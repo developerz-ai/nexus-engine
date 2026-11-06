@@ -16,7 +16,7 @@ members = [
   "crates/nexus-audio",
   "crates/nexus-net",
   "crates/nexus-script",
-  "crates/nexus-agent",
+  "packages/nexus-agent",
   "crates/nexus-editor",
   "crates/nexus-cli",
   "crates/nexus-merge",

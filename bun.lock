@@ -5,6 +5,10 @@
     "": {
       "name": "nexus-engine-root",
     },
+    "packages/nexus-agent": {
+      "name": "@nexus-engine/nexus-agent",
+      "version": "0.1.0",
+    },
     "scripts": {
       "name": "@nexus-engine/scripts",
       "version": "0.1.0",
@@ -37,6 +41,8 @@
     "@biomejs/cli-win32-arm64": ["@biomejs/cli-win32-arm64@2.6.2", "", { "os": "win32", "cpu": "arm64" }, "sha512-/PEOo6evlgrQOfKhMNtC/4Gk8ai3hySXXEtjUzCqZe/4iAbMdqelpp7qvZEDyLxlZS+BjOMQFpq2gXI/BPaAqw=="],
 
     "@biomejs/cli-win32-x64": ["@biomejs/cli-win32-x64@2.6.2", "", { "os": "win32", "cpu": "x64" }, "sha512-FVlWD+mDDz8nN5LWKRWUhhb7wKIK0VE3oXQvQBX7Fwwj00CvqMVhMyiz1iz8O5aZGmnkhFlKSwJPrUvMh5prQw=="],
+
+    "@nexus-engine/nexus-agent": ["@nexus-engine/nexus-agent@workspace:packages/nexus-agent"],
 
     "@nexus-engine/scripts": ["@nexus-engine/scripts@workspace:scripts"],
 

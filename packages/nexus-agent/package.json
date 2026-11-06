@@ -1,0 +1,8 @@
+{
+  "name": "@nexus-engine/nexus-agent",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Nexus Engine agent API crate (Rust) — Bun workspace marker for packages/nexus-agent.",
+  "license": "MIT"
+}

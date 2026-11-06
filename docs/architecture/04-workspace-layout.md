@@ -39,7 +39,6 @@ nexus-engine/
 │   ├── nexus-audio/
 │   ├── nexus-net/
 │   ├── nexus-script/
-│   ├── nexus-agent/
 │   ├── nexus-editor/
 │   ├── nexus-cli/
 │   ├── nexus-merge/                 # the AI maintainer's lint/check library
@@ -64,7 +63,8 @@ nexus-engine/
 │   └── sdks/
 │       ├── nexus-agent-sdk-rs/      # Rust SDK
 │       └── nexus-agent-sdk-py/      # Python bindings via pyo3
-├── packages/                        # member groups outside the engine tree
+├── packages/                        # out-of-crates packages (Rust or JS)
+│   ├── nexus-agent/                 # agent API crate (see §nexus-agent)
 │   └── styles/                      # style modules (PBR, NPR, pixel, 2D, mixed)
 │       ├── nexus-style-pbr/
 │       ├── nexus-style-npr/
@@ -101,7 +101,6 @@ members = [
   "crates/nexus-audio",
   "crates/nexus-net",
   "crates/nexus-script",
-  "crates/nexus-agent",
   "crates/nexus-editor",
   "crates/nexus-cli",
   "crates/nexus-merge",
@@ -109,6 +108,7 @@ members = [
   "packages/styles/*",
   "crates/genres/*",
   "crates/sdks/*",
+  "packages/nexus-agent",
   "games/*",
   "tools/*",
 ]

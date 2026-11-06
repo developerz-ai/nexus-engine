@@ -13,7 +13,7 @@
 
 A pull request that:
 
-1. Modifies any file under `crates/nexus-{core,renderer,physics,audio,networking,scripting,assets,agent,editor}/src/**` AND
+1. Modifies any file under `crates/nexus-{core,renderer,physics,audio,networking,scripting,assets,editor}/src/**` or `packages/nexus-agent/src/**` AND
 2. Does NOT link to an approved RFC/ADR (`docs/architecture/05-adr/NNNN-*.md` with Status: Accepted)
 
 is **auto-rejected** by `nexus-merge` with a structured rejection payload (below) before any other reviewer sees it.
@@ -131,7 +131,7 @@ The JSON block always precedes the markdown. Automation parses the JSON; humans 
 | `crates/nexus-networking/src/**` | Net stack — use `NetTransport` |
 | `crates/nexus-scripting/src/**` | VM glue — use `ScriptVm` |
 | `crates/nexus-assets/src/**` | Pipeline — use `AssetSource` / `AssetImporter` |
-| `crates/nexus-agent/src/**` | Agent RPC — wire-stable, requires ADR for any addition |
+| `packages/nexus-agent/src/**` | Agent RPC — wire-stable, requires ADR for any addition |
 | `crates/nexus-editor/src/**` | Editor core — use editor extensions |
 
 Engine-shipped extension crates (`packages/styles/`, `crates/genres/`, `crates/nexus-engine-compat-*/`) are NOT in the trigger set. They are themselves extensions to the core.
