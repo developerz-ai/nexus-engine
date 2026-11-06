@@ -33,7 +33,6 @@ nexus-engine/
 ├── crates/                          # all engine crates (one per system + sub-crates)
 │   ├── nexus-core/
 │   ├── nexus-hal/
-│   ├── nexus-assets/
 │   ├── nexus-renderer/
 │   ├── nexus-physics/
 │   ├── nexus-audio/
@@ -70,6 +69,8 @@ nexus-engine/
 │   └── sdks/
 │       ├── nexus-agent-sdk-rs/      # Rust SDK
 │       └── nexus-agent-sdk-py/      # Python bindings via pyo3
+├── packages/                        # out-of-crates packages (Rust or JS)
+│   └── nexus-assets/                # asset pipeline crate (see §nexus-assets)
 ├── games/                           # demo games — integration tests
 │   ├── nexus-fps/
 │   ├── nexus-rpg/
@@ -94,7 +95,6 @@ resolver = "2"
 members = [
   "crates/nexus-core",
   "crates/nexus-hal",
-  "crates/nexus-assets",
   "crates/nexus-renderer",
   "crates/nexus-physics",
   "crates/nexus-audio",
@@ -108,6 +108,7 @@ members = [
   "crates/styles/*",
   "crates/genres/*",
   "crates/sdks/*",
+  "packages/nexus-assets",
   "games/*",
   "tools/*",
 ]

@@ -1,0 +1,1 @@
+{"name": "@nexus-engine/nexus-assets", "version": "0.1.0", "private": true, "type": "module", "description": "Nexus Engine asset pipeline crate (Rust) — Bun workspace marker for packages/nexus-assets.", "license": "MIT"}
