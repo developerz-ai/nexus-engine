@@ -318,8 +318,8 @@ ensure_gate_tool "cargo-deny" "$deny_version" \
 
 # ── scripts workspace ───────────────────────────────────────────────────────
 # The bun workspace root is the repo root (the root package.json declares
-# workspaces: ["scripts"] and bun.lock lives there), so one frozen install
-# provisions the scripts workspace too.
+# workspaces: ["scripts", "packages/nexus-hal"] and bun.lock lives there), so
+# one frozen install provisions scripts and the private HAL workspace adapter.
 if ! bun install --frozen-lockfile; then
   echo "bin/setup: bun install --frozen-lockfile failed" >&2
   exit 1

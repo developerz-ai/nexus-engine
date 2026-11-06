@@ -30,9 +30,16 @@ nexus-engine/
 │   ├── game-template/
 │   ├── games/
 │   └── initial/
-├── crates/                          # all engine crates (one per system + sub-crates)
+├── packages/                        # migrated HAL and style modules
+│   ├── nexus-hal/                    # Rust crate + private Bun workspace adapter
+│   └── styles/                      # style modules (PBR, NPR, pixel, 2D, mixed)
+│       ├── nexus-style-pbr/
+│       ├── nexus-style-npr/
+│       ├── nexus-style-pixel/
+│       ├── nexus-style-2d/
+│       └── nexus-style-mixed/
+├── crates/                          # remaining engine crates (systems + sub-crates)
 │   ├── nexus-core/
-│   ├── nexus-hal/
 │   ├── nexus-assets/
 │   ├── nexus-renderer/
 │   ├── nexus-physics/
@@ -64,13 +71,6 @@ nexus-engine/
 │   └── sdks/
 │       ├── nexus-agent-sdk-rs/      # Rust SDK
 │       └── nexus-agent-sdk-py/      # Python bindings via pyo3
-├── packages/                        # member groups outside the engine tree
-│   └── styles/                      # style modules (PBR, NPR, pixel, 2D, mixed)
-│       ├── nexus-style-pbr/
-│       ├── nexus-style-npr/
-│       ├── nexus-style-pixel/
-│       ├── nexus-style-2d/
-│       └── nexus-style-mixed/
 ├── games/                           # demo games — integration tests
 │   ├── nexus-fps/
 │   ├── nexus-rpg/
@@ -86,6 +86,14 @@ nexus-engine/
 
 ---
 
+`nexus-hal` and the five style modules have moved to `packages/`; all other crates
+retain their existing locations, and dependency boundaries are unchanged. The root
+Cargo workspace includes `packages/nexus-hal` and `packages/styles/*`. The Bun
+workspace includes `scripts`, `packages/nexus-hal`, and `packages/styles/*`. HAL's
+private, dependency-free `@nexus-engine/nexus-hal` adapter registers the Rust
+package without adding a JavaScript implementation; the style crates remain
+Rust-only, without Bun adapters.
+
 ## Workspace root `Cargo.toml` (shape only)
 
 ```toml
@@ -94,7 +102,7 @@ nexus-engine/
 resolver = "2"
 members = [
   "crates/nexus-core",
-  "crates/nexus-hal",
+  "packages/nexus-hal",
   "crates/nexus-assets",
   "crates/nexus-renderer",
   "crates/nexus-physics",

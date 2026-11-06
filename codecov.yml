@@ -48,7 +48,7 @@ flags:
   core:
     paths:
       - crates/nexus-core/
-      - crates/nexus-hal/
+      - packages/nexus-hal/
   systems:
     paths:
       - crates/nexus-renderer/
