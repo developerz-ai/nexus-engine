@@ -20,7 +20,7 @@ members = [
   "crates/nexus-editor",
   "crates/nexus-cli",
   "crates/nexus-merge",
-  "crates/nexus-engine",
+  "packages/nexus-engine",
   "packages/styles/*",
   "crates/genres/*",
   "crates/sdks/nexus-agent-sdk-rs",
