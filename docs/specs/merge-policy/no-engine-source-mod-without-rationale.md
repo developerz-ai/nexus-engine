@@ -126,9 +126,9 @@ The JSON block always precedes the markdown. Automation parses the JSON; humans 
 |---|---|
 | `crates/nexus-core/src/**` | Substrate — extensions cannot reach into the substrate |
 | `crates/nexus-renderer/src/**` | Render pipeline — use `RenderPass` plugins |
-| `crates/nexus-physics/src/**` | Physics core — use `PhysicsBackend` |
+| `packages/nexus-physics/src/**` | Physics core — use `PhysicsBackend` |
 | `crates/nexus-audio/src/**` | Audio core — use `AudioBackend` / `DspPack` |
-| `crates/nexus-networking/src/**` | Net stack — use `NetTransport` |
+| `packages/nexus-net/src/**` | Net stack — use `NetTransport` |
 | `crates/nexus-scripting/src/**` | VM glue — use `ScriptVm` |
 | `crates/nexus-assets/src/**` | Pipeline — use `AssetSource` / `AssetImporter` |
 | `crates/nexus-agent/src/**` | Agent RPC — wire-stable, requires ADR for any addition |

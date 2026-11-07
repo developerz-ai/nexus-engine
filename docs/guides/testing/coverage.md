@@ -57,7 +57,7 @@ PR comment shows per-file diff:
 
 ```
 crates/nexus-ecs/src/archetype.rs    87.2% → 84.1%   (-3.1%)  ❌
-crates/nexus-net/src/rollback.rs     91.0% → 91.5%   (+0.5%)  ✅
+packages/nexus-net/src/rollback.rs    91.0% → 91.5%   (+0.5%)  ✅
 ```
 
 ## Run

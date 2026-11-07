@@ -61,21 +61,22 @@ const NAMING_FILES = [
   '.claude/skills/fix-from-coderabbit/SKILL.md',
 ] as const;
 
-/** Other subtrees stay at their merged locations (styles moved independently). */
+/** Other subtrees stay at their merged locations (styles, net and physics moved
+ * independently of this PR's genre move). */
 const UNMOVED_PATHS = [
   'crates/nexus-core',
   'crates/nexus-hal',
   'crates/nexus-assets',
   'crates/nexus-renderer',
-  'crates/nexus-physics',
   'crates/nexus-audio',
-  'crates/nexus-net',
   'crates/nexus-script',
   'crates/nexus-agent',
   'crates/nexus-editor',
   'crates/nexus-cli',
   'crates/nexus-merge',
   'crates/nexus-engine',
+  'packages/nexus-net',
+  'packages/nexus-physics',
   'packages/styles',
   'crates/sdks',
   'games',

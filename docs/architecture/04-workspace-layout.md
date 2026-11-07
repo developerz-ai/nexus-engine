@@ -35,9 +35,7 @@ nexus-engine/
 │   ├── nexus-hal/
 │   ├── nexus-assets/
 │   ├── nexus-renderer/
-│   ├── nexus-physics/
 │   ├── nexus-audio/
-│   ├── nexus-net/
 │   ├── nexus-script/
 │   ├── nexus-agent/
 │   ├── nexus-editor/
@@ -65,6 +63,8 @@ nexus-engine/
 │   │   ├── nexus-genre-puzzle/
 │   │   ├── nexus-genre-visualnovel/
 │   │   └── nexus-genre-openworld/
+│   ├── nexus-net/                   # relocated system crate (transport, quinn)
+│   ├── nexus-physics/               # relocated system crate (rapier)
 │   └── styles/                      # style modules (PBR, NPR, pixel, 2D, mixed)
 │       ├── nexus-style-pbr/
 │       ├── nexus-style-npr/
@@ -97,9 +97,9 @@ members = [
   "crates/nexus-hal",
   "crates/nexus-assets",
   "crates/nexus-renderer",
-  "crates/nexus-physics",
+  "packages/nexus-physics",
   "crates/nexus-audio",
-  "crates/nexus-net",
+  "packages/nexus-net",
   "crates/nexus-script",
   "crates/nexus-agent",
   "crates/nexus-editor",
