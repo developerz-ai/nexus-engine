@@ -21,7 +21,7 @@ Doctrine: the three pyramids. → `overview.md`.
 | performance | criterion benches | `perf.md` | `crates/<c>/benches/`, `benches/` |
 | fuzz | `cargo-fuzz` + corpora | `fuzz.md` | `crates/<c>/fuzz/`, `fuzz/` |
 | visual | pixel-diff golden image | `visual.md` | `crates/<c>/tests/visual/`, `tests/golden/` |
-| network | lag/loss injection | `network.md` | `crates/nexus-net/tests/net_*.rs` |
+| network | lag/loss injection | `network.md` | `packages/nexus-net/tests/net_*.rs` |
 | coverage | line+branch gate | `coverage.md` | computed; output in `logs/test/coverage/` |
 | game-side | identical stack, in template | `game-tests.md` | `nexus new` scaffold |
 | CI orchestration | matrix + gates | `ci.md` | `.github/workflows/*` (deferred) |

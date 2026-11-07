@@ -128,13 +128,13 @@ The JSON block always precedes the markdown. Automation parses the JSON; humans 
 | `crates/nexus-renderer/src/**` | Render pipeline — use `RenderPass` plugins |
 | `crates/nexus-physics/src/**` | Physics core — use `PhysicsBackend` |
 | `crates/nexus-audio/src/**` | Audio core — use `AudioBackend` / `DspPack` |
-| `crates/nexus-networking/src/**` | Net stack — use `NetTransport` |
+| `packages/nexus-net/src/**` | Net stack — use `NetTransport` |
 | `crates/nexus-scripting/src/**` | VM glue — use `ScriptVm` |
 | `crates/nexus-assets/src/**` | Pipeline — use `AssetSource` / `AssetImporter` |
 | `crates/nexus-agent/src/**` | Agent RPC — wire-stable, requires ADR for any addition |
 | `crates/nexus-editor/src/**` | Editor core — use editor extensions |
 
-Engine-shipped extension crates (`crates/styles/`, `crates/genres/`, `crates/nexus-engine-compat-*/`) are NOT in the trigger set. They are themselves extensions to the core.
+Engine-shipped extension crates (`packages/styles/`, `crates/genres/`, `crates/nexus-engine-compat-*/`) are NOT in the trigger set. They are themselves extensions to the core.
 
 ---
 

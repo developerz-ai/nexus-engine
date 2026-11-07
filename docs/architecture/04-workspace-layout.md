@@ -37,19 +37,12 @@ nexus-engine/
 │   ├── nexus-renderer/
 │   ├── nexus-physics/
 │   ├── nexus-audio/
-│   ├── nexus-net/
 │   ├── nexus-script/
 │   ├── nexus-agent/
 │   ├── nexus-editor/
 │   ├── nexus-cli/
 │   ├── nexus-merge/                 # the AI maintainer's lint/check library
 │   ├── nexus-engine/                # facade re-export crate (the public umbrella)
-│   ├── styles/
-│   │   ├── nexus-style-pbr/
-│   │   ├── nexus-style-npr/
-│   │   ├── nexus-style-pixel/
-│   │   ├── nexus-style-2d/
-│   │   └── nexus-style-mixed/
 │   ├── genres/
 │   │   ├── nexus-genre-fps/
 │   │   ├── nexus-genre-rpg/
@@ -70,6 +63,14 @@ nexus-engine/
 │   └── sdks/
 │       ├── nexus-agent-sdk-rs/      # Rust SDK
 │       └── nexus-agent-sdk-py/      # Python bindings via pyo3
+├── packages/                        # house-layout migration: relocated engine crates and member groups
+│   ├── nexus-net/
+│   └── styles/                      # style modules (PBR, NPR, pixel, 2D, mixed)
+│       ├── nexus-style-pbr/
+│       ├── nexus-style-npr/
+│       ├── nexus-style-pixel/
+│       ├── nexus-style-2d/
+│       └── nexus-style-mixed/
 ├── games/                           # demo games — integration tests
 │   ├── nexus-fps/
 │   ├── nexus-rpg/
@@ -98,14 +99,14 @@ members = [
   "crates/nexus-renderer",
   "crates/nexus-physics",
   "crates/nexus-audio",
-  "crates/nexus-net",
+  "packages/nexus-net",
   "crates/nexus-script",
   "crates/nexus-agent",
   "crates/nexus-editor",
   "crates/nexus-cli",
   "crates/nexus-merge",
   "crates/nexus-engine",
-  "crates/styles/*",
+  "packages/styles/*",
   "crates/genres/*",
   "crates/sdks/*",
   "games/*",
@@ -289,7 +290,7 @@ Every crate lists: **purpose**, **spec**, **public surface**, **internal deps**,
 - **Internal deps.** all `nexus-*` engine crates.
 - **External deps.** none direct.
 
-### `crates/styles/nexus-style-*`
+### `packages/styles/nexus-style-*`
 
 - **Purpose.** Style modules (PBR, NPR, pixel, 2D, mixed). Plug into renderer.
 - **Spec.** `docs/specs/styles/<style>.md`.

@@ -17,7 +17,7 @@ area/renderer:
   - changed-files:
       - any-glob-to-any-file:
           - crates/nexus-renderer/**
-          - crates/styles/**
+          - packages/styles/**
 
 area/physics:
   - changed-files:
@@ -32,7 +32,7 @@ area/audio:
 area/networking:
   - changed-files:
       - any-glob-to-any-file:
-          - crates/nexus-net/**
+          - packages/nexus-net/**
 
 area/scripting:
   - changed-files:

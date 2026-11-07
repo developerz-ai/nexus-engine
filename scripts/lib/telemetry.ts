@@ -9,8 +9,7 @@
 //
 // Suppressed when env `NEXUS_NO_TELEMETRY` is set (tests, CI sanity).
 
-import { existsSync, mkdirSync } from 'node:fs';
-import { appendFileSync } from 'node:fs';
+import { appendFileSync, existsSync, mkdirSync } from 'node:fs';
 
 export interface TelemetryFrame {
   startedAtIso: string;

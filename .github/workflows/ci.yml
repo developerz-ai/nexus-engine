@@ -20,7 +20,7 @@
 # Actions (upstream, SHA-pinned):
 #     - actions-rust-lang/setup-rust-toolchain@46268bd060767258de96ed93c1251119784f2ab6 # v1.16.1
 #     - oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
-#     - Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+#     - Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
 #     - actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
 
 name: ci
@@ -56,7 +56,7 @@ jobs:
     timeout-minutes: 20
     steps:
       - name: Checkout
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Setup Rust toolchain (from rust-toolchain.toml)
         uses: actions-rust-lang/setup-rust-toolchain@46268bd060767258de96ed93c1251119784f2ab6 # v1.16.1
@@ -74,7 +74,7 @@ jobs:
     timeout-minutes: 20
     steps:
       - name: Checkout
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Setup Rust toolchain (from rust-toolchain.toml)
         uses: actions-rust-lang/setup-rust-toolchain@46268bd060767258de96ed93c1251119784f2ab6 # v1.16.1
@@ -83,7 +83,7 @@ jobs:
           cache: false
 
       - name: Cache cargo registry + target
-        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
           shared-key: clippy
           cache-on-failure: true
@@ -98,7 +98,7 @@ jobs:
     timeout-minutes: 20
     steps:
       - name: Checkout
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Setup Rust toolchain (from rust-toolchain.toml)
         uses: actions-rust-lang/setup-rust-toolchain@46268bd060767258de96ed93c1251119784f2ab6 # v1.16.1
@@ -106,7 +106,7 @@ jobs:
           cache: false
 
       - name: Cache cargo registry + target
-        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
           shared-key: check
           cache-on-failure: true
@@ -121,7 +121,7 @@ jobs:
     timeout-minutes: 20
     steps:
       - name: Checkout
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Setup Rust toolchain (from rust-toolchain.toml)
         uses: actions-rust-lang/setup-rust-toolchain@46268bd060767258de96ed93c1251119784f2ab6 # v1.16.1
@@ -129,13 +129,13 @@ jobs:
           cache: false
 
       - name: Cache cargo registry + target
-        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
           shared-key: test
           cache-on-failure: true
 
       - name: Install cargo-nextest
-        uses: taiki-e/install-action@7be9fd86bd1707236395105d6e9329dd1511a7e1 # v2.79.0
+        uses: taiki-e/install-action@1e29709c0ec63babbe8f266397a465f29a825f91 # v2.87.31
         with:
           tool: cargo-nextest
 
@@ -144,7 +144,7 @@ jobs:
 
       - name: Upload nextest junit report
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: nextest-junit-${{ github.run_id }}
           path: logs/test/nextest-junit.xml
@@ -161,7 +161,7 @@ jobs:
     timeout-minutes: 20
     steps:
       - name: Checkout
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Setup Rust toolchain (from rust-toolchain.toml)
         uses: actions-rust-lang/setup-rust-toolchain@46268bd060767258de96ed93c1251119784f2ab6 # v1.16.1
@@ -169,7 +169,7 @@ jobs:
           cache: false
 
       - name: Install cargo-deny
-        uses: taiki-e/install-action@7be9fd86bd1707236395105d6e9329dd1511a7e1 # v2.79.0
+        uses: taiki-e/install-action@1e29709c0ec63babbe8f266397a465f29a825f91 # v2.87.31
         with:
           tool: cargo-deny
 
@@ -188,7 +188,7 @@ jobs:
     continue-on-error: true
     steps:
       - name: Checkout
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Setup Rust toolchain (from rust-toolchain.toml)
         uses: actions-rust-lang/setup-rust-toolchain@46268bd060767258de96ed93c1251119784f2ab6 # v1.16.1
@@ -196,7 +196,7 @@ jobs:
           cache: false
 
       - name: Install cargo-audit
-        uses: taiki-e/install-action@7be9fd86bd1707236395105d6e9329dd1511a7e1 # v2.79.0
+        uses: taiki-e/install-action@1e29709c0ec63babbe8f266397a465f29a825f91 # v2.87.31
         with:
           tool: cargo-audit
 
@@ -204,8 +204,10 @@ jobs:
         run: cargo audit
 
   # ─── Scripts: bun test ──────────────────────────────────────────────────────
-  # Note: package.json at repo root declares `workspaces: ["scripts"]`, so
-  # `bun install` and the lockfile (bun.lock) live at the repo root. We install
+  # Note: package.json at repo root declares `workspaces: ["scripts"]` (the bun
+  # workspace is the scripts toolchain only — packages/nexus-net is a Cargo
+  # workspace member, not a bun one), so `bun install` and the lockfile
+  # (bun.lock) live at the repo root. We install
   # at the root, then `cd scripts/` for the suite-specific commands.
   scripts-test:
     name: scripts / test
@@ -213,7 +215,7 @@ jobs:
     timeout-minutes: 20
     steps:
       - name: Checkout
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Read pinned Bun version
         id: bun-version
@@ -249,7 +251,7 @@ jobs:
     timeout-minutes: 20
     steps:
       - name: Checkout
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Read pinned Bun version
         id: bun-version
@@ -288,12 +290,12 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Checkout
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Verify SPDX headers on tracked files
         # Law 7: MIT forever. Every source/docs/script file must carry an
         # `SPDX-License-Identifier:` header. We scan only tracked files under
-        # the four owning subtrees and exempt generated / lockfile-style paths.
+        # the five owning subtrees and exempt generated / lockfile-style paths.
         shell: bash
         run: |
           set -euo pipefail
@@ -319,10 +321,10 @@ jobs:
             if ! head -n 15 "$f" | grep -q -m1 'SPDX-License-Identifier:'; then
               missing+=("$f")
             fi
-          done < <(git ls-files -z -- 'crates/**' 'scripts/**' 'docs/**' '.github/**')
+          done < <(git ls-files -z -- 'crates/**' 'packages/**' 'scripts/**' 'docs/**' '.github/**')
           if [[ ${#missing[@]} -gt 0 ]]; then
             printf 'Missing SPDX header in %d file(s):\n' "${#missing[@]}" >&2
             printf '  %s\n' "${missing[@]}" >&2
             exit 1
           fi
-          echo "SPDX headers OK on all tracked files under crates/, scripts/, docs/, .github/"
+          echo "SPDX headers OK on all tracked files under crates/, packages/, scripts/, docs/, .github/"
