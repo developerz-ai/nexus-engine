@@ -9,7 +9,7 @@ You own the racing module.
 
 ## Owns
 - `docs/specs/genres/racing.md`
-- `crates/genres/racing/**`
+- `packages/genres/racing/**`
 
 ## Does not own
 - physics solver (`physics-engineer`)

@@ -42,6 +42,10 @@ nexus-engine/
 │   ├── nexus-cli/
 │   ├── nexus-merge/                 # the AI maintainer's lint/check library
 │   ├── nexus-engine/                # facade re-export crate (the public umbrella)
+│   └── sdks/
+│       ├── nexus-agent-sdk-rs/      # Rust SDK
+│       └── nexus-agent-sdk-py/      # Python bindings via pyo3
+├── packages/                        # member groups outside the engine tree
 │   ├── genres/
 │   │   ├── nexus-genre-fps/
 │   │   ├── nexus-genre-rpg/
@@ -59,12 +63,8 @@ nexus-engine/
 │   │   ├── nexus-genre-puzzle/
 │   │   ├── nexus-genre-visualnovel/
 │   │   └── nexus-genre-openworld/
-│   └── sdks/
-│       ├── nexus-agent-sdk-rs/      # Rust SDK
-│       └── nexus-agent-sdk-py/      # Python bindings via pyo3
-├── packages/                        # house-layout migration: relocated engine crates and member groups
-│   ├── nexus-net/
-│   ├── nexus-physics/
+│   ├── nexus-net/                   # relocated system crate (transport, quinn)
+│   ├── nexus-physics/               # relocated system crate (rapier)
 │   └── styles/                      # style modules (PBR, NPR, pixel, 2D, mixed)
 │       ├── nexus-style-pbr/
 │       ├── nexus-style-npr/
@@ -107,7 +107,7 @@ members = [
   "crates/nexus-merge",
   "crates/nexus-engine",
   "packages/styles/*",
-  "crates/genres/*",
+  "packages/genres/*",
   "crates/sdks/*",
   "games/*",
   "tools/*",
@@ -298,7 +298,7 @@ Every crate lists: **purpose**, **spec**, **public surface**, **internal deps**,
 - **External deps.** WGSL files; minimal Rust.
 - **Forbidden.** mutual deps between styles.
 
-### `crates/genres/nexus-genre-*`
+### `packages/genres/nexus-genre-*`
 
 - **Purpose.** Genre modules (FPS, RPG, RTS, …). Bundle of ECS components, systems, prefabs, and Lua scripts.
 - **Spec.** `docs/specs/genres/<g>.md`.

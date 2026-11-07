@@ -1,0 +1,8 @@
+{
+  "name": "@nexus-engine/genres",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Nexus Engine genre modules (Cargo crates) grouped as one workspace package.",
+  "license": "MIT"
+}

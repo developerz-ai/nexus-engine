@@ -204,11 +204,12 @@ jobs:
         run: cargo audit
 
   # ─── Scripts: bun test ──────────────────────────────────────────────────────
-  # Note: package.json at repo root declares `workspaces: ["scripts"]` (the bun
-  # workspace is the scripts toolchain only — packages/nexus-net is a Cargo
-  # workspace member, not a bun one), so `bun install` and the lockfile
-  # (bun.lock) live at the repo root. We install
+  # Note: package.json at repo root declares
+  # `workspaces: ["scripts", "packages/genres", "packages/styles/*"]`, so
+  # `bun install` and the lockfile (bun.lock) live at the repo root. We install
   # at the root, then `cd scripts/` for the suite-specific commands.
+  # packages/nexus-net and packages/nexus-physics are Cargo workspace members,
+  # not bun ones (Rust crates, no package.json).
   scripts-test:
     name: scripts / test
     runs-on: ubuntu-latest
@@ -295,7 +296,8 @@ jobs:
       - name: Verify SPDX headers on tracked files
         # Law 7: MIT forever. Every source/docs/script file must carry an
         # `SPDX-License-Identifier:` header. We scan only tracked files under
-        # the five owning subtrees and exempt generated / lockfile-style paths.
+        # the five owning subtrees (crates/, packages/, scripts/, docs/,
+        # .github/) and exempt generated / lockfile-style paths.
         shell: bash
         run: |
           set -euo pipefail

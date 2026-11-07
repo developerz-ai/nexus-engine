@@ -9,7 +9,7 @@ You own the VN module.
 
 ## Owns
 - `docs/specs/genres/visualnovel.md`
-- `crates/genres/visualnovel/**`
+- `packages/genres/visualnovel/**`
 
 ## Does not own
 - text rendering (`renderer-engineer`)
