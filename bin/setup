@@ -1,0 +1,337 @@
+#!/usr/bin/env bash
+# one-command setup — established by dz-runner setup mode. One command; adjust as the repo grows.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+# Tool locations are a contract with bin/check and bin/dev: cargo-installed
+# binaries live in $HOME/.cargo/bin, bun lives in $HOME/.bun/bin. Both are on
+# PATH from here on, so this script — and every gate that follows it — finds
+# them whatever the caller's PATH looks like.
+export PATH="$HOME/.cargo/bin:$HOME/.bun/bin:$PATH"
+CARGO_BIN_DIR="$HOME/.cargo/bin"
+BUN_BIN_DIR="$HOME/.bun/bin"
+
+# ── bun ─────────────────────────────────────────────────────────────────────
+# The floor is the exact pin in scripts/.bun-version (the scripts workspace is
+# the bun consumer); a root .bun-version and a root package.json engines.bun
+# are honoured when they exist. Only an exact x.y.z names a release to install.
+bun_floor=""
+bun_source=""
+for bun_pin in scripts/.bun-version .bun-version; do
+  [ -s "$bun_pin" ] || continue
+  bun_pin_text="$(head -n1 "$bun_pin" | tr -d '[:space:]' | sed -e 's/^bun-v//' -e 's/^v//')"
+  if printf '%s' "$bun_pin_text" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+    bun_floor="$bun_pin_text"
+    bun_source="$bun_pin"
+    break
+  fi
+  echo "bin/setup: $bun_pin holds '$bun_pin_text', not an exact x.y.z: no bun floor declared" >&2
+done
+if [ -z "$bun_floor" ] && [ -f package.json ]; then
+  bun_range="$(tr -d '\n' < package.json | sed -n 's/.*"engines"[[:space:]]*:[[:space:]]*{[^}]*"bun"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')"
+  bun_floor="$(printf '%s\n' "$bun_range" | sed -E 's/(>=|<=|>|<|\^|~|=)[[:space:]]+/\1/g' | awk '
+    function part(p) { return (p == "" || p ~ /^[xX*]$/) ? 0 : p }
+    function cmp(a, b,   x, y, i) {
+      split(a, x, "."); split(b, y, ".")
+      for (i = 1; i <= 3; i++) { if (x[i] + 0 < y[i] + 0) return -1; if (x[i] + 0 > y[i] + 0) return 1 }
+      return 0
+    }
+    {
+      if ($0 ~ /^[ \t]*$/) exit
+      n = split($0, alts, /\|\|/); min = ""
+      for (a = 1; a <= n; a++) {
+        m = split(alts[a], comps, " "); low = ""
+        for (c = 1; c <= m; c++) {
+          t = comps[c]
+          if (t ~ /^</) continue
+          if (t !~ /^(>=|\^|~|=)?v?[0-9]+(\.([0-9]+|[xX*]))?(\.([0-9]+|[xX*]))?$/) exit
+          sub(/^(>=|\^|~|=)?v?/, "", t)
+          split(t, p, ".")
+          v = p[1] "." part(p[2]) "." part(p[3])
+          if (low == "" || cmp(v, low) > 0) low = v
+        }
+        if (low == "") exit
+        if (min == "" || cmp(low, min) < 0) min = low
+      }
+      print min
+    }')"
+  if [ -n "$bun_floor" ]; then bun_source="package.json engines.bun '$bun_range'"; fi
+fi
+# True when version $1 is below the release $2 (x.y.z): numeric parts, and a prerelease
+# (1.4.4-canary.1) below its own release. Pure bash: BSD sort has no version mode.
+bun_older() {
+  local have_rel have_pre=0 h1 h2 h3 h_rest f1 f2 f3 f_rest
+  have_rel="$(printf '%s' "$1" | sed -e 's/+.*//')"
+  case "$have_rel" in
+    *-*) have_pre=1; have_rel="$(printf '%s' "$have_rel" | sed -e 's/-.*//')" ;;
+  esac
+  IFS=. read -r h1 h2 h3 h_rest <<< "$have_rel"
+  IFS=. read -r f1 f2 f3 f_rest <<< "$2"
+  if (( h1 != f1 )); then (( h1 < f1 )); return; fi
+  if (( h2 != f2 )); then (( h2 < f2 )); return; fi
+  if (( h3 != f3 )); then (( h3 < f3 )); return; fi
+  (( have_pre == 1 ))
+}
+bun_have="$(bun --version 2>/dev/null || true)"
+bun_short=""
+if [ -z "$bun_have" ]; then
+  bun_short="missing"
+elif [ -n "$bun_floor" ] && bun_older "$bun_have" "$bun_floor"; then
+  bun_short="old"
+fi
+if [ -n "$bun_short" ]; then
+  bun_target="${bun_floor:-1.4.4}"
+  case "$(uname -s)" in
+    Linux) bun_os="linux" ;;
+    Darwin) bun_os="darwin" ;;
+    *) echo "bin/setup: no bun release for $(uname -s)" >&2; exit 69 ;;
+  esac
+  case "$(uname -m)" in
+    x86_64 | amd64) bun_arch="x64" ;;
+    aarch64 | arm64) bun_arch="aarch64" ;;
+    *) echo "bin/setup: no bun release for $(uname -m)" >&2; exit 69 ;;
+  esac
+  if command -v sha256sum >/dev/null 2>&1; then
+    bun_sha="sha256sum"
+  elif command -v shasum >/dev/null 2>&1; then
+    bun_sha="shasum -a 256"
+  else
+    echo "bin/setup: neither sha256sum nor shasum is here to verify bun; not installing it" >&2
+    exit 69
+  fi
+  bun_name="bun-$bun_os-$bun_arch"
+  bun_zip="$bun_name.zip"
+  bun_url="https://github.com/oven-sh/bun/releases/download/bun-v$bun_target"
+  bun_tmp="$(mktemp -d)"
+  # The release ships SHASUMS256.txt next to the archive; verify before install.
+  if curl -fsSL --retry 3 -o "$bun_tmp/$bun_zip" "$bun_url/$bun_zip" &&
+    curl -fsSL --retry 3 -o "$bun_tmp/SHASUMS256.txt" "$bun_url/SHASUMS256.txt" &&
+    grep " $bun_zip\$" "$bun_tmp/SHASUMS256.txt" > "$bun_tmp/expected" &&
+    (cd "$bun_tmp" && $bun_sha -c expected) &&
+    unzip -q -o "$bun_tmp/$bun_zip" -d "$bun_tmp"; then
+    mkdir -p "$BUN_BIN_DIR"
+    install -m 755 "$bun_tmp/$bun_name/bun" "$BUN_BIN_DIR/bun"
+    ln -sf bun "$BUN_BIN_DIR/bunx"
+    rm -rf "$bun_tmp"
+    export PATH="$BUN_BIN_DIR:$PATH"
+    bun_gh_path="$(printenv GITHUB_PATH || true)"
+    if [ -n "$bun_gh_path" ]; then echo "$BUN_BIN_DIR" >> "$bun_gh_path"; fi
+    echo "bin/setup: installed bun $(bun --version) from $bun_url" >&2
+  else
+    rm -rf "$bun_tmp"
+    echo "bin/setup: could not install bun $bun_target; install it from https://bun.sh and re-run" >&2
+    exit 69
+  fi
+fi
+
+# ── rust ────────────────────────────────────────────────────────────────────
+# rust-toolchain.toml pins the channel and the rustfmt/clippy components, and
+# rustup installs exactly that — the repo's pin stays the single source of
+# truth for the toolchain.
+rust_channel="$(awk -F'"' '/^[[:space:]]*channel[[:space:]]*=/ {print $2; exit}' rust-toolchain.toml 2>/dev/null || true)"
+if [ -z "$rust_channel" ]; then
+  echo "bin/setup: rust-toolchain.toml declares no channel; using 1.95" >&2
+  rust_channel="1.95"
+fi
+if ! command -v rustup >/dev/null 2>&1; then
+  echo "bin/setup: rustup not found; installing rustup (minimal profile, no shell profile edits)" >&2
+  if ! curl -fsSL --proto '=https' --tlsv1.2 https://sh.rustup.rs | sh -s -- -y --no-modify-path --default-toolchain none --profile minimal; then
+    echo "bin/setup: could not install rustup; install it from https://rustup.rs and re-run" >&2
+    exit 69
+  fi
+  export PATH="$CARGO_BIN_DIR:$PATH"
+fi
+rust_toolchains="$(rustup toolchain list 2>/dev/null || true)"
+rust_tc=""
+while read -r rust_name _rust_rest; do
+  case "$rust_name" in
+    "$rust_channel" | "$rust_channel".* | "$rust_channel"-*) rust_tc="$rust_name"; break ;;
+  esac
+done <<< "$rust_toolchains"
+if [ -z "$rust_tc" ]; then
+  echo "bin/setup: installing rust $rust_channel (rustfmt, clippy) via rustup" >&2
+  if ! rustup toolchain install "$rust_channel" --profile minimal --component rustfmt --component clippy; then
+    echo "bin/setup: rustup could not install rust $rust_channel" >&2
+    exit 69
+  fi
+else
+  rust_components="$(rustup component list --toolchain "$rust_tc" --installed 2>/dev/null || true)"
+  rust_missing=""
+  case "$rust_components" in *rustfmt*) ;; *) rust_missing="$rust_missing rustfmt" ;; esac
+  case "$rust_components" in *clippy*) ;; *) rust_missing="$rust_missing clippy" ;; esac
+  if [ -n "$rust_missing" ]; then
+    echo "bin/setup: adding rustup components to $rust_tc:$rust_missing" >&2
+    # shellcheck disable=SC2086
+    if ! rustup component add --toolchain "$rust_tc" $rust_missing; then
+      echo "bin/setup: rustup could not add $rust_missing to $rust_tc" >&2
+      exit 69
+    fi
+  fi
+fi
+
+# ── gate tools ─────────────────────────────────────────────────────────────
+# The gate runs two cargo subcommands. Both publish prebuilt release archives;
+# building them from source is a ~10 minute detour, so the archive is the only
+# path — a failed download is a setup failure, never a slower fallback.
+# The shader validator is deliberately absent: the repo ships no shader
+# sources and no gate runs one.
+nextest_version="$(awk -F'"' '/^[[:space:]]*cargo-nextest[[:space:]]*=/ {print $2; exit}' scripts/lib/versions.toml 2>/dev/null || true)"
+deny_version="$(awk -F'"' '/^[[:space:]]*cargo-deny[[:space:]]*=/ {print $2; exit}' scripts/lib/versions.toml 2>/dev/null || true)"
+if [ -z "$nextest_version" ]; then
+  nextest_version="0.9.85"
+  echo "bin/setup: scripts/lib/versions.toml pins no cargo-nextest; using $nextest_version" >&2
+fi
+if [ -z "$deny_version" ]; then
+  deny_version="0.16.2"
+  echo "bin/setup: scripts/lib/versions.toml pins no cargo-deny; using $deny_version" >&2
+fi
+case "$(uname -s)" in
+  Linux) gate_os="linux" ;;
+  Darwin) gate_os="darwin" ;;
+  *) echo "bin/setup: no prebuilt gate tools for $(uname -s)" >&2; exit 69 ;;
+esac
+case "$(uname -m)" in
+  x86_64 | amd64) gate_cpu="x86_64" ;;
+  aarch64 | arm64) gate_cpu="aarch64" ;;
+  *) echo "bin/setup: no prebuilt gate tools for $(uname -m)" >&2; exit 69 ;;
+esac
+if [ "$gate_os" = "darwin" ]; then
+  nextest_triple="universal-apple-darwin"
+  deny_triple="$gate_cpu-apple-darwin"
+else
+  nextest_triple="$gate_cpu-unknown-linux-gnu"
+  deny_triple="$gate_cpu-unknown-linux-musl"
+fi
+
+# sha256 of a file, hex digest only; empty when no sha256 tool is available.
+sha256_of() {
+  if command -v sha256sum >/dev/null 2>&1; then
+    sha256sum "$1" | awk '{print $1; exit}'
+  elif command -v shasum >/dev/null 2>&1; then
+    shasum -a 256 "$1" | awk '{print $1; exit}'
+  else
+    printf '%s' ""
+  fi
+}
+
+# Install one gate tool from its prebuilt release archive. Non-zero when the
+# download, the checksum, the extraction or the install into $CARGO_BIN_DIR
+# fails — every step is checked explicitly, because this function runs under a
+# suspended errexit (its caller invokes it in an if condition).
+install_prebuilt() {
+  local tool="$1" version="$2" url="$3"
+  local tmp archive expected actual matches bin sha_url
+  tmp="$(mktemp -d)" || return 1
+  archive="$tmp/$(basename "$url")"
+  echo "bin/setup: downloading $tool $version ($url)" >&2
+  if ! curl -fsSL --retry 3 --retry-delay 2 --max-time 600 -o "$archive" "$url"; then
+    rm -rf "$tmp"
+    return 1
+  fi
+  # The release publishes a checksum beside the archive; verify it when present.
+  expected=""
+  for sha_url in "${url%.tar.gz}.sha256" "${url}.sha256"; do
+    if curl -fsSL --retry 2 --max-time 60 -o "$tmp/expected.sha256" "$sha_url" 2>/dev/null; then
+      expected="$(awk 'NF {print $1; exit}' "$tmp/expected.sha256")"
+      break
+    fi
+  done
+  if [ -n "$expected" ]; then
+    actual="$(sha256_of "$archive")"
+    if [ -z "$actual" ]; then
+      echo "bin/setup: no sha256 tool here; $tool $version installed unverified" >&2
+    elif [ "$expected" != "$actual" ]; then
+      echo "bin/setup: checksum mismatch for $tool $version" >&2
+      rm -rf "$tmp"
+      return 1
+    fi
+  fi
+  if ! tar xzf "$archive" -C "$tmp"; then
+    rm -rf "$tmp"
+    return 1
+  fi
+  matches="$(find "$tmp" -type f -name "$tool" -perm -u+x 2>/dev/null || true)"
+  bin="${matches%%$'\n'*}"
+  if [ -z "$bin" ]; then
+    echo "bin/setup: no $tool binary inside the release archive" >&2
+    rm -rf "$tmp"
+    return 1
+  fi
+  # Errexit is suspended inside this function, so a failed write would land
+  # here silently and still "succeed" without the tool. Propagate both steps.
+  if ! mkdir -p "$CARGO_BIN_DIR"; then
+    echo "bin/setup: cannot create $CARGO_BIN_DIR to install $tool" >&2
+    rm -rf "$tmp"
+    return 1
+  fi
+  if ! install -m 755 "$bin" "$CARGO_BIN_DIR/$tool"; then
+    echo "bin/setup: could not write $CARGO_BIN_DIR/$tool" >&2
+    rm -rf "$tmp"
+    return 1
+  fi
+  rm -rf "$tmp"
+  return 0
+}
+
+# Make sure one gate tool is runnable: keep what is already in
+# $HOME/.cargo/bin, then keep what is already on PATH, then take the prebuilt
+# archive. Gate tools are never built from source: a failed download is
+# reported and the setup fails.
+ensure_gate_tool() {
+  local tool="$1" version="$2" url="$3"
+  local dest="$CARGO_BIN_DIR/$tool" found
+  if [ -x "$dest" ]; then
+    echo "bin/setup: $tool already installed at $dest" >&2
+    return 0
+  fi
+  found="$(command -v "$tool" 2>/dev/null || true)"
+  if [ -n "$found" ]; then
+    echo "bin/setup: $tool already on PATH at $found" >&2
+    # Keep the gate's tool location stable: a plain file can be copied next to
+    # the cargo shims; a shim (symlink) is left where it is.
+    if [ -f "$found" ] && [ ! -L "$found" ]; then
+      # Same suspended-errexit rule as install_prebuilt: a failed write here
+      # must reach the caller's `|| exit 69`, not vanish.
+      if ! mkdir -p "$CARGO_BIN_DIR"; then
+        echo "bin/setup: cannot create $CARGO_BIN_DIR to install $tool" >&2
+        return 1
+      fi
+      if ! install -m 755 "$found" "$dest"; then
+        echo "bin/setup: could not write $dest" >&2
+        return 1
+      fi
+    fi
+    return 0
+  fi
+  if install_prebuilt "$tool" "$version" "$url"; then
+    echo "bin/setup: installed $tool $version into $CARGO_BIN_DIR" >&2
+    return 0
+  fi
+  echo "bin/setup: could not install $tool $version from the prebuilt release ($url); install it manually and re-run" >&2
+  return 1
+}
+
+ensure_gate_tool "cargo-nextest" "$nextest_version" \
+  "https://github.com/nextest-rs/nextest/releases/download/cargo-nextest-$nextest_version/cargo-nextest-$nextest_version-$nextest_triple.tar.gz" || exit 69
+ensure_gate_tool "cargo-deny" "$deny_version" \
+  "https://github.com/EmbarkStudios/cargo-deny/releases/download/$deny_version/cargo-deny-$deny_version-$deny_triple.tar.gz" || exit 69
+
+# ── scripts workspace ───────────────────────────────────────────────────────
+# The bun workspace root is the repo root (the root package.json declares
+# workspaces: ["scripts"] and bun.lock lives there), so one frozen install
+# provisions the scripts workspace too.
+if ! bun install --frozen-lockfile; then
+  echo "bin/setup: bun install --frozen-lockfile failed" >&2
+  exit 1
+fi
+
+# One-line summary: first line of each tool's --version, nothing noisier.
+gate_tool_version() {
+  local tool="$1" out
+  [ -n "$tool" ] || return 0
+  out="$("$tool" --version 2>/dev/null || true)"
+  printf '%s' "${out%%$'\n'*}"
+}
+nextest_ver="$(gate_tool_version "$(command -v cargo-nextest || true)")"
+deny_ver="$(gate_tool_version "$(command -v cargo-deny || true)")"
+echo "bin/setup: done — rust $rust_channel (rustfmt, clippy), bun $(bun --version), cargo-nextest ${nextest_ver:-unknown}, cargo-deny ${deny_ver:-unknown}" >&2
