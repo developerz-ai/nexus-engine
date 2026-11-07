@@ -36,7 +36,6 @@ nexus-engine/
 │   ├── nexus-assets/
 │   ├── nexus-renderer/
 │   ├── nexus-audio/
-│   ├── nexus-net/
 │   ├── nexus-script/
 │   ├── nexus-agent/
 │   ├── nexus-editor/
@@ -63,7 +62,8 @@ nexus-engine/
 │   └── sdks/
 │       ├── nexus-agent-sdk-rs/      # Rust SDK
 │       └── nexus-agent-sdk-py/      # Python bindings via pyo3
-├── packages/                        # workspace packages outside crates/
+├── packages/                        # house-layout migration: relocated engine crates and member groups
+│   ├── nexus-net/
 │   ├── nexus-physics/
 │   └── styles/                      # style modules (PBR, NPR, pixel, 2D, mixed)
 │       ├── nexus-style-pbr/
@@ -99,7 +99,7 @@ members = [
   "crates/nexus-renderer",
   "packages/nexus-physics",
   "crates/nexus-audio",
-  "crates/nexus-net",
+  "packages/nexus-net",
   "crates/nexus-script",
   "crates/nexus-agent",
   "crates/nexus-editor",

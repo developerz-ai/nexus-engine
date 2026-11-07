@@ -32,7 +32,7 @@ area/audio:
 area/networking:
   - changed-files:
       - any-glob-to-any-file:
-          - crates/nexus-net/**
+          - packages/nexus-net/**
 
 area/scripting:
   - changed-files:

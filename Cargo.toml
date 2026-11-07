@@ -14,7 +14,7 @@ members = [
   "crates/nexus-renderer",
   "packages/nexus-physics",
   "crates/nexus-audio",
-  "crates/nexus-net",
+  "packages/nexus-net",
   "crates/nexus-script",
   "crates/nexus-agent",
   "crates/nexus-editor",

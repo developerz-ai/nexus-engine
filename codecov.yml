@@ -54,7 +54,7 @@ flags:
       - crates/nexus-renderer/
       - packages/nexus-physics/
       - crates/nexus-audio/
-      - crates/nexus-net/
+      - packages/nexus-net/
       - crates/nexus-assets/
       - crates/nexus-script/
   agent:

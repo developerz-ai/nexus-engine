@@ -46,15 +46,15 @@ cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warni
 | Path | Count | Contents |
 |---|---|---|
 | `crates/` | 29 | 12 system + `crates/genres/` 16 + `crates/sdks/nexus-agent-sdk-rs` 1 · 58 `.rs` files |
-| system crates | 12 | `crates/nexus-core` `crates/nexus-hal` `crates/nexus-assets` `crates/nexus-renderer` `crates/nexus-audio` `crates/nexus-net` `crates/nexus-script` `crates/nexus-agent` `crates/nexus-editor` `crates/nexus-cli` `crates/nexus-merge` `crates/nexus-engine` |
-| `packages/` | 6 | `packages/nexus-physics` + `packages/styles/` 5 · 12 `.rs` files |
+| `packages/` | 7 | `packages/nexus-net` `packages/nexus-physics` 2 system + `packages/styles/` 5 · 14 `.rs` files |
+| system crates | 13 | `crates/nexus-core` `crates/nexus-hal` `crates/nexus-assets` `crates/nexus-renderer` `packages/nexus-physics` `crates/nexus-audio` `packages/nexus-net` `crates/nexus-script` `crates/nexus-agent` `crates/nexus-editor` `crates/nexus-cli` `crates/nexus-merge` `crates/nexus-engine` |
 | `games/` | 4 | `games/nexus-fps` `games/nexus-platformer` `games/nexus-rpg` `games/nexus-rts` |
 | `tools/` | 2 | `tools/nexus-codegen` `tools/nexus-scenario` |
 | `scripts/` | 62 | Bun workspace · 14 scripts under `scripts/bin/` · one test per bin · count excludes `scripts/CLAUDE.md` |
 | `docs/` | 413 `.md` | `docs/architecture/` · `docs/specs/` · `docs/contracts/` · `docs/guides/` · `docs/prior-art/` · `docs/game-template/` · `docs/games/` |
 | `.claude/` | 119 / 14 / 15 | agents / commands / skills |
 
-Cargo workspace = `crates/` + `packages/` + `games/` + `tools/` (`Cargo.toml:10-30`). Bun workspace = `scripts/` only (`package.json:5`) — `packages/nexus-physics` is a Cargo-workspace member, not a Bun workspace (Rust crate, no `package.json`).
+Cargo workspace = `crates/` + `packages/` + `games/` + `tools/` (`Cargo.toml:10-30`). Bun workspace = `scripts/` only (`package.json:5`) — `packages/nexus-net` and `packages/nexus-physics` are Cargo-workspace members, not Bun workspaces (Rust crates, no `package.json`).
 
 ## Conventions
 | Rule | Where |
@@ -243,7 +243,7 @@ When in doubt: vision → `docs/architecture/00-vision.md` · law → `docs/arch
 2. Pick from `docs/architecture/decisions-open.md` (`[DECISION NEEDED]`) and `docs/architecture/benchmarks-pending.md` (`[BENCHMARK NEEDED]`); spawn the relevant subagent from the routing table above.
 3. Cross-check `docs/architecture/cross-agent-flags.md` if the task touches a file authored by multiple agents.
 
-Engine source exists but is Phase 0 scaffold — 29 crates, 58 `.rs` files under `crates/`, plus 6 crates, 12 `.rs` files under `packages/` (`packages/nexus-physics` + `packages/styles/`), 4 games, 2 tools; every crate, game and tool declares `Status: stub (Phase 0 scaffold)` (`crates/nexus-core/src/lib.rs:7`). The tree stays spec-driven (Law 2): new behavior starts at a spec.
+Engine source exists but is Phase 0 scaffold — 29 crates, 58 `.rs` files under `crates/`, plus 7 crates, 14 `.rs` files under `packages/` (`packages/nexus-net`, `packages/nexus-physics` + `packages/styles/`), 4 games, 2 tools; every crate, game and tool declares `Status: stub (Phase 0 scaffold)` (`crates/nexus-core/src/lib.rs:7`). The tree stays spec-driven (Law 2): new behavior starts at a spec.
 
 ## Note
 No git worktrees — work directly in this checkout. If a task needs subagents, run them as a team in this same checkout: split the work into disjoint pieces so no two agents touch the same files.
