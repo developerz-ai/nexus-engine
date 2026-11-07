@@ -35,7 +35,6 @@ nexus-engine/
 │   ├── nexus-hal/
 │   ├── nexus-assets/
 │   ├── nexus-renderer/
-│   ├── nexus-physics/
 │   ├── nexus-audio/
 │   ├── nexus-script/
 │   ├── nexus-agent/
@@ -65,6 +64,7 @@ nexus-engine/
 │       └── nexus-agent-sdk-py/      # Python bindings via pyo3
 ├── packages/                        # house-layout migration: relocated engine crates and member groups
 │   ├── nexus-net/
+│   ├── nexus-physics/
 │   └── styles/                      # style modules (PBR, NPR, pixel, 2D, mixed)
 │       ├── nexus-style-pbr/
 │       ├── nexus-style-npr/
@@ -97,7 +97,7 @@ members = [
   "crates/nexus-hal",
   "crates/nexus-assets",
   "crates/nexus-renderer",
-  "crates/nexus-physics",
+  "packages/nexus-physics",
   "crates/nexus-audio",
   "packages/nexus-net",
   "crates/nexus-script",
