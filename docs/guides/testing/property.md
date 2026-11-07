@@ -133,7 +133,7 @@ All persistence files **committed**. They are the corpus.
 
 ```
 crates/nexus-math/proptest-regressions/quat.txt   ← committed
-crates/nexus-net/proptest-regressions/rollback.txt
+packages/nexus-net/proptest-regressions/rollback.txt
 ```
 
 CI loads them first. New failure → new line appended → committed by AI fix PR.
