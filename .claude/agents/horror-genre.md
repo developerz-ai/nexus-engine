@@ -9,7 +9,7 @@ You own the horror module.
 
 ## Owns
 - `docs/specs/genres/horror.md`
-- `crates/genres/horror/**`
+- `packages/genres/horror/**`
 
 ## Does not own
 - adaptive audio (`audio-engineer`)

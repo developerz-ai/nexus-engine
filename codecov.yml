@@ -48,13 +48,13 @@ flags:
   core:
     paths:
       - crates/nexus-core/
-      - crates/nexus-hal/
+      - packages/nexus-hal/
   systems:
     paths:
       - crates/nexus-renderer/
-      - crates/nexus-physics/
+      - packages/nexus-physics/
       - crates/nexus-audio/
-      - crates/nexus-net/
+      - packages/nexus-net/
       - crates/nexus-assets/
       - crates/nexus-script/
   agent:
@@ -67,7 +67,7 @@ flags:
       - crates/nexus-cli/
   genres_styles:
     paths:
-      - crates/genres/
+      - packages/genres/
       - packages/styles/
 
 ignore:

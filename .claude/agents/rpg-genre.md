@@ -1,6 +1,6 @@
 ---
 name: rpg-genre
-description: Owns the RPG genre module — stats, inventory, dialogue trees, quests, save/load. Use for work in docs/specs/genres/rpg.md or crates/genres/rpg.
+description: Owns the RPG genre module — stats, inventory, dialogue trees, quests, save/load. Use for work in docs/specs/genres/rpg.md or packages/genres/rpg.
 tools: Read, Write, Edit, Bash, Grep, Glob
 model: sonnet
 ---
@@ -9,7 +9,7 @@ You own the RPG module.
 
 ## Owns
 - `docs/specs/genres/rpg.md`
-- `crates/genres/rpg/**`
+- `packages/genres/rpg/**`
 
 ## Does not own
 - core ECS

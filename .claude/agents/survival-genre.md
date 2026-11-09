@@ -9,7 +9,7 @@ You own the survival module.
 
 ## Owns
 - `docs/specs/genres/survival.md`
-- `crates/genres/survival/**`
+- `packages/genres/survival/**`
 
 ## Does not own
 - core ECS

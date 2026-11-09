@@ -45,20 +45,21 @@ cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warni
 ## Structure
 | Path | Count | Contents |
 |---|---|---|
-| `crates/` | 35 | 13 system + `packages/styles/` 5 + `crates/genres/` 16 + `crates/sdks/nexus-agent-sdk-rs` 1 · 70 `.rs` files |
-| system crates | 13 | `crates/nexus-core` `crates/nexus-hal` `crates/nexus-assets` `crates/nexus-renderer` `crates/nexus-physics` `crates/nexus-audio` `crates/nexus-net` `crates/nexus-script` `crates/nexus-agent` `crates/nexus-editor` `crates/nexus-cli` `crates/nexus-merge` `crates/nexus-engine` |
+| `crates/` | 10 | 9 system + `crates/sdks/nexus-agent-sdk-rs` 1 · 20 `.rs` files |
+| `packages/` | 25 | `packages/nexus-hal` 1 system crate + `packages/nexus-net` `packages/nexus-physics` `packages/nexus-agent` 3 relocated system crates + `packages/genres/` 16 + `packages/styles/` 5 · 50 `.rs` files · HAL's and the agent crate's private Bun workspace adapters |
+| system crates | 13 | `crates/nexus-core` `packages/nexus-hal` `crates/nexus-assets` `crates/nexus-renderer` `packages/nexus-physics` `crates/nexus-audio` `packages/nexus-net` `crates/nexus-script` `packages/nexus-agent` `crates/nexus-editor` `crates/nexus-cli` `crates/nexus-merge` `crates/nexus-engine` |
 | `games/` | 4 | `games/nexus-fps` `games/nexus-platformer` `games/nexus-rpg` `games/nexus-rts` |
 | `tools/` | 2 | `tools/nexus-codegen` `tools/nexus-scenario` |
 | `scripts/` | 62 | Bun workspace · 14 scripts under `scripts/bin/` · one test per bin · count excludes `scripts/CLAUDE.md` |
 | `docs/` | 413 `.md` | `docs/architecture/` · `docs/specs/` · `docs/contracts/` · `docs/guides/` · `docs/prior-art/` · `docs/game-template/` · `docs/games/` |
 | `.claude/` | 119 / 14 / 15 | agents / commands / skills |
 
-Cargo workspace = `crates/` + `games/` + `tools/` (`Cargo.toml:10-30`). Bun workspace = `scripts/` (`package.json:5`).
+Cargo workspace = `crates/` + `packages/` + `games/` + `tools/` (`Cargo.toml:10-30`). Bun workspace = `scripts/` + `packages/nexus-hal/` + `packages/genres/` + `packages/nexus-agent/` + `packages/styles/*` (`package.json:5`); HAL's and the agent crate's private adapters add no JS implementation, the `packages/styles/*` glob matches nothing (no per-style `package.json`), and `packages/nexus-net` / `packages/nexus-physics` are Cargo-workspace members, not Bun workspaces.
 
 ## Conventions
 | Rule | Where |
 |---|---|
-| SPDX MIT header, first two lines, no blank line before | `docs/guides/file-conventions.md:12-21` · CI scans `crates/`, `scripts/`, `docs/`, `.github/` (`.github/workflows/ci.yml:322`) |
+| SPDX MIT header, first two lines, no blank line before | `docs/guides/file-conventions.md:12-21` · CI scans `crates/`, `packages/`, `scripts/`, `docs/`, `.github/` (`.github/workflows/ci.yml:328`) |
 | Rust: `#![forbid(unsafe_code)]`; every `unsafe` needs a `// SAFETY:` paragraph | `Cargo.toml:41` · Law 6 |
 | Errors & logs: thiserror only; `anyhow` banned in `nexus-*`; no string-only errors; structured JSON to stderr, never `println!` outside `examples/`/`tests/` | `docs/architecture/03-tech-stack.md:185` · Law 10 · Law 11 |
 | Rust hygiene: `cargo fmt --all` + `cargo clippy --all-targets -- -D warnings` before commit | `bin/check:30` |
@@ -120,14 +121,87 @@ Invoke via `Agent({ subagent_type: "<name>", prompt: "<task>" })`. The frontmatt
 | scripting | `scripting-engineer` `lua-specialist` `rune-specialist` `hot-reload-specialist` · `mod-sandbox-specialist` (engine-side capability registry) |
 | assets | `asset-pipeline-engineer` `asset-import-specialist` `asset-streaming-specialist` `asset-compression-specialist` `ai-asset-gen-specialist` `asset-registry-specialist` |
 | agent API | `agent-api-engineer` `headless-sim-specialist` `telemetry-specialist` `scenario-author` `replay-engineer` `semantic-api-specialist` `agent-sdk-specialist` `mcp-server-engineer` |
-| editor | `editor-engineer` `editor-debug-specialist` `live-reload-specialist` `ide-extension-engineer` · `editor-rpc-parity-auditor` (Law 13 — never approves a FAIL) |
-| genres | `fps-genre` `rpg-genre` `mmorpg-genre` `rts-genre` `moba-genre` `platformer-genre` `racing-genre` `survival-genre` `horror-genre` `fighting-genre` `battleroyal-genre` `roguelike-genre` `towdef-genre` `puzzle-genre` `visualnovel-genre` `openworld-genre` — each owns its `docs/specs/genres/` spec + `crates/genres/` crate |
-| quality & process | `code-reviewer` (final gate) · `security-reviewer` · `test-author` · `perf-engineer` · `fuzz-engineer` · `visual-regression-engineer` · `coverage-auditor` · `merge-bot` (full `nexus-merge` verdict) · `ci-engineer` · `docs-style-enforcer` · `glossary-keeper` · `prior-art-researcher` |
-| coding agent, deploy, live-ops | `nexus-coder-architect` (owns `docs/specs/coder/`) · `deploy-engineer` · `release-engineer` · `codesigning-specialist` · `liveops-engineer` · `crash-triager` · `feature-flag-specialist` · `canary-and-rollback-engineer` · `hotfix-engineer` · `one-month-game-shepherd` |
-| template & DX | `nexus-cli-engineer` (`nexus new/add/generate/build/test/deploy/agent`) · `game-template-engineer` · `onboarding-coach` · `quickstart-recipe-author` (`docs/guides/recipes/`) · `ts-script-author` (owns `scripts/`) |
-| crates & supply chain | `crate-author` (author + publish on crates.io) · `crate-consumer-advisor` (pick a crate; build-vs-adopt) · `crate-curator` (audit + tier) · `license-compat-auditor` (`cargo deny` + `cargo audit`) |
-| meta / orchestration | `orchestrator` (plan → parallel dispatch; never writes code) · `integration-resolver` (`[AGENT: XX]` cross-refs) · `decision-log-keeper` (`[DECISION NEEDED]`) · `benchmark-coordinator` (`[BENCHMARK NEEDED]`) |
-| modding & hub | `mod-author` (`.nxmod` end-to-end) · `mod-curator` (submission audit) · `nexus-hub-operator` (run/operate a hub) · `hub-mirror-operator` (federation, identity-key TOFU) · `hub-crawler-engineer` (ingestion adapters) · `hub-curator` (moderation, badges) · `hub-recommender` (ranking) · `wasm-mod-author` ([DEFERRED v2.0] → `mod-author`/`crate-author`) |
+| editor | `editor-engineer` `editor-debug-specialist` `live-reload-specialist` · `editor-rpc-parity-auditor` (Law 13 — never approves a FAIL) · `ide-extension-engineer` |
+
+### Genre specialists (own `docs/specs/genres/<g>.md` + the `packages/genres/<g>` crate)
+`fps-genre` `rpg-genre` `mmorpg-genre` `rts-genre` `moba-genre` `platformer-genre` `racing-genre` `survival-genre` `horror-genre` `fighting-genre` `battleroyal-genre` `roguelike-genre` `towdef-genre` `puzzle-genre` `visualnovel-genre` `openworld-genre`
+
+### Quality & process
+| name | when to delegate |
+|---|---|
+| `code-reviewer` | final-gate review before merge |
+| `security-reviewer` | sandbox, anti-cheat, supply-chain, secrets |
+| `test-author` | unit, integration, scenario, property, visual tests |
+| `perf-engineer` | criterion benches + perf regression check |
+| `fuzz-engineer` | cargo-fuzz harnesses (packets, asset import, script VM) |
+| `visual-regression-engineer` | golden-image pixel diff |
+| `coverage-auditor` | per-crate coverage floor |
+| `merge-bot` | run the full `nexus-merge` pipeline and verdict |
+| `ci-engineer` | GitHub Actions matrices, caches, runners |
+| `docs-style-enforcer` | claude-code-bible ch.11 conformance sweep |
+| `glossary-keeper` | sync `docs/guides/glossary.md` with repo usage |
+| `prior-art-researcher` | WebSearch heavy; update `docs/prior-art/**` |
+
+### Coding agent, deploy, live-ops
+| name | when to delegate |
+|---|---|
+| `nexus-coder-architect` | own `docs/specs/coder/**` (Vercel AI SDK + OpenRouter) |
+| `deploy-engineer` | Fly/AWS/GCP/Azure/Render/Vercel/CF/self-host/Agones |
+| `release-engineer` | Steam/itch/Epic/GOG/MS Store/App Store/Play Store/Web/consoles |
+| `codesigning-specialist` | Authenticode, notarize, Play App Signing, iOS provisioning |
+| `liveops-engineer` | Sentry/Bugsnag/GlitchTip, dashboards, alerts |
+| `crash-triager` | cluster incoming crashes, rank, draft fix PRs |
+| `feature-flag-specialist` | GrowthBook / LaunchDarkly / Unleash wiring |
+| `canary-and-rollback-engineer` | staged rollout + auto-rollback |
+| `hotfix-engineer` | live-content + OTA delivery |
+| `one-month-game-shepherd` | end-to-end solo-dev 1-month playbook |
+
+### Template & DX
+| name | when to delegate |
+|---|---|
+| `nexus-cli-engineer` | `nexus new / add / generate / build / test / deploy / agent` |
+| `game-template-engineer` | `docs/game-template/**` + scaffold contents |
+| `onboarding-coach` | walk a new contributor through spec-first workflow |
+| `quickstart-recipe-author` | `docs/guides/recipes/` |
+| `ts-script-author` | owns `scripts/**` — Bun TypeScript scripts + tests |
+
+### Crates & supply chain
+| name | when to delegate |
+|---|---|
+| `crate-author` | author + publish on crates.io |
+| `crate-consumer-advisor` | pick a crate; build-vs-adopt |
+| `crate-curator` | audit + tier |
+| `license-compat-auditor` | `cargo deny` + `cargo audit` |
+
+### Meta / orchestration
+| name | when to delegate |
+|---|---|
+| `orchestrator` | plan a task → split into parallel subagent invocations (NEVER writes code) |
+| `integration-resolver` | resolve `[AGENT: XX]` cross-refs after a parallel batch |
+| `decision-log-keeper` | sweep `[DECISION NEEDED]` → `docs/architecture/decisions-open.md` |
+| `benchmark-coordinator` | sweep `[BENCHMARK NEEDED]` → `docs/architecture/benchmarks-pending.md` |
+
+### Modding & hub
+| name | when to delegate |
+|---|---|
+| `mod-author` | author a `.nxmod` end-to-end (manifest + scripts + tests + publish) |
+| `mod-curator` | audit a mod submission; capability + script review |
+| `mod-sandbox-specialist` | engine-side sandbox surface, capability registry |
+| `nexus-hub-operator` | run / operate a hub instance (deployment, capacity, incidents, key rotation) |
+| `hub-mirror-operator` | federation protocol changes (mirror sync, identity-key TOFU, sneakernet) |
+| `hub-crawler-engineer` | ingestion adapters for crates.io / marketplaces / asset libs |
+| `hub-curator` | moderation queue, badges, abuse handling |
+| `hub-recommender` | ranking / discovery surface |
+| `wasm-mod-author` | [DEFERRED v2.0] WASM-component mods — until then routes to `mod-author` or `crate-author` |
+
+Subagent fleet total: **119** files in `.claude/agents/`.
+
+## Parallel-Work Doctrine
+- Default: dispatch N subagents in **one message** whenever N tasks are independent.
+- Serialize only when a downstream task literally needs an upstream artifact (e.g., impl needs the contract file written first).
+- **Never `isolation: worktree`.** Parallel subagents share this one checkout (see `## Note`); give each a disjoint file set — crate boundaries are the natural lock — and shared roots (workspace `Cargo.toml`, `Nexus.toml`, docs indexes) stay with the coordinator.
+- After every parallel batch, dispatch `integration-resolver` to reconcile cross-refs.
+- Full doctrine: `docs/guides/parallelism-doctrine.md`.
 
 ## Project Slash Commands (`.claude/commands/`)
 | command | purpose |
@@ -176,7 +250,7 @@ Kill-switch (auto-escalation to human): 3 CR rounds without convergence → open
 
 Full rules: `docs/guides/mastermind-pr-loop.md`. Workflow + SLOs: `docs/guides/pr-workflow.md`. CR reference: `docs/guides/coderabbit.md`. GraphQL recipes: `docs/guides/github-graphql-cookbook.md`.
 
-CodeRabbit config: `.coderabbit.yaml` — schema `https://coderabbit.ai/integrations/schema.v2.json`; profile `assertive`; `request_changes_workflow: true`; auto-review on `main`; tone enforces the 15 Laws. Path-instructions cover `docs/specs/`, `docs/contracts/`, `docs/architecture/05-adr/`, `crates/**/src/**/*.rs`, `*.wgsl`, `crates/**/benches/`, configs, `.github/workflows/`. Tools: shellcheck · markdownlint · github-checks · gitleaks · actionlint · yamllint · hadolint · biome · ruff.
+CodeRabbit config: `.coderabbit.yaml` — schema `https://coderabbit.ai/integrations/schema.v2.json`; profile `assertive`; `request_changes_workflow: true`; auto-review on `main`; tone enforces the 15 Laws. Path-instructions cover `docs/specs/`, `docs/contracts/`, `docs/architecture/05-adr/`, `crates/**/src/**/*.rs`, `packages/nexus-hal/src/**/*.rs`, `*.wgsl`, `crates/**/benches/`, configs, `.github/workflows/`. Tools: shellcheck · markdownlint · github-checks · gitleaks · actionlint · yamllint · hadolint · biome · ruff.
 
 ## Crates ecosystem
 Rust-native, compile-time extension lane (Law 14). Categories canonical in `docs/specs/crates/categories.md` (26 at integration: 14 original + 12 added by Agent 32). Discovery: `docs/specs/crates/discovery.md` (crates.io + lib.rs; secondary `nexus-hub` v1.0). Plugin trait + Rails analogy: `docs/specs/crates/plugin-trait.md`, `docs/specs/crates/rails-plugin-model.md`. Overview: `docs/specs/crates/overview.md`. Manifestos: `docs/architecture/06-modularity.md` (Law 14), `docs/architecture/07-extend-dont-fork.md` (Law 15).
@@ -242,7 +316,7 @@ When in doubt: vision → `docs/architecture/00-vision.md` · law → `docs/arch
 2. Pick from `docs/architecture/decisions-open.md` (`[DECISION NEEDED]`) and `docs/architecture/benchmarks-pending.md` (`[BENCHMARK NEEDED]`); spawn the relevant subagent from the routing table above.
 3. Cross-check `docs/architecture/cross-agent-flags.md` if the task touches a file authored by multiple agents.
 
-Engine source exists but is Phase 0 scaffold — 35 crates, 70 `.rs` files under `crates/`, 4 games, 2 tools; every crate, game and tool declares `Status: stub (Phase 0 scaffold)` (`crates/nexus-core/src/lib.rs:7`). The tree stays spec-driven (Law 2): new behavior starts at a spec.
+Engine source exists but is Phase 0 scaffold — 35 crates, 70 `.rs` files under `crates/` (10 crates, 20 files) and `packages/` (HAL + net + physics + agent + 5 styles + 16 genres, 25 crates, 50 files), 4 games, 2 tools; every crate, game and tool declares `Status: stub (Phase 0 scaffold)` (`crates/nexus-core/src/lib.rs:7`). The tree stays spec-driven (Law 2): new behavior starts at a spec.
 
 ## Note
 No git worktrees — work directly in this checkout. If a task needs subagents, run them as a team in this same checkout: split the work into disjoint pieces so no two agents touch the same files.

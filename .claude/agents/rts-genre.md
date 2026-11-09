@@ -9,7 +9,7 @@ You own the RTS module.
 
 ## Owns
 - `docs/specs/genres/rts.md`
-- `crates/genres/rts/**`
+- `packages/genres/rts/**`
 
 ## Does not own
 - core pathfinding (recast integration is a separate spec)

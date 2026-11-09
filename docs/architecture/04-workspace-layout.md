@@ -30,19 +30,20 @@ nexus-engine/
 │   ├── game-template/
 │   ├── games/
 │   └── initial/
-├── crates/                          # all engine crates (one per system + sub-crates)
+├── crates/                          # remaining engine crates (systems + sub-crates)
 │   ├── nexus-core/
-│   ├── nexus-hal/
 │   ├── nexus-assets/
 │   ├── nexus-renderer/
-│   ├── nexus-physics/
 │   ├── nexus-audio/
-│   ├── nexus-net/
 │   ├── nexus-script/
 │   ├── nexus-editor/
 │   ├── nexus-cli/
 │   ├── nexus-merge/                 # the AI maintainer's lint/check library
 │   ├── nexus-engine/                # facade re-export crate (the public umbrella)
+│   └── sdks/
+│       ├── nexus-agent-sdk-rs/      # Rust SDK
+│       └── nexus-agent-sdk-py/      # Python bindings via pyo3
+├── packages/                        # members relocated out of crates/ (Rust, or Rust + a JS adapter)
 │   ├── genres/
 │   │   ├── nexus-genre-fps/
 │   │   ├── nexus-genre-rpg/
@@ -60,11 +61,10 @@ nexus-engine/
 │   │   ├── nexus-genre-puzzle/
 │   │   ├── nexus-genre-visualnovel/
 │   │   └── nexus-genre-openworld/
-│   └── sdks/
-│       ├── nexus-agent-sdk-rs/      # Rust SDK
-│       └── nexus-agent-sdk-py/      # Python bindings via pyo3
-├── packages/                        # out-of-crates packages (Rust or JS)
 │   ├── nexus-agent/                 # agent API crate (see §nexus-agent)
+│   ├── nexus-hal/                   # Rust crate + private Bun workspace adapter
+│   ├── nexus-net/                   # relocated system crate (transport, quinn)
+│   ├── nexus-physics/               # relocated system crate (rapier)
 │   └── styles/                      # style modules (PBR, NPR, pixel, 2D, mixed)
 │       ├── nexus-style-pbr/
 │       ├── nexus-style-npr/
@@ -86,6 +86,19 @@ nexus-engine/
 
 ---
 
+`nexus-hal`, the five style modules, `nexus-net`, `nexus-physics`, `nexus-agent` and
+the sixteen genre crates live under `packages/`; every remaining engine crate,
+including the SDKs, stays under `crates/`, and dependency boundaries are unchanged.
+The root Cargo workspace includes `packages/nexus-hal`, `packages/nexus-net`,
+`packages/nexus-physics`, `packages/nexus-agent` and `packages/{genres,styles}/*`.
+The Bun workspace includes `scripts`, `packages/nexus-hal`, `packages/genres` and
+`packages/nexus-agent`. HAL's private, dependency-free `@nexus-engine/nexus-hal`
+adapter registers the Rust package without adding a JavaScript implementation, and
+`@nexus-engine/genres` groups the genre crates the same way; `packages/nexus-agent`
+ships the agent crate's own dependency-free adapter, and `packages/styles/*`,
+`packages/nexus-net` and `packages/nexus-physics` stay Rust-only, without Bun
+adapters.
+
 ## Workspace root `Cargo.toml` (shape only)
 
 ```toml
@@ -94,19 +107,19 @@ nexus-engine/
 resolver = "2"
 members = [
   "crates/nexus-core",
-  "crates/nexus-hal",
+  "packages/nexus-hal",
   "crates/nexus-assets",
   "crates/nexus-renderer",
-  "crates/nexus-physics",
+  "packages/nexus-physics",
   "crates/nexus-audio",
-  "crates/nexus-net",
+  "packages/nexus-net",
   "crates/nexus-script",
   "crates/nexus-editor",
   "crates/nexus-cli",
   "crates/nexus-merge",
   "crates/nexus-engine",
   "packages/styles/*",
-  "crates/genres/*",
+  "packages/genres/*",
   "crates/sdks/*",
   "packages/nexus-agent",
   "games/*",
@@ -298,7 +311,7 @@ Every crate lists: **purpose**, **spec**, **public surface**, **internal deps**,
 - **External deps.** WGSL files; minimal Rust.
 - **Forbidden.** mutual deps between styles.
 
-### `crates/genres/nexus-genre-*`
+### `packages/genres/nexus-genre-*`
 
 - **Purpose.** Genre modules (FPS, RPG, RTS, …). Bundle of ECS components, systems, prefabs, and Lua scripts.
 - **Spec.** `docs/specs/genres/<g>.md`.
