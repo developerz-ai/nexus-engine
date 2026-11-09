@@ -394,6 +394,78 @@ describe('bin scripts', () => {
       expect(r.stderr).toContain('Missing SPDX header in 1 file(s)');
       expect(r.stderr).toContain(headerless);
       expect(r.stdout).not.toContain(SPDX_OK_MESSAGE);
+      // set -e stops the script at spdx_sweep's exit 1, so the cargo chain
+      // (bin/check:149) must never run: nothing besides the two component
+      // probes may reach the stub log.
+      const probes = ['cargo fmt --version', 'cargo clippy --version'];
+      expect(calls(sandbox).filter((call) => !probes.includes(call))).toEqual([]);
+    } finally {
+      rmSync(sandbox.root, { recursive: true, force: true });
+    }
+  });
+
+  it('bin/check enforces the exact 15-line SPDX header window and exempts .json files', async () => {
+    const sandbox = sharedContext();
+    try {
+      // A repo of its own, same as the headerless case above.
+      const repo = join(sandbox.root, 'spdx-window-repo');
+      const atLine15 = 'crates/nexus-core/header-at-line-15.rs';
+      const atLine16 = 'crates/nexus-core/header-at-line-16.rs';
+      const exemptJson = 'crates/nexus-core/exempt.json';
+      mkdirSync(join(repo, 'bin'), { recursive: true });
+      mkdirSync(join(repo, 'crates', 'nexus-core'), { recursive: true });
+      mkdirSync(join(repo, 'scripts'), { recursive: true });
+      const script = join(repo, 'bin', 'check');
+      writeFileSync(script, readFileSync(join(BIN_DIR, 'check')));
+      chmodSync(script, 0o755);
+
+      // The sweep checks lines 1..15 inclusive (bin/check:124-132): a header
+      // on line 15 is the last line still inside the window (passes); one
+      // line later, on line 16, is just outside it (fails). A tracked
+      // `.json` file with no header at all is exempt regardless (bin/check:110).
+      const filler14 = Array.from({ length: 14 }, (_, i) => `// filler ${i + 1}`).join('\n');
+      writeFileSync(
+        join(repo, atLine15),
+        `${filler14}\n// SPDX-License-Identifier: MIT\npub fn at_line_15() {}\n`,
+      );
+      const filler15 = Array.from({ length: 15 }, (_, i) => `// filler ${i + 1}`).join('\n');
+      writeFileSync(
+        join(repo, atLine16),
+        `${filler15}\n// SPDX-License-Identifier: MIT\npub fn at_line_16() {}\n`,
+      );
+      writeFileSync(join(repo, exemptJson), '{"no":"header"}\n');
+
+      const init = await runGit(['init', '--quiet'], repo);
+      expect(init.exitCode).toBe(0);
+      const add = await runGit(['add', '-f', atLine15, atLine16, exemptJson], repo);
+      expect(add.exitCode).toBe(0);
+      const r = await spawnScript(script, repo, sandbox.env);
+      expect(r.exitCode).toBe(1);
+      expect(r.stderr).toContain('Missing SPDX header in 1 file(s)');
+      expect(r.stderr).toContain(atLine16);
+      expect(r.stderr).not.toContain(atLine15);
+      expect(r.stderr).not.toContain(exemptJson);
+    } finally {
+      rmSync(sandbox.root, { recursive: true, force: true });
+    }
+  });
+
+  it('bin/check reports a failed `git ls-files` and skips the sweep without reddening the gate', async () => {
+    const sandbox = sharedContext();
+    try {
+      // A fake git ahead of the real one on PATH always exits 1, as `git
+      // ls-files` would against a corrupt or unreadable index. The sweep
+      // must read this from git's own exit status (bin/check:99-104), not
+      // from `$!`, and still leave the gate green.
+      const fakeGitDir = join(sandbox.root, 'fake-git');
+      mkdirSync(fakeGitDir, { recursive: true });
+      writeStub(join(fakeGitDir, 'git'), '#!/bin/sh\nexit 1\n');
+      sandbox.env.PATH = `${fakeGitDir}:${sandbox.env.PATH}`;
+      const r = await runScript('check', sandbox);
+      expect(r.exitCode).toBe(0);
+      expect(r.stderr).toContain('git ls-files failed (exit 1)');
+      expect(r.stderr).toContain('skipping the SPDX header sweep');
+      expect(r.stdout).not.toContain(SPDX_OK_MESSAGE);
     } finally {
       rmSync(sandbox.root, { recursive: true, force: true });
     }

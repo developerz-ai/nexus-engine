@@ -59,7 +59,7 @@ Cargo workspace = `crates/` + `packages/` + `games/` + `tools/` (`Cargo.toml:10-
 ## Conventions
 | Rule | Where |
 |---|---|
-| SPDX MIT header, first two lines, no blank line before | `docs/guides/file-conventions.md:12-21` · CI scans `crates/`, `packages/`, `scripts/`, `docs/`, `.github/` (`.github/workflows/ci.yml:328`); `./bin/check` runs the same sweep (`bin/check:85`) |
+| SPDX MIT header, first two lines, no blank line before | `docs/guides/file-conventions.md:12-21` · CI scans `crates/`, `packages/`, `scripts/`, `docs/`, `.github/` (`.github/workflows/ci.yml:328`); `./bin/check` runs the same sweep (`bin/check:85`) — Law 7, `docs/architecture/01-principles.md:117-128` |
 | Rust: `#![forbid(unsafe_code)]`; every `unsafe` needs a `// SAFETY:` paragraph | `Cargo.toml:41` · Law 6 |
 | Errors & logs: thiserror only; `anyhow` banned in `nexus-*`; no string-only errors; structured JSON to stderr, never `println!` outside `examples/`/`tests/` | `docs/architecture/03-tech-stack.md:185` · Law 10 · Law 11 |
 | Rust hygiene: `cargo fmt --all` + `cargo clippy --all-targets -- -D warnings` before commit | `bin/check:149` |
