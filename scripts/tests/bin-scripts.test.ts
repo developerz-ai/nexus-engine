@@ -7,9 +7,24 @@
 // scripts omits every real tool: the only way a script can find one is the
 // $HOME/.cargo/bin and $HOME/.bun/bin it puts on PATH itself. No network, no
 // Rust toolchain, no node_modules.
+//
+// bin/check also runs the Law 7 SPDX header sweep — the CI job `docs / spdx`.
+// The sweep shells out to git and to nothing else, so it adds no cargo/bun
+// call: the cases below pin its three outcomes (clean tree, a tracked file
+// without a header, no git on PATH) and nothing else in the gate moves.
 
 import { describe, expect, it } from 'bun:test';
-import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  chmodSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  statSync,
+  symlinkSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { REPO_ROOT } from './helpers';
@@ -19,6 +34,26 @@ const BIN_DIR = join(REPO_ROOT, 'bin');
 // A PATH without cargo, bun or rustup in it. The scripts under test have to
 // find those tools in the fake $HOME on their own.
 const BARE_PATH = '/usr/bin:/bin';
+
+// The sweep in bin/check needs git, so git has to be reachable from the
+// sandbox PATH: the bare PATH above may not carry it (some images keep git in
+// /usr/local/bin), so the directory holding the git this process can find is
+// appended. It is found with the real PATH, never with the bare one.
+const GIT_DIR = ((): string | undefined => {
+  for (const dir of (process.env.PATH ?? '').split(':')) {
+    if (dir.length === 0) continue;
+    try {
+      if (statSync(join(dir, 'git')).isFile()) return dir;
+    } catch {
+      continue;
+    }
+  }
+  return undefined;
+})();
+
+// The sweep's success line — the same one CI's `docs / spdx` job prints.
+const SPDX_OK_MESSAGE =
+  'SPDX headers OK on all tracked files under crates/, packages/, scripts/, docs/, .github/';
 
 // The JSON crates/nexus-cli prints (crates/nexus-cli/src/main.rs).
 const NEXUS_CLI_JSON =
@@ -184,19 +219,24 @@ function sharedContext(options: FixtureOptions = {}): Sandbox {
   const env: Record<string, string> = {
     ...(process.env as Record<string, string>),
     HOME: home,
-    PATH: BARE_PATH,
+    PATH: GIT_DIR ? `${BARE_PATH}:${GIT_DIR}` : BARE_PATH,
     STUB_LOG: log,
   };
   if (options.cargoFail) env.STUB_CARGO_FAIL = options.cargoFail;
   return { root, home, log, env };
 }
 
-/** Run one of the repo's bin/ scripts against the sandbox. */
-async function runScript(name: string, sandbox: Sandbox): Promise<RunResult> {
+/** Run one script against a sandbox and capture its streams. */
+async function spawnScript(
+  scriptPath: string,
+  cwd: string,
+  env: Record<string, string>,
+  args: string[] = [],
+): Promise<RunResult> {
   const proc = Bun.spawn({
-    cmd: [join(BIN_DIR, name)],
-    cwd: REPO_ROOT,
-    env: sandbox.env,
+    cmd: [scriptPath, ...args],
+    cwd,
+    env,
     stdin: 'ignore',
     stdout: 'pipe',
     stderr: 'pipe',
@@ -207,6 +247,51 @@ async function runScript(name: string, sandbox: Sandbox): Promise<RunResult> {
     proc.exited,
   ]);
   return { exitCode, stdout, stderr };
+}
+
+/** Run one of the repo's bin/ scripts against the sandbox. */
+async function runScript(name: string, sandbox: Sandbox): Promise<RunResult> {
+  return spawnScript(join(BIN_DIR, name), REPO_ROOT, sandbox.env);
+}
+
+/**
+ * A PATH directory holding every tool on the real PATH except git.
+ *
+ * The sweep has to skip itself when git is unreachable, but the rest of the
+ * gate still needs bash (the shebang), dirname, mktemp and whatever else the
+ * sweep may shell out to — so the farm mirrors the real PATH and drops git
+ * only. The first directory on PATH wins for a given name, as PATH itself
+ * does.
+ */
+function pathWithoutGit(farm: string): string {
+  mkdirSync(farm, { recursive: true });
+  for (const dir of (process.env.PATH ?? '').split(':')) {
+    if (dir.length === 0) continue;
+    let entries: string[];
+    try {
+      entries = readdirSync(dir);
+    } catch {
+      continue;
+    }
+    for (const entry of entries) {
+      if (entry === 'git') continue;
+      const source = join(dir, entry);
+      try {
+        const st = statSync(source);
+        if (!st.isFile() || (st.mode & 0o111) === 0) continue;
+        symlinkSync(source, join(farm, entry));
+      } catch {
+        // Already linked (an earlier PATH entry won) or not linkable.
+        continue;
+      }
+    }
+  }
+  return farm;
+}
+
+/** Run git in the test process' own environment — the sandbox stubs none of it. */
+async function runGit(args: string[], cwd: string): Promise<RunResult> {
+  return spawnScript('git', cwd, process.env as Record<string, string>, args);
 }
 
 /** Every stubbed call, in the order the script made them. */
@@ -269,6 +354,61 @@ describe('bin scripts', () => {
       expect(r.exitCode).toBe(69);
       expect(r.stderr).toContain('clippy');
       expect(r.stderr).toContain('run ./bin/setup');
+    } finally {
+      rmSync(sandbox.root, { recursive: true, force: true });
+    }
+  });
+
+  it('bin/check passes the SPDX header sweep on a clean tree', async () => {
+    const sandbox = sharedContext();
+    try {
+      const r = await runScript('check', sandbox);
+      expect(r.exitCode).toBe(0);
+      expect(r.stdout).toContain(SPDX_OK_MESSAGE);
+    } finally {
+      rmSync(sandbox.root, { recursive: true, force: true });
+    }
+  });
+
+  it('bin/check fails the SPDX header sweep on a tracked file without a header', async () => {
+    const sandbox = sharedContext();
+    try {
+      // A repo of its own: bin/check sweeps the tree it sits in, so the copy
+      // below is the tree the sweep sees.
+      const repo = join(sandbox.root, 'spdx-repo');
+      const headerless = 'crates/nexus-core/headerless.rs';
+      mkdirSync(join(repo, 'bin'), { recursive: true });
+      mkdirSync(join(repo, 'crates', 'nexus-core'), { recursive: true });
+      // the last step of the gate is `cd scripts` — the directory has to exist
+      mkdirSync(join(repo, 'scripts'), { recursive: true });
+      const script = join(repo, 'bin', 'check');
+      writeFileSync(script, readFileSync(join(BIN_DIR, 'check')));
+      chmodSync(script, 0o755);
+      writeFileSync(join(repo, headerless), 'pub fn no_spdx_header() {}\n');
+      const init = await runGit(['init', '--quiet'], repo);
+      expect(init.exitCode).toBe(0);
+      const add = await runGit(['add', '-f', headerless], repo);
+      expect(add.exitCode).toBe(0);
+      const r = await spawnScript(script, repo, sandbox.env);
+      expect(r.exitCode).toBe(1);
+      expect(r.stderr).toContain('Missing SPDX header in 1 file(s)');
+      expect(r.stderr).toContain(headerless);
+      expect(r.stdout).not.toContain(SPDX_OK_MESSAGE);
+    } finally {
+      rmSync(sandbox.root, { recursive: true, force: true });
+    }
+  });
+
+  it('bin/check skips the SPDX header sweep when git is not on PATH', async () => {
+    const sandbox = sharedContext();
+    try {
+      // Without git the sweep cannot run; it has to skip itself and leave the
+      // gate green rather than redden a build over an unusable environment.
+      sandbox.env.PATH = pathWithoutGit(join(sandbox.root, 'path-no-git'));
+      const r = await runScript('check', sandbox);
+      expect(r.exitCode).toBe(0);
+      expect(r.stderr).toContain('skipping the SPDX header sweep');
+      expect(r.stdout).not.toContain(SPDX_OK_MESSAGE);
     } finally {
       rmSync(sandbox.root, { recursive: true, force: true });
     }

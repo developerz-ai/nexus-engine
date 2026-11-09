@@ -7,7 +7,7 @@
 
 ## Stack
 
-Rust + Cargo + Bun. The gate is `bin/check` (`cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings && cargo check --workspace --all-targets && cargo nextest run --workspace --profile ci && cargo deny check && (cd scripts && bun test && bun x biome check .)`): a change that does not pass it is not proven, whatever its description says.
+Rust + Cargo + Bun. The gate is `bin/check`: first CI's `docs / spdx` SPDX-header sweep (`bin/check:85` — every tracked file under `crates/`, `packages/`, `scripts/`, `docs/`, `.github/` must carry `SPDX-License-Identifier:` within its first 15 lines; the sweep lists offenders as `Missing SPDX header in N file(s)` and exits 1), then the chain (`bin/check:149`) — `cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings && cargo check --workspace --all-targets && cargo nextest run --workspace --profile ci && cargo deny check && (cd scripts && bun test && bun x biome check .)`. A change that does not pass it is not proven, whatever its description says — and a file shipping without its Law 7 SPDX header fails the gate even when the build is green.
 
 ## Review conventions
 

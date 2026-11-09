@@ -30,13 +30,13 @@ Rust 1.95 · edition 2021 · MSRV 1.95 (`Cargo.toml:33,38`) — key deps, pinned
 | Command | Effect |
 |---|---|
 | `./bin/setup` | rustup + channel from `rust-toolchain.toml`, bun (floor `scripts/.bun-version`), cargo-nextest/cargo-deny from `scripts/lib/versions.toml`, `bun install --frozen-lockfile`. Exit 69 = tool missing. |
-| `./bin/check` | THE gate. Exit 69 = gate tool missing. |
+| `./bin/check` | THE gate — SPDX-header sweep, then fmt · clippy · check · test · deny · script tests/lint. Exit 69 = gate tool missing. |
 | `./bin/dev` | `cargo run -p nexus-cli --` (`bin/dev:8`) |
 | `./bin/stop` | no-op (`bin/stop:7`) |
 | `bun run scripts/check` | TS gate set (`scripts/bin/check.ts:33`) |
 | `bun test` | script tests (`package.json:8`) |
 
-`./bin/check` chain (`bin/check:30`), verbatim:
+`./bin/check` runs CI's `docs / spdx` SPDX-header sweep first (`bin/check:85` — mirrors ci.yml:288-334; blocking: exits 1 on a missing header), then this chain (`bin/check:149`), verbatim:
 ```
 cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings && cargo check --workspace --all-targets && cargo nextest run --workspace --profile ci && cargo deny check && (cd scripts && bun test && bun x biome check .)
 ```
@@ -59,10 +59,10 @@ Cargo workspace = `crates/` + `packages/` + `games/` + `tools/` (`Cargo.toml:10-
 ## Conventions
 | Rule | Where |
 |---|---|
-| SPDX MIT header, first two lines, no blank line before | `docs/guides/file-conventions.md:12-21` · CI scans `crates/`, `packages/`, `scripts/`, `docs/`, `.github/` (`.github/workflows/ci.yml:328`) |
+| SPDX MIT header, first two lines, no blank line before | `docs/guides/file-conventions.md:12-21` · CI scans `crates/`, `packages/`, `scripts/`, `docs/`, `.github/` (`.github/workflows/ci.yml:328`); `./bin/check` runs the same sweep (`bin/check:85`) |
 | Rust: `#![forbid(unsafe_code)]`; every `unsafe` needs a `// SAFETY:` paragraph | `Cargo.toml:41` · Law 6 |
 | Errors & logs: thiserror only; `anyhow` banned in `nexus-*`; no string-only errors; structured JSON to stderr, never `println!` outside `examples/`/`tests/` | `docs/architecture/03-tech-stack.md:185` · Law 10 · Law 11 |
-| Rust hygiene: `cargo fmt --all` + `cargo clippy --all-targets -- -D warnings` before commit | `bin/check:30` |
+| Rust hygiene: `cargo fmt --all` + `cargo clippy --all-targets -- -D warnings` before commit | `bin/check:149` |
 | TS/JS: Biome is the only linter — `bun x biome check .` from `scripts/` | `scripts/CLAUDE.md:37` |
 | WGSL: `naga` validates manually; the repo ships no shader sources and no gate runs one | `bin/setup:176` |
 | Commit `<system>: <imperative>` · 50/72 | `CONTRIBUTING.md:21` |

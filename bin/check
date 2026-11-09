@@ -1,5 +1,41 @@
 #!/usr/bin/env bash
 # one-command check (typecheck + lint + test) — established by dz-runner setup mode. One command; adjust as the repo grows.
+#
+# ── CI parity ────────────────────────────────────────────────────────────────
+# Every job in .github/workflows/ci.yml, the exact command it runs, and whether
+# this gate runs the same thing. The gate covers every BLOCKING CI job.
+#
+#   CI job         | CI command (working-directory)                        | bin/check
+#   ---------------|---------------------------------------------------------|----------
+#   rust / fmt     | cargo fmt --all -- --check                           | yes
+#   rust / clippy  | cargo clippy --workspace --all-targets -- -D warnings | yes
+#   rust / check   | cargo check --workspace --all-targets                | yes
+#   rust / test    | cargo nextest run --workspace --profile ci           | yes
+#   rust / deny    | cargo deny check                                     | yes
+#   rust / audit   | cargo audit                                          | NO — advisory
+#   scripts / test | bun test                        (scripts/)          | yes
+#   scripts / lint | bun x biome check .             (scripts/)          | yes
+#   docs / spdx    | tracked-file SPDX header sweep                      | yes (sweep below)
+#
+# `rust / audit` is the one deliberate divergence: ci.yml:181-188 runs that job
+# with `continue-on-error: true` ("Advisory-level — never fails the build"), and
+# bin/setup provisions only cargo-nextest and cargo-deny (bin/setup:314-317) —
+# cargo-audit is unprovisioned, unpinned and network-dependent here. Putting it
+# in this chain would add a tool the gate does not install and would break the
+# exact cargo/bun call sequence scripts/tests/bin-scripts.test.ts asserts. CI
+# keeps it as an advisory signal for the security-reviewer; the hard gate is
+# `rust / deny`.
+#
+# `docs / spdx` was the one BLOCKING CI job this gate did not run: the SPDX
+# header sweep lived only in ci.yml:288-334, so `bin/check` passed on a tree
+# CI rejects (Law 7). The sweep below mirrors that job exactly — the same five
+# tracked subtrees, the same exemption list, the same 15-line
+# 'SPDX-License-Identifier:' window, the same two messages and the same exit 1 —
+# using git and bash builtins only (no cargo, no bun, no fork per file). It runs
+# after the exit-69 tool probes and before the cargo chain: a missing header is
+# a Law 7 failure that must be reported in seconds rather than after a full
+# build, and the chain stays the last statement, so its exit status is still the
+# gate's exit status.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 # bin/setup puts the gate tools in the cargo and bun bin dirs but leaves them off PATH, so a
@@ -27,4 +63,87 @@ if ! cargo clippy --version >/dev/null 2>&1; then
   echo "bin/check: the clippy component is missing; run ./bin/setup first" >&2
   exit 69
 fi
+
+# ── docs / spdx — Law 7 SPDX header sweep (mirrors ci.yml:288-334) ───────────
+# The same five tracked subtrees, the same exemptions, the same 15-line window,
+# the same two messages and the same exit 1 as CI's `docs / spdx` job. The file
+# list comes from `git ls-files` (NUL-delimited, so a path with a space is
+# safe) and the header window is read with the `read` builtin — no `head`/`grep`
+# fork per file, so the sweep costs a fraction of a second on ~750 files.
+#
+# If git is missing, or the file list cannot be built, the sweep is SKIPPED with
+# a loud notice and the gate stays green: an unusable git is an environment
+# problem, not a Law 7 violation. CI's own job passes vacuously in the same
+# situation, so the gate never reddens the build over it.
+#
+# git's exit status comes from the command that wrote the list, never from
+# `$!`: bash only sets `$!` to a process substitution's pid from 4.4 on, so on
+# bash 3.2 (stock macOS) it stays empty — the old capture then reported a git
+# failure that never happened and skipped the Law 7 check on a green build.
+# The list goes to a temp file instead: git's own status decides, on every
+# bash, and the temp file is removed on every exit path of the sweep.
+spdx_sweep() {
+  local path line n found count=0
+  local missing_list
+  local list_file git_rc=0
+  missing_list=()
+  if ! command -v git >/dev/null 2>&1; then
+    echo "bin/check: git not found — skipping the SPDX header sweep; CI job 'docs / spdx' still enforces it" >&2
+    return 0
+  fi
+  list_file="$(mktemp "${TMPDIR:-/tmp}/nexus-spdx-list.XXXXXX" 2>/dev/null)" || list_file=""
+  if [ -z "$list_file" ]; then
+    echo "bin/check: no temp file for the SPDX header list — skipping the sweep; CI job 'docs / spdx' still enforces it" >&2
+    return 0
+  fi
+  git -c safe.directory='*' ls-files -z -- 'crates/**' 'packages/**' 'scripts/**' 'docs/**' '.github/**' > "$list_file" || git_rc=$?
+  if [ "$git_rc" -ne 0 ]; then
+    rm -f "$list_file"
+    echo "bin/check: git ls-files failed (exit ${git_rc}) — skipping the SPDX header sweep; CI job 'docs / spdx' still enforces it" >&2
+    return 0
+  fi
+  while IFS= read -r -d '' path; do
+    case "$path" in
+      # Exemptions: lockfiles, binaries, JSON without comments, indexes.
+      *.lock|*.png|*.jpg|*.jpeg|*.webp|*.ico|*.gif|*.svg|*.wasm|*.bin)
+        continue ;;
+      *.json|*/bun.lock|*/Cargo.lock|*/package-lock.json)
+        continue ;;
+      */node_modules/*|*/target/*|*/.git/*)
+        continue ;;
+      *.snap|*/snapshots/*)
+        continue ;;
+      # Single-value pins / placeholders that have no comment syntax.
+      */.placeholder|*/.bun-version|*/.keep|*/.nvmrc)
+        continue ;;
+    esac
+    # A path the index still lists but the worktree no longer holds is not in the
+    # tree: CI checks out a commit, so it never sees this state. Skip it.
+    [ -f "$path" ] || continue
+    # Law 7 intent: header must be near top-of-file, not buried in a blob
+    # somewhere. Restrict to first 15 lines.
+    found=0
+    n=0
+    while IFS= read -r line || [ -n "$line" ]; do
+      n=$((n + 1))
+      case "$line" in
+        *SPDX-License-Identifier:*) found=1; break ;;
+      esac
+      [ "$n" -ge 15 ] && break
+    done < "$path"
+    if [ "$found" -ne 1 ]; then
+      missing_list+=("$path")
+      count=$((count + 1))
+    fi
+  done < "$list_file"
+  rm -f "$list_file"
+  if [ "$count" -gt 0 ]; then
+    printf 'Missing SPDX header in %d file(s):\n' "$count" >&2
+    printf '  %s\n' "${missing_list[@]}" >&2
+    return 1
+  fi
+  echo "SPDX headers OK on all tracked files under crates/, packages/, scripts/, docs/, .github/"
+}
+spdx_sweep
+
 cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings && cargo check --workspace --all-targets && cargo nextest run --workspace --profile ci && cargo deny check && (cd scripts && bun test && bun x biome check .)
