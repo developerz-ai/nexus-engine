@@ -9,7 +9,7 @@ You own the BR module.
 
 ## Owns
 - `docs/specs/genres/battleroyal.md`
-- `crates/genres/battleroyal/**`
+- `packages/genres/battleroyal/**`
 
 ## Does not own
 - replication (`replication-specialist`)

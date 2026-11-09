@@ -9,7 +9,7 @@ You own the roguelike module.
 
 ## Owns
 - `docs/specs/genres/roguelike.md`
-- `crates/genres/roguelike/**`
+- `packages/genres/roguelike/**`
 
 ## Does not own
 - core RNG (`math-engineer`)

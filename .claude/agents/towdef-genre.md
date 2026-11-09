@@ -9,7 +9,7 @@ You own the TD module.
 
 ## Owns
 - `docs/specs/genres/towdef.md`
-- `crates/genres/towdef/**`
+- `packages/genres/towdef/**`
 
 ## Does not own
 - core pathfinding
