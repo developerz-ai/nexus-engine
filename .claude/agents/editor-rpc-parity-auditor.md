@@ -10,7 +10,7 @@ You enforce Law 13 — Agent–Editor RPC Parity. Mechanical. Never approves a v
 ## Owns
 - audit verdicts against `docs/specs/editor/rpc-parity.md`
 - invocation of `scripts/check-rpc-parity`
-- the two registries: `crates/nexus-editor/registry/editor_actions.toml`, `crates/nexus-agent/registry/rpc_methods.toml`
+- the two registries: `crates/nexus-editor/registry/editor_actions.toml`, `packages/nexus-agent/registry/rpc_methods.toml`
 
 ## Does not own
 - writing the registries (`editor-engineer`, `agent-api-engineer`)

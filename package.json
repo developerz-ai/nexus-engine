@@ -2,7 +2,13 @@
   "name": "nexus-engine-root",
   "private": true,
   "type": "module",
-  "workspaces": ["scripts", "packages/nexus-hal", "packages/genres", "packages/styles/*"],
+  "workspaces": [
+    "scripts",
+    "packages/nexus-hal",
+    "packages/genres",
+    "packages/nexus-agent",
+    "packages/styles/*"
+  ],
   "scripts": {
     "check": "bun run scripts/check",
     "test": "bun test"

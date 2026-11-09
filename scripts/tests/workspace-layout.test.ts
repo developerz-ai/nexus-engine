@@ -27,6 +27,9 @@ import { REPO_ROOT } from './helpers';
 const HAL = 'packages/nexus-hal';
 const OLD_HAL = 'crates/nexus-hal';
 
+/** The agent API crate — moved by this branch, alongside HAL. */
+const AGENT = 'packages/nexus-agent';
+
 /** The 16 genre crates that moved out of crates/genres/ into packages/genres/. */
 const GENRES = [
   'battleroyal',
@@ -71,9 +74,9 @@ const NAMING_FILES = [
   '.claude/skills/fix-from-coderabbit/SKILL.md',
 ] as const;
 
-/** Other subtrees stay at their merged locations — HAL, styles, net and physics
- * moved independently of the genre move, so the genre guard must not disturb
- * them. */
+/** Other subtrees stay at their merged locations — HAL, styles, net, physics and
+ * the agent crate moved independently of the genre move, so the genre guard must
+ * not disturb them. */
 const UNMOVED_PATHS = [
   'crates/nexus-core',
   'packages/nexus-hal',
@@ -81,7 +84,7 @@ const UNMOVED_PATHS = [
   'crates/nexus-renderer',
   'crates/nexus-audio',
   'crates/nexus-script',
-  'crates/nexus-agent',
+  'packages/nexus-agent',
   'crates/nexus-editor',
   'crates/nexus-cli',
   'crates/nexus-merge',
@@ -328,6 +331,12 @@ describe('workspace layout', () => {
     if (!members.includes(HAL)) {
       fail(`root Cargo.toml members does not list "${HAL}"`);
     }
+    // …and this branch's agent-crate relocation: a member missing from either
+    // list leaves crates out of the build or fails `bun install --frozen-lockfile`
+    // at bin/setup, which is how the two moves broke when they were merged.
+    if (!members.includes(AGENT)) {
+      fail(`root Cargo.toml members does not list "${AGENT}"`);
+    }
 
     // --- The old subtree is gone ----------------------------------------
     if (exists(OLD_ROOT)) fail(`${OLD_ROOT}/ still exists`);
@@ -400,6 +409,9 @@ describe('workspace layout', () => {
     const rootPkg = JSON.parse(readText('package.json')) as { workspaces?: string[] };
     if (!rootPkg.workspaces?.includes(NEW_ROOT)) {
       fail(`root package.json workspaces does not list "${NEW_ROOT}"`);
+    }
+    if (!rootPkg.workspaces?.includes(AGENT)) {
+      fail(`root package.json workspaces does not list "${AGENT}"`);
     }
     if (!exists(NEW_ROOT, 'package.json')) {
       fail(`${NEW_ROOT}/package.json is missing (bun needs a manifest per workspace)`);

@@ -45,16 +45,16 @@ cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warni
 ## Structure
 | Path | Count | Contents |
 |---|---|---|
-| `crates/` | 11 | 10 system + `crates/sdks/nexus-agent-sdk-rs` 1 · 22 `.rs` files |
-| `packages/` | 24 | `packages/nexus-hal` 1 system crate + `packages/nexus-net` `packages/nexus-physics` 2 relocated system crates + `packages/genres/` 16 + `packages/styles/` 5 · 48 `.rs` files · HAL's private Bun workspace adapter |
-| system crates | 13 | `crates/nexus-core` `packages/nexus-hal` `crates/nexus-assets` `crates/nexus-renderer` `packages/nexus-physics` `crates/nexus-audio` `packages/nexus-net` `crates/nexus-script` `crates/nexus-agent` `crates/nexus-editor` `crates/nexus-cli` `crates/nexus-merge` `crates/nexus-engine` |
+| `crates/` | 10 | 9 system + `crates/sdks/nexus-agent-sdk-rs` 1 · 20 `.rs` files |
+| `packages/` | 25 | `packages/nexus-hal` 1 system crate + `packages/nexus-net` `packages/nexus-physics` `packages/nexus-agent` 3 relocated system crates + `packages/genres/` 16 + `packages/styles/` 5 · 50 `.rs` files · HAL's and the agent crate's private Bun workspace adapters |
+| system crates | 13 | `crates/nexus-core` `packages/nexus-hal` `crates/nexus-assets` `crates/nexus-renderer` `packages/nexus-physics` `crates/nexus-audio` `packages/nexus-net` `crates/nexus-script` `packages/nexus-agent` `crates/nexus-editor` `crates/nexus-cli` `crates/nexus-merge` `crates/nexus-engine` |
 | `games/` | 4 | `games/nexus-fps` `games/nexus-platformer` `games/nexus-rpg` `games/nexus-rts` |
 | `tools/` | 2 | `tools/nexus-codegen` `tools/nexus-scenario` |
 | `scripts/` | 62 | Bun workspace · 14 scripts under `scripts/bin/` · one test per bin · count excludes `scripts/CLAUDE.md` |
 | `docs/` | 413 `.md` | `docs/architecture/` · `docs/specs/` · `docs/contracts/` · `docs/guides/` · `docs/prior-art/` · `docs/game-template/` · `docs/games/` |
 | `.claude/` | 119 / 14 / 15 | agents / commands / skills |
 
-Cargo workspace = `crates/` + `packages/` + `games/` + `tools/` (`Cargo.toml:10-30`). Bun workspace = `scripts/` + `packages/nexus-hal/` + `packages/genres/` + `packages/styles/*` (`package.json:5`); HAL's private adapter adds no JS implementation, the `packages/styles/*` glob matches nothing (no per-style `package.json`), and `packages/nexus-net` / `packages/nexus-physics` are Cargo-workspace members, not Bun workspaces.
+Cargo workspace = `crates/` + `packages/` + `games/` + `tools/` (`Cargo.toml:10-30`). Bun workspace = `scripts/` + `packages/nexus-hal/` + `packages/genres/` + `packages/nexus-agent/` + `packages/styles/*` (`package.json:5`); HAL's and the agent crate's private adapters add no JS implementation, the `packages/styles/*` glob matches nothing (no per-style `package.json`), and `packages/nexus-net` / `packages/nexus-physics` are Cargo-workspace members, not Bun workspaces.
 
 ## Conventions
 | Rule | Where |
@@ -316,7 +316,7 @@ When in doubt: vision → `docs/architecture/00-vision.md` · law → `docs/arch
 2. Pick from `docs/architecture/decisions-open.md` (`[DECISION NEEDED]`) and `docs/architecture/benchmarks-pending.md` (`[BENCHMARK NEEDED]`); spawn the relevant subagent from the routing table above.
 3. Cross-check `docs/architecture/cross-agent-flags.md` if the task touches a file authored by multiple agents.
 
-Engine source exists but is Phase 0 scaffold — 35 crates, 70 `.rs` files under `crates/` (11 crates, 22 files) and `packages/` (HAL + net + physics + 5 styles + 16 genres, 24 crates, 48 files), 4 games, 2 tools; every crate, game and tool declares `Status: stub (Phase 0 scaffold)` (`crates/nexus-core/src/lib.rs:7`). The tree stays spec-driven (Law 2): new behavior starts at a spec.
+Engine source exists but is Phase 0 scaffold — 35 crates, 70 `.rs` files under `crates/` (10 crates, 20 files) and `packages/` (HAL + net + physics + agent + 5 styles + 16 genres, 25 crates, 50 files), 4 games, 2 tools; every crate, game and tool declares `Status: stub (Phase 0 scaffold)` (`crates/nexus-core/src/lib.rs:7`). The tree stays spec-driven (Law 2): new behavior starts at a spec.
 
 ## Note
 No git worktrees — work directly in this checkout. If a task needs subagents, run them as a team in this same checkout: split the work into disjoint pieces so no two agents touch the same files.
