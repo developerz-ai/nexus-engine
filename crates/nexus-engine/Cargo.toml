@@ -21,7 +21,7 @@ workspace = true
 
 [dependencies]
 nexus-core = { path = "../nexus-core", version = "0.1.0" }
-nexus-hal = { path = "../nexus-hal", version = "0.1.0" }
+nexus-hal = { path = "../../packages/nexus-hal", version = "0.1.0" }
 nexus-assets = { path = "../nexus-assets", version = "0.1.0" }
 nexus-renderer = { path = "../nexus-renderer", version = "0.1.0" }
 nexus-physics = { path = "../../packages/nexus-physics", version = "0.1.0" }

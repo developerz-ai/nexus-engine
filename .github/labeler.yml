@@ -11,7 +11,7 @@ area/core:
   - changed-files:
       - any-glob-to-any-file:
           - crates/nexus-core/**
-          - crates/nexus-hal/**
+          - packages/nexus-hal/**
 
 area/renderer:
   - changed-files:

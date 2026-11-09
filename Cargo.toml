@@ -9,7 +9,7 @@
 resolver = "2"
 members = [
   "crates/nexus-core",
-  "crates/nexus-hal",
+  "packages/nexus-hal",
   "crates/nexus-assets",
   "crates/nexus-renderer",
   "packages/nexus-physics",

@@ -9,6 +9,10 @@
       "name": "@nexus-engine/genres",
       "version": "0.1.0",
     },
+    "packages/nexus-hal": {
+      "name": "@nexus-engine/nexus-hal",
+      "version": "0.1.0",
+    },
     "scripts": {
       "name": "@nexus-engine/scripts",
       "version": "0.1.0",
@@ -43,6 +47,8 @@
     "@biomejs/cli-win32-x64": ["@biomejs/cli-win32-x64@2.6.2", "", { "os": "win32", "cpu": "x64" }, "sha512-FVlWD+mDDz8nN5LWKRWUhhb7wKIK0VE3oXQvQBX7Fwwj00CvqMVhMyiz1iz8O5aZGmnkhFlKSwJPrUvMh5prQw=="],
 
     "@nexus-engine/genres": ["@nexus-engine/genres@workspace:packages/genres"],
+
+    "@nexus-engine/nexus-hal": ["@nexus-engine/nexus-hal@workspace:packages/nexus-hal"],
 
     "@nexus-engine/scripts": ["@nexus-engine/scripts@workspace:scripts"],
 

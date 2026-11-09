@@ -205,8 +205,8 @@ jobs:
 
   # ─── Scripts: bun test ──────────────────────────────────────────────────────
   # Note: package.json at repo root declares
-  # `workspaces: ["scripts", "packages/genres", "packages/styles/*"]`, so
-  # `bun install` and the lockfile (bun.lock) live at the repo root. We install
+  # `workspaces: ["scripts", "packages/nexus-hal", "packages/genres", "packages/styles/*"]`,
+  # so `bun install` and the lockfile (bun.lock) live at the repo root. We install
   # at the root, then `cd scripts/` for the suite-specific commands.
   # packages/nexus-net and packages/nexus-physics are Cargo workspace members,
   # not bun ones (Rust crates, no package.json).
@@ -297,7 +297,8 @@ jobs:
         # Law 7: MIT forever. Every source/docs/script file must carry an
         # `SPDX-License-Identifier:` header. We scan only tracked files under
         # the five owning subtrees (crates/, packages/, scripts/, docs/,
-        # .github/) and exempt generated / lockfile-style paths.
+        # .github/ — packages/ covers both the HAL/style crates and the genres)
+        # and exempt generated / lockfile-style paths.
         shell: bash
         run: |
           set -euo pipefail

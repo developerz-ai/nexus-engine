@@ -1,21 +1,31 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Nexus Engine contributors
 //
-// scripts/tests/workspace-layout.test.ts — house-layout guard for the
-// crates/genres/ → packages/genres/ move (Law 3, Law 7, Law 14).
+// scripts/tests/workspace-layout.test.ts — house-layout guards for the two
+// member-group moves this branch carries together (Law 3, Law 7, Law 14):
+//
+//   1. crates/nexus-hal/  → packages/nexus-hal/   (this branch)
+//   2. crates/genres/     → packages/genres/      (main)
 //
 // A half-done move is silent. Drop "packages/genres/*" from the root
 // Cargo.toml members and `cargo check --workspace` / `cargo nextest` stay
 // green while 16 crates fall out of the workspace; leave the SPDX sweep on
 // crates/** only and the moved crates are never header-checked; forget the
-// bun workspace entry and `bun install` no longer sees the genres package.
+// bun workspace entry and `bun install --frozen-lockfile` fails only at
+// `bin/setup`. The same holds for HAL: leave a path dep pointing at
+// crates/nexus-hal and the workspace stops resolving.
+//
 // Every invariant below is asserted statically — no cargo, no network — so
 // the guard runs in the bun-test pass of `bin/check`.
 
 import { describe, expect, it } from 'bun:test';
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
-import { extname, join, relative, resolve } from 'node:path';
+import { dirname, extname, join, relative, resolve } from 'node:path';
 import { REPO_ROOT } from './helpers';
+
+/** HAL — moved by this branch. */
+const HAL = 'packages/nexus-hal';
+const OLD_HAL = 'crates/nexus-hal';
 
 /** The 16 genre crates that moved out of crates/genres/ into packages/genres/. */
 const GENRES = [
@@ -61,11 +71,12 @@ const NAMING_FILES = [
   '.claude/skills/fix-from-coderabbit/SKILL.md',
 ] as const;
 
-/** Other subtrees stay at their merged locations (styles, net and physics moved
- * independently of this PR's genre move). */
+/** Other subtrees stay at their merged locations — HAL, styles, net and physics
+ * moved independently of the genre move, so the genre guard must not disturb
+ * them. */
 const UNMOVED_PATHS = [
   'crates/nexus-core',
-  'crates/nexus-hal',
+  'packages/nexus-hal',
   'crates/nexus-assets',
   'crates/nexus-renderer',
   'crates/nexus-audio',
@@ -124,15 +135,49 @@ const SKIP_EXT = new Set([
 const abs = (...parts: string[]): string => join(REPO_ROOT, ...parts);
 const exists = (...parts: string[]): boolean => existsSync(abs(...parts));
 const readText = (...parts: string[]): string => readFileSync(abs(...parts), 'utf8');
+const read = (path: string): string => readText(path);
+
+interface Manifest {
+  package: { name: string };
+  dependencies: Record<string, { path: string; version: string }>;
+}
+
+const toml = (path: string): Manifest => Bun.TOML.parse(read(path)) as unknown as Manifest;
+const json = <T>(path: string): T => JSON.parse(read(path)) as T;
+
+/** Assert a `[dependencies]` entry points at the crate that owns `name`. */
+function dependency(manifest: string, name: string, destination: string): void {
+  const dep = toml(manifest).dependencies[name];
+  expect(dep.version).toBe('0.1.0');
+  const target = resolve(REPO_ROOT, dirname(manifest), dep.path, 'Cargo.toml');
+  expect(target).toBe(resolve(REPO_ROOT, destination, 'Cargo.toml'));
+  expect(existsSync(target)).toBe(true);
+  expect((Bun.TOML.parse(readFileSync(target, 'utf8')) as Manifest).package.name).toBe(name);
+}
+
+/** These configs use literal paths; scope each assertion to its owning block. */
+function block(text: string, start: string, end: string): string {
+  expect(text).toContain(start);
+  expect(text).toContain(end);
+  return text.slice(text.indexOf(start), text.indexOf(end, text.indexOf(start)));
+}
 
 /** Parse the `[workspace] members` array out of a Cargo.toml. */
 function cargoMembers(text: string): string[] {
-  const block = /members\s*=\s*\[([\s\S]*?)\]/.exec(text)?.[1] ?? '';
-  return block
+  const members = /members\s*=\s*\[([\s\S]*?)\]/.exec(text)?.[1] ?? '';
+  return members
     .split('\n')
     .map((line) => line.replace(/#.*$/, '').trim())
     .filter((line) => line.length > 0)
     .map((line) => line.replace(/,$/, '').replace(/^"|"$/g, ''));
+}
+
+/** Parse bun's text lockfile — JSON with trailing commas, not executable code. */
+function parseBunLock(): {
+  workspaces?: Record<string, { name?: string; version?: string }>;
+  packages?: Record<string, string[]>;
+} {
+  return JSON.parse(readText('bun.lock').replace(/,\s*([}\]])/g, '$1'));
 }
 
 /** Read only this flag's path list, never comments or sibling coverage flags. */
@@ -178,6 +223,73 @@ function staleLocationRefs(): string[] {
   return hits;
 }
 
+describe('HAL workspace relocation', () => {
+  it('keeps the four Rust crate files only at the new root', () => {
+    for (const file of ['Cargo.toml', 'README.md', 'src/lib.rs', 'tests/smoke.rs']) {
+      expect(exists(HAL, file)).toBe(true);
+    }
+    expect(exists(OLD_HAL)).toBe(false);
+    expect(toml(`${HAL}/Cargo.toml`).package.name).toBe('nexus-hal');
+  });
+
+  it('registers HAL exactly once in both explicit workspace lists', () => {
+    const cargoMembersList = cargoMembers(readText('Cargo.toml'));
+    const bunMembers = json<{ workspaces: string[] }>('package.json').workspaces;
+    for (const members of [cargoMembersList, bunMembers]) {
+      expect(members.filter((member: string) => member === HAL)).toHaveLength(1);
+      expect(members).not.toContain(OLD_HAL);
+    }
+    expect(bunMembers).toContain('scripts');
+    // Both member groups this branch merges must stay in the Bun workspace.
+    expect(bunMembers).toContain(NEW_ROOT);
+  });
+
+  it('resolves every inbound dependency and the outbound core dependency', () => {
+    for (const consumer of ['assets', 'audio', 'editor', 'engine', 'renderer']) {
+      dependency(`crates/nexus-${consumer}/Cargo.toml`, 'nexus-hal', HAL);
+    }
+    dependency(`${HAL}/Cargo.toml`, 'nexus-core', 'crates/nexus-core');
+  });
+
+  it('keeps the private Bun adapter and frozen lock metadata consistent', () => {
+    const adapter = json<{ name: string; version: string; private: boolean; license: string }>(
+      `${HAL}/package.json`,
+    );
+    expect(adapter).toEqual({
+      name: '@nexus-engine/nexus-hal',
+      version: '0.1.0',
+      private: true,
+      license: 'MIT',
+    });
+    const lock = parseBunLock();
+    expect(lock.workspaces?.[HAL]?.name).toBe(adapter.name);
+    expect(lock.packages?.[adapter.name]).toEqual([`${adapter.name}@workspace:${HAL}`]);
+  });
+
+  it('retains area/core labeling and core coverage membership', () => {
+    const labels = block(read('.github/labeler.yml'), 'area/core:', 'area/renderer:');
+    const coverage = block(read('codecov.yml'), '  core:', '  systems:');
+    expect(labels).toContain(`- ${HAL}/**`);
+    expect(coverage).toContain(`- ${HAL}/`);
+    expect(labels).not.toContain(OLD_HAL);
+    expect(coverage).not.toContain(OLD_HAL);
+  });
+
+  it('retains tracked-file SPDX enforcement and covers both trees from one Rust rule', () => {
+    const ci = read('.github/workflows/ci.yml');
+    const sweep = ci.split('\n').find((line) => line.includes('done < <(git ls-files'));
+    // One sweep over packages/** covers HAL, the genres and the styles at once.
+    expect(sweep).toContain("'packages/**'");
+    expect(ci).toContain('*.json|*/bun.lock|*/Cargo.lock|*/package-lock.json)');
+
+    // A duplicate HAL-only Rust review block would drift from the shared one;
+    // the single {crates,packages} glob must be the only Rust-source rule.
+    const review = read('.coderabbit.yaml');
+    expect(review).toContain('    - path: "{crates,packages}/**/src/**/*.rs"\n');
+    expect(review.split('/src/**/*.rs"').length - 1).toBe(1);
+  });
+});
+
 describe('workspace layout', () => {
   it.each([
     [
@@ -212,13 +324,17 @@ describe('workspace layout', () => {
     if (!members.includes('packages/styles/*')) {
       fail('root Cargo.toml members does not list "packages/styles/*"');
     }
+    // …and this branch's HAL relocation alongside it.
+    if (!members.includes(HAL)) {
+      fail(`root Cargo.toml members does not list "${HAL}"`);
+    }
 
     // --- The old subtree is gone ----------------------------------------
     if (exists(OLD_ROOT)) fail(`${OLD_ROOT}/ still exists`);
 
     // --- The 16 genre crates landed, with their 4 files each -------------
     const expectedCrates = GENRES.map((genre) => `nexus-genre-${genre}`);
-    const actualCrates = existsSync(abs(NEW_ROOT))
+    const actualCrates = exists(NEW_ROOT)
       ? readdirSync(abs(NEW_ROOT), { withFileTypes: true })
           .filter((entry) => entry.isDirectory())
           .map((entry) => entry.name)
@@ -312,7 +428,7 @@ describe('workspace layout', () => {
       fail('.github/workflows/ci.yml SPDX sweep does not cover packages/**');
     }
     const labeler = readText('.github/labeler.yml');
-    const areaGenres = /area\/genres:([\s\S]*?)(?=\narea\/|\Z)/.exec(labeler)?.[1] ?? '';
+    const areaGenres = /area\/genres:([\s\S]*?)(?=\narea\/|$)/.exec(labeler)?.[1] ?? '';
     if (!areaGenres.includes(`${NEW_ROOT}/**`)) {
       fail('.github/labeler.yml area/genres does not glob packages/genres/**');
     }
