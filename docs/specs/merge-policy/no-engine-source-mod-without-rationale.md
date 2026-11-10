@@ -34,7 +34,7 @@ The rule does NOT trigger when the PR matches one of:
 | Dependency bump | Diff is limited to `Cargo.toml` + `Cargo.lock` AND no `src/**` file changed |
 | Test-only change | Diff is 100% within `tests/**` or `#[cfg(test)]` blocks |
 | Spec-prep refactor | PR title prefix `refactor:` AND linked ADR is in `Status: Proposed` (allowed to land prep work; the actual feature waits for ADR acceptance) |
-| Compat-shim update | Diff is limited to `crates/nexus-engine-compat-*/` |
+| Compat-shim update | Diff is limited to `packages/nexus-engine-compat-*/` |
 
 Exception detection is mechanical (lints + file-path globs + title regex). If a PR satisfies more than one filter, the most permissive applies.
 
@@ -134,7 +134,7 @@ The JSON block always precedes the markdown. Automation parses the JSON; humans 
 | `packages/nexus-agent/src/**` | Agent RPC — wire-stable, requires ADR for any addition |
 | `packages/nexus-editor/src/**` | Editor core — use editor extensions |
 
-Engine-shipped extension crates (`packages/styles/`, `packages/genres/`, `crates/nexus-engine-compat-*/`) are NOT in the trigger set. They are themselves extensions to the core.
+Engine-shipped extension crates (`packages/styles/`, `packages/genres/`, `packages/nexus-engine-compat-*/`) are NOT in the trigger set. They are themselves extensions to the core.
 
 ---
 

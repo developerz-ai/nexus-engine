@@ -51,6 +51,12 @@ else
 fi
 missing=()
 while IFS= read -r -d '' f; do
+  # During a relocation merge, the index can still list a path deleted from
+  # the worktree. The final index commit supplies its removal, so only scan
+  # files present in this worktree.
+  if [[ ! -f "$f" ]]; then
+    continue
+  fi
   case "$f" in
     *.lock|*.png|*.jpg|*.jpeg|*.webp|*.ico|*.gif|*.svg|*.wasm|*.bin)
       continue ;;

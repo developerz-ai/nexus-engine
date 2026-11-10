@@ -138,7 +138,7 @@ If you bailed before the bottom, you didn't need to fork — and you've already 
 | Public trait stability | `docs/specs/crates/stable-api.md` — Stable tier, one-major shim, semver discipline |
 | Extension-surface coverage | `docs/specs/crates/categories.md` — 14 surfaces v1.0; petition for more |
 | AI tooling targets canonical | `docs/specs/coder/tools.md` (Agent 18) — `nexus-coder` only learns the canonical engine |
-| Compat shim per major | `crates/nexus-engine-compat-(N-1)/` ships at each major (`stable-api.md`) |
+| Compat shim per major | `packages/nexus-engine-compat-(N-1)/` ships at each major (`stable-api.md`) |
 | Perf budgets honored | Law 5 — perf regression beyond budget blocks merge |
 | Headless / determinism honored | Laws 8 + 9 — server, replay, CI all keep working |
 | MIT forever | Law 7 — license never changes |
