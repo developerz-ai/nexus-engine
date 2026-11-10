@@ -236,7 +236,7 @@ Each genre crate exposes a small set of features. Common pattern:
 
 Forbidden in genre crates: any feature that pulls in another genre crate, renderer style, or networking mode directly. Use ECS components published by those crates only (per Law 3 + the enforcement rule in `docs/architecture/06-modularity.md`).
 
-### `crates/sdks/nexus-agent-sdk-rs`
+### `packages/sdks/nexus-agent-sdk-rs`
 
 | Feature | Gates | Default | Hard-deps | Callers |
 |---|---|---|---|---|
@@ -244,7 +244,7 @@ Forbidden in genre crates: any feature that pulls in another genre crate, render
 | `tls` | rustls for HTTPS endpoints | yes | `rustls` | remote agents |
 | `cli` | bundle a thin CLI wrapper | no | `clap` | `nexus agent` binary |
 
-### `crates/sdks/nexus-agent-sdk-py`
+### `packages/sdks/nexus-agent-sdk-py`
 
 | Feature | Gates | Default | Hard-deps | Callers |
 |---|---|---|---|---|

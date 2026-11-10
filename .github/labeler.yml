@@ -87,4 +87,4 @@ area/tools:
 area/sdks:
   - changed-files:
       - any-glob-to-any-file:
-          - crates/sdks/**
+          - packages/sdks/**

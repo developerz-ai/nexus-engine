@@ -13,6 +13,8 @@
 //   7. the engine facade    → packages/nexus-engine/ (this branch)
 //   8. the script crate     → packages/nexus-script/ (this branch)
 //   9. the renderer crate   → packages/nexus-renderer/ (this branch)
+//   9. the merge crate      → packages/nexus-merge/  (this branch)
+//  10. the SDK subtree      → packages/sdks/         (this branch)
 //
 // A half-done move is silent. Drop "packages/genres/*" from the root
 // Cargo.toml members and `cargo check --workspace` / `cargo nextest` stay
@@ -99,6 +101,16 @@ const RENDERER = 'packages/nexus-renderer';
  *  a literal here would put the legacy path back into the tree. */
 const OLD_RENDERER = RENDERER.replace('packages/', 'crates/');
 
+/** The merge crate stays Rust-only, with no dependencies to re-anchor. */
+const MERGE = 'packages/nexus-merge';
+const OLD_MERGE = MERGE.replace('packages/', 'crates/');
+
+/** The Rust SDK and deferred Python placeholder keep their original depth. */
+const SDKS = 'packages/sdks';
+const OLD_SDKS = SDKS.replace('packages/', 'crates/');
+const SDK_RS = `${SDKS}/nexus-agent-sdk-rs`;
+const SDK_PY = `${SDKS}/nexus-agent-sdk-py`;
+
 /** The 16 genre crates that moved out of crates/genres/ into packages/genres/. */
 const GENRES = [
   'battleroyal',
@@ -147,7 +159,7 @@ const NAMING_FILES = [
  * the agent crate moved independently of the genre move, so the genre guard must
  * not disturb them. The assets, audio and CLI crates left crates/ with this
  * branch, so their new homes are asserted here too. The editor, engine
- * facade, script and renderer crates left crates/ with this branch as well. */
+ * facade, script, renderer and merge crates left crates/ with this branch as well. */
 const UNMOVED_PATHS = [
   'crates/nexus-core',
   'packages/nexus-hal',
@@ -158,12 +170,12 @@ const UNMOVED_PATHS = [
   'packages/nexus-agent',
   'packages/nexus-editor',
   'packages/nexus-cli',
-  'crates/nexus-merge',
+  MERGE,
   ENGINE,
   'packages/nexus-net',
   'packages/nexus-physics',
   'packages/styles',
-  'crates/sdks',
+  SDKS,
   'games',
   'tools',
   'docs',
@@ -290,6 +302,8 @@ function staleRootIn(text: string): string | undefined {
   if (text.includes(OLD_ENGINE)) return OLD_ENGINE;
   if (text.includes(OLD_SCRIPT)) return OLD_SCRIPT;
   if (text.includes(OLD_RENDERER)) return OLD_RENDERER;
+  if (text.includes(OLD_MERGE)) return OLD_MERGE;
+  if (text.includes(OLD_SDKS)) return OLD_SDKS;
   return undefined;
 }
 
@@ -695,6 +709,164 @@ describe('renderer workspace relocation', () => {
     expect(coverage).toContain(`- ${RENDERER}/`);
     expect(labels).not.toContain(OLD_RENDERER);
     expect(coverage).not.toContain(OLD_RENDERER);
+  });
+});
+
+describe('merge workspace relocation', () => {
+  it('keeps all four crate files and SPDX headers only at the new root', () => {
+    for (const file of CRATE_FILES) {
+      expect(exists(MERGE, file)).toBe(true);
+      expect(readText(MERGE, file).split('\n')[0]).toContain('SPDX-License-Identifier: MIT');
+    }
+    expect(exists(OLD_MERGE)).toBe(false);
+    expect(toml(`${MERGE}/Cargo.toml`).package.name).toBe('nexus-merge');
+  });
+
+  it('retains the README spec link at the same relative depth', () => {
+    const spec = 'docs/guides/merge-system.md';
+    const link = /\]\(([^)]+)\)/.exec(readText(MERGE, 'README.md'))?.[1];
+    expect(link).toBe(`../../${spec}`);
+    expect(resolve(abs(MERGE), link ?? '')).toBe(abs(spec));
+    expect(exists(spec)).toBe(true);
+  });
+
+  it('registers merge exactly once in Cargo and keeps it Rust-only', () => {
+    const members = cargoMembers(readText('Cargo.toml'));
+    expect(members.filter((member) => member === MERGE)).toHaveLength(1);
+    expect(members).not.toContain(OLD_MERGE);
+    expect(toml(`${MERGE}/Cargo.toml`).dependencies).toEqual({});
+    expect(exists(MERGE, 'package.json')).toBe(false);
+    const bunMembers = json<{ workspaces: string[] }>('package.json').workspaces;
+    expect(bunMembers).not.toContain(MERGE);
+    expect(bunMembers).not.toContain(OLD_MERGE);
+    const lock = parseBunLock();
+    expect(lock.workspaces?.[MERGE]).toBeUndefined();
+    expect(lock.workspaces?.[OLD_MERGE]).toBeUndefined();
+  });
+
+  it('detects stale merge references without spelling one in this guard', () => {
+    expect(read(SELF)).not.toContain(OLD_MERGE);
+    expect(staleRootIn(`path = "${OLD_MERGE}"`)).toBe(OLD_MERGE);
+    expect(staleRootIn(`path = "${MERGE}"`)).toBeUndefined();
+    expect(staleRootIn('')).toBeUndefined();
+    expect(staleLocationRefs().filter((hit) => hit.stale === OLD_MERGE)).toEqual([]);
+  });
+});
+
+describe('SDK workspace relocation', () => {
+  it('keeps all five files only at the new root, with four SPDX headers', () => {
+    expect(exists(OLD_SDKS)).toBe(false);
+    const files = [...walkFiles(abs(SDKS))]
+      .map((file) => relative(abs(SDKS), file).replaceAll('\\', '/'))
+      .sort();
+    expect(files).toEqual(
+      [
+        ...CRATE_FILES.map((file) => `nexus-agent-sdk-rs/${file}`),
+        'nexus-agent-sdk-py/.placeholder',
+      ].sort(),
+    );
+    for (const file of CRATE_FILES) {
+      expect(readText(SDK_RS, file).split('\n')[0]).toContain('SPDX-License-Identifier: MIT');
+    }
+    expect(readText(SDK_RS, 'src/lib.rs')).toContain('#![forbid(unsafe_code)]');
+    expect(readText(SDK_RS, 'src/lib.rs')).toContain('Status: stub (Phase 0 scaffold)');
+    expect(readText(SDK_RS, 'tests/smoke.rs')).toContain('fn crate_links()');
+  });
+
+  it('preserves package identity, workspace inheritance and dependency boundaries', () => {
+    const manifest = Bun.TOML.parse(readText(SDK_RS, 'Cargo.toml'));
+    expect(manifest).toEqual({
+      package: {
+        name: 'nexus-agent-sdk-rs',
+        version: { workspace: true },
+        edition: { workspace: true },
+        license: { workspace: true },
+        authors: { workspace: true },
+        repository: { workspace: true },
+        'rust-version': { workspace: true },
+        description: 'Rust client SDK for the Nexus Agent API (JSON-RPC over QUIC/WS).',
+        readme: 'README.md',
+        metadata: {
+          nexus: { spec: 'docs/specs/agent/api.md', laws: ['1', '2', '7', '10', '11'] },
+        },
+      },
+      lints: { workspace: true },
+      dependencies: {},
+    });
+  });
+
+  it('registers only the explicit Rust SDK member and leaves Python deferred', () => {
+    const members = cargoMembers(readText('Cargo.toml'));
+    const sdkMembers = members.filter((member) => member.startsWith(`${SDKS}/`));
+    expect(sdkMembers).toEqual([SDK_RS]);
+    expect(readText('Cargo.toml')).toContain(`# ${SDK_PY} — deferred`);
+    const placeholder = readText(SDK_PY, '.placeholder');
+    expect(placeholder).toContain('DEFERRED');
+    expect(placeholder).toContain(`only \`${SDK_RS}\``);
+    expect(placeholder).toContain('explicit Cargo member');
+    expect(placeholder).toContain('Python remains deferred and excluded');
+    expect(placeholder).not.toContain('glob');
+    expect(exists(SDK_PY, 'Cargo.toml')).toBe(false);
+
+    const bunMembers = json<{ workspaces: string[] }>('package.json').workspaces;
+    const lockMembers = Object.keys(parseBunLock().workspaces ?? {});
+    for (const root of [SDKS, SDK_RS, SDK_PY]) {
+      expect(exists(root, 'package.json')).toBe(false);
+      for (const members of [bunMembers, lockMembers]) {
+        expect(members.some((member) => new Bun.Glob(member).match(root))).toBe(false);
+      }
+    }
+  });
+
+  it('retains the README specification link at the same depth', () => {
+    const spec = 'docs/specs/agent/api.md';
+    const link = /\]\(([^)]+)\)/.exec(readText(SDK_RS, 'README.md'))?.[1];
+    expect(link).toBe(`../../../${spec}`);
+    expect(resolve(abs(SDK_RS), link ?? '')).toBe(abs(spec));
+    expect(exists(spec)).toBe(true);
+  });
+
+  it('retains SDK labeling, agent coverage and existing packages SPDX enforcement', () => {
+    const labels = Bun.YAML.parse(read('.github/labeler.yml')) as Record<
+      string,
+      { 'changed-files': { 'any-glob-to-any-file': string[] }[] }[]
+    >;
+    expect(labels['area/sdks']).toEqual([
+      { 'changed-files': [{ 'any-glob-to-any-file': [`${SDKS}/**`] }] },
+    ]);
+    const coverage = Bun.YAML.parse(read('codecov.yml')) as {
+      flags: { agent: { paths: string[] } };
+    };
+    expect(coverage.flags.agent.paths).toContain(`${SDKS}/`);
+    const ci = read('.github/workflows/ci.yml');
+    const sweep = ci.split('\n').find((line) => line.includes('done < <(git ls-files'));
+    expect(sweep).toContain("'packages/**'");
+    expect(ci).toContain('*/.placeholder|');
+  });
+
+  it('documents both SDK locations and the explicit Rust-only Cargo membership', () => {
+    const layout = read('docs/architecture/04-workspace-layout.md');
+    for (const file of [
+      'docs/architecture/04-workspace-layout.md',
+      'docs/architecture/feature-flag-matrix.md',
+    ]) {
+      for (const sdk of [SDK_RS, SDK_PY]) {
+        expect(read(file)).toContain(`### \`${sdk}\``);
+      }
+    }
+    expect(cargoMembers(layout).filter((member) => member.startsWith(`${SDKS}/`))).toEqual([
+      SDK_RS,
+    ]);
+    expect(read('CLAUDE.md')).toContain(SDK_RS);
+    expect(layout).toContain('Python remains deferred and excluded');
+  });
+
+  it('detects legacy references across the tree without embedding one in the guard', () => {
+    expect(read(SELF)).not.toContain(OLD_SDKS);
+    expect(staleRootIn(`path = "${OLD_SDKS}/nexus-agent-sdk-rs"`)).toBe(OLD_SDKS);
+    expect(staleRootIn(`path = "${SDKS}"`)).toBeUndefined();
+    expect(staleRootIn('')).toBeUndefined();
+    expect(staleLocationRefs().filter((hit) => hit.stale === OLD_SDKS)).toEqual([]);
   });
 });
 
