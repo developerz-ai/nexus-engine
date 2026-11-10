@@ -210,8 +210,9 @@ jobs:
   # lockfile (bun.lock) live at the repo root. We install at the root — the
   # frozen install provisions every bun workspace — then `cd scripts/` for the
   # suite-specific commands. packages/nexus-net, packages/nexus-physics,
-  # packages/nexus-assets, packages/nexus-audio and packages/nexus-cli are
-  # Cargo workspace members, not bun ones (Rust crates, no package.json).
+  # packages/nexus-assets, packages/nexus-audio, packages/nexus-cli and
+  # packages/nexus-engine are Cargo workspace members, not bun ones
+  # (Rust crates, no package.json).
   scripts-test:
     name: scripts / test
     runs-on: ubuntu-latest
