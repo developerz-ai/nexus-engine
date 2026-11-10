@@ -27,4 +27,60 @@ if ! cargo clippy --version >/dev/null 2>&1; then
   echo "bin/check: the clippy component is missing; run ./bin/setup first" >&2
   exit 69
 fi
-cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings && cargo check --workspace --all-targets && cargo nextest run --workspace --profile ci && cargo deny check && (cd scripts && bun test && bun x biome check .)
+cargo fmt --all -- --check
+cargo clippy --workspace --all-targets -- -D warnings
+cargo check --workspace --all-targets
+cargo nextest run --workspace --profile ci
+cargo deny check
+(
+  cd scripts
+  bun test
+  bun x biome check .
+)
+
+# Match CI's tracked-file SPDX policy. Capture enumeration separately: failures
+# inside process substitution would otherwise be lost by the reading loop.
+tracked_files=$(mktemp)
+trap 'rm -f "$tracked_files"' EXIT
+if git ls-files -z -- 'crates/**' 'packages/**' 'scripts/**' 'docs/**' '.github/**' > "$tracked_files"; then
+  :
+else
+  status=$?
+  echo "bin/check: tracked-file enumeration failed (exit $status)" >&2
+  exit "$status"
+fi
+missing=()
+while IFS= read -r -d '' f; do
+  case "$f" in
+    *.lock|*.png|*.jpg|*.jpeg|*.webp|*.ico|*.gif|*.svg|*.wasm|*.bin)
+      continue ;;
+    *.json|*/bun.lock|*/Cargo.lock|*/package-lock.json)
+      continue ;;
+    */node_modules/*|*/target/*|*/.git/*)
+      continue ;;
+    *.snap|*/snapshots/*)
+      continue ;;
+    */.placeholder|*/.bun-version|*/.keep|*/.nvmrc)
+      continue ;;
+  esac
+  # Consume all 15 lines: grep -q/-m1 could SIGPIPE head on long lines under
+  # pipefail, rejecting a valid header. Acceptance stays identical to CI.
+  if ! head -n 15 "$f" | grep 'SPDX-License-Identifier:' > /dev/null; then
+    missing+=("$f")
+  fi
+done < "$tracked_files"
+if [[ ${#missing[@]} -gt 0 ]]; then
+  printf 'Missing SPDX header in %d file(s):\n' "${#missing[@]}" >&2
+  printf '  %s\n' "${missing[@]}" >&2
+  exit 1
+fi
+echo "SPDX headers OK on all tracked files under crates/, packages/, scripts/, docs/, .github/"
+
+# CI treats audit as advisory. Attempt it even when cargo-audit is unavailable;
+# retain cargo's diagnostics without making it a setup requirement or hard gate.
+if cargo audit; then
+  echo "bin/check: cargo audit completed (advisory)" >&2
+else
+  status=$?
+  echo "bin/check: cargo audit failed or unavailable (exit $status; advisory, nonblocking)" >&2
+fi

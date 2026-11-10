@@ -11,7 +11,7 @@
 import { describe, expect, it } from 'bun:test';
 import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { REPO_ROOT } from './helpers';
 
 const BIN_DIR = join(REPO_ROOT, 'bin');
@@ -32,7 +32,15 @@ if [ -n "$STUB_CARGO_FAIL" ] && [ "$*" = "$STUB_CARGO_FAIL" ]; then
   printf 'cargo %s\\n' "$*" >> "$STUB_LOG"
   exit 1
 fi
+if [ -n "$STUB_REPO" ] && [ "$PWD" != "$STUB_REPO" ]; then exit 90; fi
 case "$1" in
+  audit)
+    printf 'cargo %s\\n' "$*" >> "$STUB_LOG"
+    if [ ! -x "$HOME/.cargo/bin/cargo-audit" ]; then
+      echo 'error: no such command: audit' >&2
+      exit 101
+    fi
+    exec "$HOME/.cargo/bin/cargo-audit" ;;
   nextest | deny)
     sub="$1"
     shift
@@ -58,8 +66,27 @@ printf 'cargo-deny 0.16.2\\n'
 exit 0
 `;
 
+const STUB_AUDIT = `#!/bin/sh
+printf 'audit stub diagnostic\\n' >&2
+exit "\${STUB_AUDIT_STATUS:-0}"
+`;
+
+// Only fixture data is enumerated; the real repository/index is never queried.
+const STUB_GIT = `#!/bin/bash
+printf 'git %s\\n' "$*" >> "$STUB_LOG"
+if [[ "$PWD" != "$STUB_REPO" || "$*" != 'ls-files -z -- crates/** packages/** scripts/** docs/** .github/**' ]]; then
+  echo 'unexpected enumeration scope' >&2
+  exit 90
+fi
+cat "$STUB_TRACKED"
+if [[ "$STUB_GIT_STATUS" != 0 ]]; then echo 'fixture enumeration failed' >&2; fi
+exit "$STUB_GIT_STATUS"
+`;
+
 const STUB_BUN = `#!/bin/sh
 printf 'bun %s\\n' "$*" >> "$STUB_LOG"
+if [ -n "$STUB_REPO" ] && [ "$PWD" != "$STUB_REPO/scripts" ]; then exit 90; fi
+if [ "$*" = "$STUB_BUN_FAIL" ]; then exit 1; fi
 case "$1" in
   --version) printf '1.4.4\\n' ;;
 esac
@@ -139,6 +166,9 @@ interface FixtureOptions {
   omit?: readonly string[];
   /** exact argv the cargo stub fails on, e.g. 'fmt --version' */
   cargoFail?: string;
+  bunFail?: string;
+  auditStatus?: number;
+  gitStatus?: number;
   /** install a curl stub whose downloads always fail */
   failCurl?: boolean;
   /** install a curl stub that serves a real archive for the requested tool */
@@ -168,6 +198,7 @@ function sharedContext(options: FixtureOptions = {}): Sandbox {
   mkdirSync(bunBin, { recursive: true });
   const log = join(root, 'stub.log');
   writeFileSync(log, '');
+  writeFileSync(join(root, 'tracked'), '');
 
   const omit = options.omit ?? [];
   if (!omit.includes('cargo')) writeStub(join(cargoBin, 'cargo'), STUB_CARGO);
@@ -176,6 +207,8 @@ function sharedContext(options: FixtureOptions = {}): Sandbox {
     writeStub(join(cargoBin, 'cargo-nextest'), STUB_NEXTTEST);
   }
   if (!omit.includes('cargo-deny')) writeStub(join(cargoBin, 'cargo-deny'), STUB_DENY);
+  if (!omit.includes('cargo-audit')) writeStub(join(cargoBin, 'cargo-audit'), STUB_AUDIT);
+  writeStub(join(cargoBin, 'git'), STUB_GIT);
   if (!omit.includes('bun')) writeStub(join(bunBin, 'bun'), STUB_BUN);
   if (options.failCurl) writeStub(join(cargoBin, 'curl'), STUB_CURL);
   if (options.okCurl) writeStub(join(cargoBin, 'curl'), OK_CURL);
@@ -186,15 +219,27 @@ function sharedContext(options: FixtureOptions = {}): Sandbox {
     HOME: home,
     PATH: BARE_PATH,
     STUB_LOG: log,
+    STUB_CARGO_FAIL: options.cargoFail ?? '',
+    STUB_BUN_FAIL: options.bunFail ?? '',
+    STUB_AUDIT_STATUS: String(options.auditStatus ?? 0),
+    STUB_GIT_STATUS: String(options.gitStatus ?? 0),
+    STUB_REPO: '',
+    STUB_TRACKED: join(root, 'tracked'),
   };
-  if (options.cargoFail) env.STUB_CARGO_FAIL = options.cargoFail;
   return { root, home, log, env };
 }
 
 /** Run one of the repo's bin/ scripts against the sandbox. */
 async function runScript(name: string, sandbox: Sandbox): Promise<RunResult> {
+  const script = name === 'check' ? join(sandbox.root, 'repo', 'bin', name) : join(BIN_DIR, name);
+  if (name === 'check') {
+    sandbox.env.STUB_REPO = join(sandbox.root, 'repo');
+    mkdirSync(dirname(script), { recursive: true });
+    mkdirSync(join(sandbox.env.STUB_REPO, 'scripts'), { recursive: true });
+    writeStub(script, readFileSync(join(BIN_DIR, name), 'utf8'));
+  }
   const proc = Bun.spawn({
-    cmd: [join(BIN_DIR, name)],
+    cmd: [script],
     cwd: REPO_ROOT,
     env: sandbox.env,
     stdin: 'ignore',
@@ -217,6 +262,26 @@ function calls(sandbox: Sandbox): string[] {
     .filter((line) => line.length > 0);
 }
 
+const HARD_CALLS = [
+  'cargo fmt --all -- --check',
+  'cargo clippy --workspace --all-targets -- -D warnings',
+  'cargo check --workspace --all-targets',
+  'cargo-nextest run --workspace --profile ci',
+  'cargo-deny check',
+  'bun test',
+  'bun x biome check .',
+];
+const ROOTS = ['crates', 'packages', 'scripts', 'docs', '.github'];
+
+function scanFiles(sandbox: Sandbox, files: Record<string, string>): void {
+  for (const [name, content] of Object.entries(files)) {
+    const path = join(sandbox.root, 'repo', name);
+    mkdirSync(dirname(path), { recursive: true });
+    writeFileSync(path, content);
+  }
+  writeFileSync(sandbox.env.STUB_TRACKED ?? '', `${Object.keys(files).join('\0')}\0`);
+}
+
 describe('bin scripts', () => {
   it('bin/check finds the gate tools in $HOME and runs the whole gate list', async () => {
     const sandbox = sharedContext();
@@ -225,18 +290,175 @@ describe('bin scripts', () => {
       expect(r.exitCode).toBe(0);
       const probes = ['cargo fmt --version', 'cargo clippy --version'];
       expect(calls(sandbox).filter((call) => !probes.includes(call))).toEqual([
-        'cargo fmt --all -- --check',
-        'cargo clippy --workspace --all-targets -- -D warnings',
-        'cargo check --workspace --all-targets',
-        'cargo-nextest run --workspace --profile ci',
-        'cargo-deny check',
-        'bun test',
-        'bun x biome check .',
+        ...HARD_CALLS,
+        'git ls-files -z -- crates/** packages/** scripts/** docs/** .github/**',
+        'cargo audit',
       ]);
+      expect(r.stdout).toContain('SPDX headers OK');
+      expect(r.stderr).toContain('audit stub diagnostic');
     } finally {
       rmSync(sandbox.root, { recursive: true, force: true });
     }
   });
+
+  it('bin/check command and scope expectations match CI', () => {
+    const ci = readFileSync(join(REPO_ROOT, '.github/workflows/ci.yml'), 'utf8');
+    for (const call of HARD_CALLS) {
+      const command = call
+        .replace('cargo-nextest ', 'cargo nextest ')
+        .replace('cargo-deny ', 'cargo deny ');
+      expect(ci).toContain(`run: ${command}`);
+    }
+    expect(ci).toContain('working-directory: scripts\n        run: bun test');
+    expect(ci).toContain('working-directory: scripts\n        run: bun x biome check .');
+    expect(ci).toContain('run: cargo audit');
+    expect(ci).toMatch(/rust-audit:[\s\S]*?continue-on-error: true/);
+    expect(ci).toContain(
+      "git ls-files -z -- 'crates/**' 'packages/**' 'scripts/**' 'docs/**' '.github/**'",
+    );
+  });
+
+  for (const [index, call] of HARD_CALLS.entries()) {
+    it(`bin/check fails fast on ${call}, never reaching advisory success`, async () => {
+      const command = call
+        .replace('cargo-nextest ', 'cargo nextest ')
+        .replace('cargo-deny ', 'cargo deny ');
+      const sandbox = sharedContext(
+        command.startsWith('cargo ')
+          ? { cargoFail: command.slice(6) }
+          : { bunFail: command.slice(4) },
+      );
+      try {
+        const r = await runScript('check', sandbox);
+        expect(r.exitCode).toBe(1);
+        // cargo records a failing subcommand before dispatching to its stub.
+        expect(calls(sandbox).slice(2)).toEqual([...HARD_CALLS.slice(0, index), command]);
+      } finally {
+        rmSync(sandbox.root, { recursive: true, force: true });
+      }
+    });
+  }
+
+  for (const unavailable of [false, true]) {
+    it(`bin/check reports ${unavailable ? 'unavailable' : 'failing'} audit without blocking`, async () => {
+      const sandbox = sharedContext(unavailable ? { omit: ['cargo-audit'] } : { auditStatus: 17 });
+      try {
+        const r = await runScript('check', sandbox);
+        expect(r.exitCode).toBe(0);
+        expect(calls(sandbox)).toContain('cargo audit');
+        expect(r.stderr).toContain(
+          unavailable ? 'no such command: audit' : 'audit stub diagnostic',
+        );
+        expect(r.stderr).toContain('advisory');
+        expect(r.stderr).toContain(unavailable ? '101' : '17');
+      } finally {
+        rmSync(sandbox.root, { recursive: true, force: true });
+      }
+    });
+  }
+
+  for (const root of ROOTS) {
+    it(`bin/check rejects missing SPDX under ${root}, including spaces`, async () => {
+      const sandbox = sharedContext();
+      const name = `${root}/nested/missing header.txt`;
+      try {
+        scanFiles(sandbox, { [name]: 'no header\n' });
+        const r = await runScript('check', sandbox);
+        expect(r.exitCode).toBe(1);
+        expect(r.stderr).toContain(name);
+        expect(calls(sandbox)).not.toContain('cargo audit');
+      } finally {
+        rmSync(sandbox.root, { recursive: true, force: true });
+      }
+    });
+  }
+
+  for (const line of [15, 16]) {
+    it(`bin/check ${line === 15 ? 'accepts' : 'rejects'} SPDX on line ${line}`, async () => {
+      const sandbox = sharedContext();
+      try {
+        scanFiles(sandbox, {
+          'docs/header with spaces\nand newline.md': `${'line\n'.repeat(line - 1)}SPDX-License-Identifier: MIT\n`,
+        });
+        const r = await runScript('check', sandbox);
+        expect(r.exitCode).toBe(line === 15 ? 0 : 1);
+        expect(r.stdout.includes('SPDX headers OK')).toBe(line === 15);
+      } finally {
+        rmSync(sandbox.root, { recursive: true, force: true });
+      }
+    });
+  }
+
+  it('bin/check accepts markers without tightening CI policy, even with long lines', async () => {
+    const sandbox = sharedContext();
+    try {
+      scanFiles(sandbox, {
+        'docs/long.md': `SPDX-License-Identifier: Apache-2.0\n${'x'.repeat(100_000)}\n`,
+      });
+      const r = await runScript('check', sandbox);
+      expect(r.exitCode).toBe(0);
+    } finally {
+      rmSync(sandbox.root, { recursive: true, force: true });
+    }
+  });
+
+  it('bin/check applies all CI exemptions across all five roots', async () => {
+    const sandbox = sharedContext();
+    const exempt = [
+      ...[
+        'lock',
+        'png',
+        'jpg',
+        'jpeg',
+        'webp',
+        'ico',
+        'gif',
+        'svg',
+        'wasm',
+        'bin',
+        'json',
+        'snap',
+      ].map((ext) => `fixture.${ext}`),
+      'bun.lock',
+      'Cargo.lock',
+      'package-lock.json',
+      'node_modules/nested/file.ts',
+      'target/nested/file.rs',
+      '.git/nested/file',
+      'snapshots/file.txt',
+      '.placeholder',
+      '.bun-version',
+      '.keep',
+      '.nvmrc',
+    ];
+    try {
+      const files = Object.fromEntries(
+        ROOTS.flatMap((root) => exempt.map((name) => [`${root}/${name}`, 'no header\n'])),
+      );
+      scanFiles(sandbox, files);
+      const r = await runScript('check', sandbox);
+      expect(r.exitCode).toBe(0);
+      expect(r.stdout).toContain('SPDX headers OK');
+    } finally {
+      rmSync(sandbox.root, { recursive: true, force: true });
+    }
+  });
+
+  for (const partial of [false, true]) {
+    it(`bin/check propagates enumeration failure (${partial ? 'partial output' : 'empty output'})`, async () => {
+      const sandbox = sharedContext({ gitStatus: 42 });
+      try {
+        if (partial) scanFiles(sandbox, { 'docs/valid.md': 'SPDX-License-Identifier: MIT\n' });
+        const r = await runScript('check', sandbox);
+        expect(r.exitCode).toBe(42);
+        expect(r.stderr).toContain('fixture enumeration failed');
+        expect(r.stdout).not.toContain('SPDX headers OK');
+        expect(calls(sandbox)).not.toContain('cargo audit');
+      } finally {
+        rmSync(sandbox.root, { recursive: true, force: true });
+      }
+    });
+  }
 
   it('bin/check exits 69 with a setup hint when a gate tool is missing', async () => {
     const sandbox = sharedContext({ omit: ['cargo-nextest'] });
