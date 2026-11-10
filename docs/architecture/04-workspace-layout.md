@@ -32,7 +32,6 @@ nexus-engine/
 │   └── initial/
 ├── crates/                          # remaining engine crates (systems + sub-crates)
 │   ├── nexus-core/
-│   ├── nexus-renderer/
 │   ├── nexus-merge/                 # the AI maintainer's lint/check library
 │   └── sdks/
 │       ├── nexus-agent-sdk-rs/      # Rust SDK
@@ -64,6 +63,7 @@ nexus-engine/
 │   ├── nexus-hal/                   # Rust crate + private Bun workspace adapter
 │   ├── nexus-net/                   # relocated system crate (transport, quinn)
 │   ├── nexus-physics/               # relocated system crate (rapier)
+│   ├── nexus-renderer/              # relocated system crate (wgpu, naga)
 │   ├── nexus-script/                # relocated system crate (Lua + Rune scripting, hot reload, sandbox)
 │   └── styles/                      # style modules (PBR, NPR, pixel, 2D, mixed)
 │       ├── nexus-style-pbr/
@@ -86,12 +86,12 @@ nexus-engine/
 
 ---
 
-`nexus-hal`, the five style modules, `nexus-net`, `nexus-physics`, `nexus-agent`,
-`nexus-assets`, `nexus-audio`, `nexus-cli`, `nexus-editor`, `nexus-engine`, `nexus-script` and the sixteen genre crates live under
+`nexus-hal`, the five style modules, `nexus-net`, `nexus-physics`, `nexus-renderer`,
+`nexus-agent`, `nexus-assets`, `nexus-audio`, `nexus-cli`, `nexus-editor`, `nexus-engine`, `nexus-script` and the sixteen genre crates live under
 `packages/`; every remaining engine crate, including the SDKs, stays under
 `crates/`, and dependency boundaries are unchanged.
 The root Cargo workspace includes `packages/nexus-hal`, `packages/nexus-net`,
-`packages/nexus-physics`, `packages/nexus-assets`, `packages/nexus-audio`,
+`packages/nexus-physics`, `packages/nexus-renderer`, `packages/nexus-assets`, `packages/nexus-audio`,
 `packages/nexus-cli`, `packages/nexus-editor`, `packages/nexus-agent`, `packages/nexus-engine`,
 `packages/nexus-script` and `packages/{genres,styles}/*`.
 The Bun workspace includes `scripts`, `packages/nexus-hal`, `packages/genres` and
@@ -100,7 +100,7 @@ adapter registers the Rust package without adding a JavaScript implementation, a
 `@nexus-engine/genres` groups the genre crates the same way; `packages/nexus-agent`
 ships the agent crate's own dependency-free adapter, and `packages/styles/*`,
 `packages/nexus-net`, `packages/nexus-physics`, `packages/nexus-assets`,
-`packages/nexus-audio`, `packages/nexus-cli`, `packages/nexus-editor`, `packages/nexus-engine` and
+`packages/nexus-audio`, `packages/nexus-renderer`, `packages/nexus-cli`, `packages/nexus-editor`, `packages/nexus-engine` and
 `packages/nexus-script` stay Rust-only,
 without Bun adapters.
 
@@ -114,7 +114,7 @@ members = [
   "crates/nexus-core",
   "packages/nexus-hal",
   "packages/nexus-assets",
-  "crates/nexus-renderer",
+  "packages/nexus-renderer",
   "packages/nexus-physics",
   "packages/nexus-audio",
   "packages/nexus-net",

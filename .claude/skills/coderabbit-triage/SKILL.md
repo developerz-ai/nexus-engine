@@ -78,7 +78,7 @@ jq '[.data.repository.pullRequest.reviewThreads.nodes[]
   "threads": [
     {
       "thread_id": "PRRT_kwDOA...",
-      "path": "crates/renderer/src/shadow.rs",
+      "path": "packages/nexus-renderer/src/shadow.rs",
       "line": 142,
       "class": "bug|nit|suggestion|opinion|wrong|outdated",
       "action": "accept|reject|discuss|resolve",

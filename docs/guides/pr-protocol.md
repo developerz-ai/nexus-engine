@@ -42,8 +42,8 @@ crates_touched:                                   # required if any code changes
 change_type: feat                                 # feat|fix|perf|refactor|docs|test|chore
 breaking: false                                   # if true, BREAKING CHANGE footer required
 tests_added:                                      # required: at least one
-  - crates/nexus-renderer/tests/shadows_vsm.rs
-  - crates/nexus-renderer/benches/shadows.rs
+  - packages/nexus-renderer/tests/shadows_vsm.rs
+  - packages/nexus-renderer/benches/shadows.rs
 scenarios_touched: []                             # list scenario IDs whose hash changes
 perf_claims:                                      # optional, parsed and verified at S7
   - "renderer.shadows.cascade_split: -8% vs baseline"
@@ -224,8 +224,8 @@ crates_touched:
 change_type: perf
 breaking: false
 tests_added:
-  - crates/nexus-renderer/tests/shadows_cascade_split.rs
-  - crates/nexus-renderer/benches/shadows.rs
+  - packages/nexus-renderer/tests/shadows_cascade_split.rs
+  - packages/nexus-renderer/benches/shadows.rs
 scenarios_touched: []
 perf_claims:
   - "renderer.shadows.cascade_split: -8% vs baseline"

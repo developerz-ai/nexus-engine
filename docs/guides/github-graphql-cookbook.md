@@ -47,7 +47,7 @@ Sample (truncated):
               "id": "PRRT_kwDOA1B2C3-4D5E6F",
               "isResolved": false,
               "isOutdated": false,
-              "path": "crates/renderer/src/shadow.rs",
+              "path": "packages/nexus-renderer/src/shadow.rs",
               "line": 142,
               "diffSide": "RIGHT",
               "comments": {

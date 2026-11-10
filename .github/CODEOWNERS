@@ -14,7 +14,7 @@
 /docs/contracts/         @architect @contract-author
 /docs/architecture/      @architect
 /crates/nexus-core/      @ecs-engineer @memory-engineer @jobs-engineer
-/crates/nexus-renderer/  @renderer-engineer @shader-engineer
+/packages/nexus-renderer/ @renderer-engineer @shader-engineer
 /scripts/                @ts-script-author
 /.github/workflows/      @ci-engineer
 /.coderabbit.yaml        @ci-engineer

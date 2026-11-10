@@ -183,7 +183,7 @@ jobs:
 ```json
 {
   "tool": "clippy",
-  "file": "crates/nexus-renderer/src/lib.rs",
+  "file": "packages/nexus-renderer/src/lib.rs",
   "line": 42,
   "column": 7,
   "severity": "error",

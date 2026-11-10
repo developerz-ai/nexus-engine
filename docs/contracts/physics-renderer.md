@@ -17,7 +17,7 @@ Related specs:
 | Role | Crate | File of record |
 |---|---|---|
 | Producer | `nexus-physics` | `crates/physics/src/debug.rs` |
-| Consumer | `nexus-renderer` | `crates/renderer/src/debug_pass.rs` |
+| Consumer | `nexus-renderer` | `packages/nexus-renderer/src/debug_pass.rs` |
 | Buffer | shared crate | `nexus-debug-draw` (`crates/debug-draw/src/lib.rs`) |
 
 Pattern reference: Bullet `btIDebugDraw`, Rapier `DebugRenderPipeline`, Box2D `b2Draw`. The shared buffer crate ensures the producer (physics) does not depend on the renderer — both depend on `nexus-debug-draw`. (Acyclic dependency principle, Robert C. Martin.)

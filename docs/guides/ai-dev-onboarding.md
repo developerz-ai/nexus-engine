@@ -162,17 +162,17 @@ The cheapest legal commit sequence:
 ```
 # 1
 git checkout -b feat/renderer-cascade-bias
-$EDITOR crates/nexus-renderer/tests/shadows_cascade_split.rs
+$EDITOR packages/nexus-renderer/tests/shadows_cascade_split.rs
 cargo test -p nexus-renderer cascade_split   # RED, expected
 git add -A && git commit -m "test(renderer): cascade split bias regression case"
 
 # 2
-$EDITOR crates/nexus-renderer/src/shadows.rs
+$EDITOR packages/nexus-renderer/src/shadows.rs
 cargo test -p nexus-renderer cascade_split   # GREEN
 git add -A && git commit -m "feat(renderer): correct cascade split bias in NDC"
 
 # 3 (if hot path)
-$EDITOR crates/nexus-renderer/benches/shadows.rs
+$EDITOR packages/nexus-renderer/benches/shadows.rs
 cargo bench -p nexus-renderer -- cascade_split
 git add -A && git commit -m "perf(renderer): bench for cascade split path"
 ```

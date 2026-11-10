@@ -88,7 +88,7 @@ After push, invoke `wait-for-ci`. Reset round counter in `babysit-pr` if rebase 
 {
   "pr": 123,
   "rebased_onto": "abc123",
-  "conflicts": ["Cargo.lock", "crates/renderer/src/lib.rs"],
+  "conflicts": ["Cargo.lock", "packages/nexus-renderer/src/lib.rs"],
   "resolved": true,
   "scoped_crates": ["renderer", "core-ecs"],
   "force_pushed": true,
