@@ -60,7 +60,7 @@ flags:
   agent:
     paths:
       - packages/nexus-agent/
-      - crates/sdks/
+      - packages/sdks/
   editor_cli:
     paths:
       - packages/nexus-editor/

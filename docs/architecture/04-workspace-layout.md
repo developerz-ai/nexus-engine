@@ -31,10 +31,7 @@ nexus-engine/
 │   ├── games/
 │   └── initial/
 ├── crates/                          # remaining engine crates (systems + sub-crates)
-│   ├── nexus-renderer/
-│   └── sdks/
-│       ├── nexus-agent-sdk-rs/      # Rust SDK
-│       └── nexus-agent-sdk-py/      # Python bindings via pyo3
+│   └── nexus-renderer/
 ├── packages/                        # members relocated out of crates/ (Rust, or Rust + a JS adapter)
 │   ├── genres/
 │   │   ├── nexus-genre-fps/
@@ -65,6 +62,9 @@ nexus-engine/
 │   ├── nexus-net/                   # relocated system crate (transport, quinn)
 │   ├── nexus-physics/               # relocated system crate (rapier)
 │   ├── nexus-script/                # relocated system crate (Lua + Rune scripting, hot reload, sandbox)
+│   ├── sdks/
+│   │   ├── nexus-agent-sdk-rs/       # Rust SDK (explicit Cargo member)
+│   │   └── nexus-agent-sdk-py/       # deferred Python placeholder, not a Cargo member
 │   └── styles/                      # style modules (PBR, NPR, pixel, 2D, mixed)
 │       ├── nexus-style-pbr/
 │       ├── nexus-style-npr/
@@ -89,13 +89,16 @@ nexus-engine/
 `nexus-core`, `nexus-hal`, the five style modules, `nexus-net`, `nexus-physics`,
 `nexus-agent`, `nexus-assets`, `nexus-audio`, `nexus-cli`, `nexus-editor`,
 `nexus-engine`, `nexus-script`, `nexus-merge` and the sixteen genre crates live under
-`packages/`; every remaining engine crate, including the SDKs, stays under
-`crates/`, and dependency boundaries are unchanged. The root Cargo workspace
-includes `packages/nexus-core`, `packages/nexus-hal`, `packages/nexus-net`,
-`packages/nexus-physics`, `packages/nexus-assets`, `packages/nexus-audio`,
-`packages/nexus-cli`, `packages/nexus-editor`, `packages/nexus-agent`,
-`packages/nexus-engine`, `packages/nexus-script`, `packages/nexus-merge` and
-`packages/{genres,styles}/*`.
+`packages/`, alongside the SDK subtree at `packages/sdks/`. The remaining engine crate
+(`nexus-renderer`) stays under `crates/`, and dependency boundaries are unchanged. The
+root Cargo workspace includes `packages/nexus-core`, `packages/nexus-hal`,
+`packages/nexus-net`, `packages/nexus-physics`, `packages/nexus-assets`,
+`packages/nexus-audio`, `packages/nexus-cli`, `packages/nexus-editor`,
+`packages/nexus-agent`, `packages/nexus-engine`, `packages/nexus-script`,
+`packages/nexus-merge`, `packages/{genres,styles}/*` and the explicit member
+`packages/sdks/nexus-agent-sdk-rs`. Python remains deferred and excluded:
+`packages/sdks/nexus-agent-sdk-py` contains only a `.placeholder`, not a Cargo
+manifest; no SDK wildcard is registered.
 The Bun workspace includes `scripts`, `packages/nexus-hal`, `packages/genres` and
 `packages/nexus-agent`. HAL's private, dependency-free `@nexus-engine/nexus-hal`
 adapter registers the Rust package without adding a JavaScript implementation, and
@@ -103,8 +106,8 @@ adapter registers the Rust package without adding a JavaScript implementation, a
 ships the agent crate's own dependency-free adapter, and `packages/styles/*`,
 `packages/nexus-net`, `packages/nexus-physics`, `packages/nexus-assets`,
 `packages/nexus-audio`, `packages/nexus-cli`, `packages/nexus-core`,
-`packages/nexus-editor`, `packages/nexus-engine`, `packages/nexus-script` and
-`packages/nexus-merge` stay Rust-only,
+`packages/nexus-editor`, `packages/nexus-engine`, `packages/nexus-script`,
+`packages/nexus-merge` and `packages/sdks/nexus-agent-sdk-rs` stay Cargo-only,
 without Bun adapters.
 
 ## Workspace root `Cargo.toml` (shape only)
@@ -128,7 +131,8 @@ members = [
   "packages/nexus-engine",
   "packages/styles/*",
   "packages/genres/*",
-  "crates/sdks/*",
+  "packages/sdks/nexus-agent-sdk-rs",
+  # packages/sdks/nexus-agent-sdk-py — deferred, see .placeholder
   "packages/nexus-agent",
   "games/*",
   "tools/*",
@@ -327,14 +331,14 @@ Every crate lists: **purpose**, **spec**, **public surface**, **internal deps**,
 - **External deps.** none.
 - **Forbidden.** depending on renderer/physics/audio/net DIRECTLY. They depend on ECS components published by those systems; the systems own the behavior.
 
-### `crates/sdks/nexus-agent-sdk-rs`
+### `packages/sdks/nexus-agent-sdk-rs`
 
 - **Purpose.** Rust client for the agent API. Used by external tools and by `tools/nexus-scenario`.
 - **Spec.** `docs/specs/agent/sdk.md`.
 - **Internal deps.** none (talks to a running engine via JSON-RPC).
 - **External deps.** `tokio`, `serde_json`, `jsonrpsee` client.
 
-### `crates/sdks/nexus-agent-sdk-py`
+### `packages/sdks/nexus-agent-sdk-py`
 
 - **Purpose.** Python bindings to the Rust SDK via `pyo3` / `maturin`.
 - **Spec.** `docs/specs/agent/sdk.md` §Python.
