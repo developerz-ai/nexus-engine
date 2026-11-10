@@ -54,7 +54,7 @@ Mirrors the format of Laws 1–12. Each conformance bullet maps to a check that 
 | (a) No engine-core mod without ADR | Glob match on `crates/nexus-{core,renderer,...}/src/**` and `packages/nexus-agent/src/**` + ADR-link check | `nexus-merge` rule `no-engine-source-mod-without-rationale` |
 | (b) Surfaces documented | `docs/specs/crates/categories.md` table row exists for every public trait | `principle-keeper` review + CI lint `category_documented` |
 | (c) Cookbook coverage | Cookbook row count ≥ 14 + every row has REASON/SURFACE/EXAMPLE/LINK | CI lint `cookbook_complete` |
-| (d) Compat shim present | At major bump, `crates/nexus-engine-compat-(N-1)/` exists and re-exports prior major's public surface | Release pipeline gate |
+| (d) Compat shim present | At major bump, `packages/nexus-engine-compat-(N-1)/` exists and re-exports prior major's public surface | Release pipeline gate |
 | (e) Exceptions detected | Whitelist regex on title + path globs | Bot logic in `no-engine-source-mod-without-rationale` spec |
 
 ---

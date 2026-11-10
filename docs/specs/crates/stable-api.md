@@ -118,7 +118,7 @@ engine_versions = ">=1.0, <3.0"   # widened by virtue of shim
 ```
 
 Shim policy:
-- Shim is shipped in `crates/nexus-engine-compat-N/` (the engine workspace).
+- Shim is shipped in `packages/nexus-engine-compat-N/` (the engine workspace).
 - Shim documented in `MIGRATION.md` per major.
 - Shim retired one major after introduction: engine `3.0` drops the `1.x` shim.
 - Crates running through a shim get a `warn`-level structured log event each session — visible to the author via `nexus crate health <name>`.
