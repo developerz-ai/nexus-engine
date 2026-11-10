@@ -86,13 +86,14 @@ nexus-engine/
 
 ---
 
-`nexus-hal`, the five style modules, `nexus-net`, `nexus-physics`, `nexus-agent`,
-`nexus-assets`, `nexus-audio`, `nexus-cli` and the sixteen genre crates live under
-`packages/`; every remaining engine crate, including the SDKs, stays under
-`crates/`, and dependency boundaries are unchanged.
-The root Cargo workspace includes `packages/nexus-hal`, `packages/nexus-net`,
-`packages/nexus-physics`, `packages/nexus-assets`, `packages/nexus-audio`,
-`packages/nexus-cli`, `packages/nexus-agent` and `packages/{genres,styles}/*`.
+`nexus-core`, `nexus-hal`, the five style modules, `nexus-net`, `nexus-physics`,
+`nexus-agent`, `nexus-assets`, `nexus-audio`, `nexus-cli` and the sixteen genre
+crates live under `packages/`; every remaining engine crate, including the
+SDKs, stays under `crates/`, and dependency boundaries are unchanged.
+The root Cargo workspace includes `packages/nexus-core`, `packages/nexus-hal`,
+`packages/nexus-net`, `packages/nexus-physics`, `packages/nexus-assets`,
+`packages/nexus-audio`, `packages/nexus-cli`, `packages/nexus-agent` and
+`packages/{genres,styles}/*`.
 The Bun workspace includes `scripts`, `packages/nexus-hal`, `packages/genres` and
 `packages/nexus-agent`. HAL's private, dependency-free `@nexus-engine/nexus-hal`
 adapter registers the Rust package without adding a JavaScript implementation, and
