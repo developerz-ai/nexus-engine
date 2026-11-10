@@ -120,7 +120,7 @@ If the council ever wants to weaken Law 14, those three vision clauses force a h
 ## Open questions (for council review)
 
 - `[DECISION NEEDED]` Whether Law 14 supersedes the implicit "you may always modify engine source if you can defend it" posture in current ADR culture. Default proposal: YES, the rule is the rule; ADRs become the explicit mechanism.
-- `[DECISION NEEDED]` Whether the rule applies to `crates/nexus-cli/src/**`. Default proposal: NO — CLI is tooling, not engine surface. (Mirrored in the merge-policy spec.)
+- `[DECISION NEEDED]` Whether the rule applies to `packages/nexus-cli/src/**`. Default proposal: NO — CLI is tooling, not engine surface. (Mirrored in the merge-policy spec.)
 - `[DECISION NEEDED]` Whether to ratify Laws 13 and 14 together (they're co-dependent). Default proposal: YES, single ADR `NNNN-laws-13-14-opt-in-modularity-and-no-fork.md`.
 - `[VERIFY]` Conformance check (c) cookbook row count: pinned at 14 because that's the v0.1 cookbook size. Bump as new surfaces are added.
 

@@ -210,8 +210,8 @@ jobs:
   # lockfile (bun.lock) live at the repo root. We install at the root — the
   # frozen install provisions every bun workspace — then `cd scripts/` for the
   # suite-specific commands. packages/nexus-net, packages/nexus-physics,
-  # packages/nexus-assets and packages/nexus-audio are Cargo workspace
-  # members, not bun ones (Rust crates, no package.json).
+  # packages/nexus-assets, packages/nexus-audio and packages/nexus-cli are
+  # Cargo workspace members, not bun ones (Rust crates, no package.json).
   scripts-test:
     name: scripts / test
     runs-on: ubuntu-latest
@@ -299,8 +299,9 @@ jobs:
         # Law 7: MIT forever. Every source/docs/script file must carry an
         # `SPDX-License-Identifier:` header. We scan only tracked files under
         # the five owning subtrees (crates/, packages/, scripts/, docs/,
-        # .github/ — packages/ covers the HAL/style crates, the genres and the
-        # agent crate) and exempt generated / lockfile-style paths.
+        # .github/ — packages/ covers the HAL/style crates, the genres, the
+        # agent crate and the CLI crate) and exempt generated / lockfile-style
+        # paths.
         shell: bash
         run: |
           set -euo pipefail
