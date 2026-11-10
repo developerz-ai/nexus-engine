@@ -50,7 +50,7 @@ Schema: `schemas/nexus-error-v1.schema.json` (workspace root). CI validates ever
 | `EDITOR` | editor | `EDITOR.PROJECT_INVALID` |
 | `CLI` | tooling | `CLI.INVALID_ARG`, `CLI.NETWORK` |
 
-Codes are stable. Renames are breaking changes. Error definitions are owned by per-system contracts; see the [renderer Error Contract](docs/contracts/core-renderer.md#error-contract) and [scripting Error Contract](docs/contracts/core-scripting.md#error-contract).
+Codes are stable. Renames are breaking changes. Error definitions are owned by per-system contracts; see the [renderer Error Contract](../../contracts/core-renderer.md#error-contract) and [scripting Error Contract](../../contracts/core-scripting.md#error-contract).
 
 `SPECIFIC` is `SCREAMING_SNAKE_CASE`. Never localized. → `naming.md`
 
@@ -293,8 +293,8 @@ Every boundary serializes to universal JSON. Every consumer deserializes back in
 ## Error code registry
 
 Error definitions are distributed across per-system Error Contract sections, not a central registry. Existing references:
-- [Core ⇄ Renderer](docs/contracts/core-renderer.md#error-contract)
-- [Core ⇄ Scripting](docs/contracts/core-scripting.md#error-contract)
+- [Core ⇄ Renderer](../../contracts/core-renderer.md#error-contract)
+- [Core ⇄ Scripting](../../contracts/core-scripting.md#error-contract)
 
 Each system owns its error definitions and required caller actions. Adding or changing an error requires updating the owning contract in the same PR. No central error-code registry CI check is installed.
 
