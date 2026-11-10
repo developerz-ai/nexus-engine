@@ -19,7 +19,7 @@ members = [
   "packages/nexus-agent",
   "packages/nexus-editor",
   "packages/nexus-cli",
-  "crates/nexus-merge",
+  "packages/nexus-merge",
   "packages/nexus-engine",
   "packages/styles/*",
   "packages/genres/*",

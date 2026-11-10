@@ -13,6 +13,7 @@
 //   7. the editor crate     → packages/nexus-editor/ (this branch)
 //   8. the engine facade    → packages/nexus-engine/ (this branch)
 //   9. the script crate     → packages/nexus-script/ (this branch)
+//  10. the merge crate      → packages/nexus-merge/  (this branch)
 //
 // A half-done move is silent. Drop "packages/genres/*" from the root
 // Cargo.toml members and `cargo check --workspace` / `cargo nextest` stay
@@ -95,6 +96,10 @@ const SCRIPT = 'packages/nexus-script';
  *  a literal here would put the legacy path back into the tree. */
 const OLD_SCRIPT = SCRIPT.replace('packages/', 'crates/');
 
+/** The merge crate stays Rust-only, with no dependencies to re-anchor. */
+const MERGE = 'packages/nexus-merge';
+const OLD_MERGE = MERGE.replace('packages/', 'crates/');
+
 /** The 16 genre crates that moved out of crates/genres/ into packages/genres/. */
 const GENRES = [
   'battleroyal',
@@ -142,8 +147,8 @@ const NAMING_FILES = [
 /** Other subtrees stay at their merged locations — HAL, styles, net, physics and
  * the agent crate moved independently of the genre move, so the genre guard must
  * not disturb them. The core, assets, audio, CLI, editor, engine facade and
- * script crates left crates/ with this branch, so their new homes are
- * asserted here too. */
+ * script and merge crates left crates/ with this branch, so their new homes
+ * are asserted here too. */
 const UNMOVED_PATHS = [
   CORE,
   'packages/nexus-hal',
@@ -154,7 +159,7 @@ const UNMOVED_PATHS = [
   'packages/nexus-agent',
   'packages/nexus-editor',
   'packages/nexus-cli',
-  'crates/nexus-merge',
+  MERGE,
   ENGINE,
   'packages/nexus-net',
   'packages/nexus-physics',
@@ -286,6 +291,7 @@ function staleRootIn(text: string): string | undefined {
   if (text.includes(OLD_EDITOR)) return OLD_EDITOR;
   if (text.includes(OLD_ENGINE)) return OLD_ENGINE;
   if (text.includes(OLD_SCRIPT)) return OLD_SCRIPT;
+  if (text.includes(OLD_MERGE)) return OLD_MERGE;
   return undefined;
 }
 
@@ -661,6 +667,47 @@ describe('script workspace relocation', () => {
     expect(coverage).toContain(`- ${SCRIPT}/`);
     expect(labels).not.toContain(OLD_SCRIPT);
     expect(coverage).not.toContain(OLD_SCRIPT);
+  });
+});
+
+describe('merge workspace relocation', () => {
+  it('keeps all four crate files and SPDX headers only at the new root', () => {
+    for (const file of CRATE_FILES) {
+      expect(exists(MERGE, file)).toBe(true);
+      expect(readText(MERGE, file).split('\n')[0]).toContain('SPDX-License-Identifier: MIT');
+    }
+    expect(exists(OLD_MERGE)).toBe(false);
+    expect(toml(`${MERGE}/Cargo.toml`).package.name).toBe('nexus-merge');
+  });
+
+  it('retains the README spec link at the same relative depth', () => {
+    const spec = 'docs/guides/merge-system.md';
+    const link = /\]\(([^)]+)\)/.exec(readText(MERGE, 'README.md'))?.[1];
+    expect(link).toBe(`../../${spec}`);
+    expect(resolve(abs(MERGE), link ?? '')).toBe(abs(spec));
+    expect(exists(spec)).toBe(true);
+  });
+
+  it('registers merge exactly once in Cargo and keeps it Rust-only', () => {
+    const members = cargoMembers(readText('Cargo.toml'));
+    expect(members.filter((member) => member === MERGE)).toHaveLength(1);
+    expect(members).not.toContain(OLD_MERGE);
+    expect(toml(`${MERGE}/Cargo.toml`).dependencies).toEqual({});
+    expect(exists(MERGE, 'package.json')).toBe(false);
+    const bunMembers = json<{ workspaces: string[] }>('package.json').workspaces;
+    expect(bunMembers).not.toContain(MERGE);
+    expect(bunMembers).not.toContain(OLD_MERGE);
+    const lock = parseBunLock();
+    expect(lock.workspaces?.[MERGE]).toBeUndefined();
+    expect(lock.workspaces?.[OLD_MERGE]).toBeUndefined();
+  });
+
+  it('detects stale merge references without spelling one in this guard', () => {
+    expect(read(SELF)).not.toContain(OLD_MERGE);
+    expect(staleRootIn(`path = "${OLD_MERGE}"`)).toBe(OLD_MERGE);
+    expect(staleRootIn(`path = "${MERGE}"`)).toBeUndefined();
+    expect(staleRootIn('')).toBeUndefined();
+    expect(staleLocationRefs().filter((hit) => hit.stale === OLD_MERGE)).toEqual([]);
   });
 });
 
