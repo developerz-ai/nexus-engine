@@ -23,8 +23,8 @@ members = [
   "packages/nexus-engine",
   "packages/styles/*",
   "packages/genres/*",
-  "crates/sdks/nexus-agent-sdk-rs",
-  # crates/sdks/nexus-agent-sdk-py — deferred (needs Python toolchain), see .placeholder
+  "packages/sdks/nexus-agent-sdk-rs",
+  # packages/sdks/nexus-agent-sdk-py — deferred (needs Python toolchain), see .placeholder
   "games/*",
   "tools/*",
 ]
