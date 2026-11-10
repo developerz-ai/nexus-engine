@@ -20,7 +20,7 @@ laws = ["1", "2", "3", "7", "10", "11", "12", "13"]
 workspace = true
 
 [dependencies]
-nexus-core = { path = "../nexus-core", version = "0.1.0" }
+nexus-core = { path = "../../packages/nexus-core", version = "0.1.0" }
 nexus-hal = { path = "../../packages/nexus-hal", version = "0.1.0" }
 nexus-renderer = { path = "../nexus-renderer", version = "0.1.0" }
 nexus-agent = { path = "../../packages/nexus-agent", version = "0.1.0" }

@@ -9,6 +9,7 @@
 //   3. the assets crate     → packages/nexus-assets/ (this branch)
 //   4. the audio crate      → packages/nexus-audio/  (this branch)
 //   5. the CLI crate        → packages/nexus-cli/    (this branch)
+//   6. the core crate       → packages/nexus-core/   (this branch)
 //
 // A half-done move is silent. Drop "packages/genres/*" from the root
 // Cargo.toml members and `cargo check --workspace` / `cargo nextest` stay
@@ -23,6 +24,8 @@
 // The CLI crate moved the same way but it is Rust-only with no path deps
 // at all, so nothing had to be re-anchored — yet a stale member path or
 // a stale mention in a doc still points at a crate that is gone.
+// The core crate moved last: every other crate depends on it, so each
+// consumer's `nexus-core` path dep has to be re-anchored to its new home.
 //
 // Every invariant below is asserted statically — no cargo, no network — so
 // the guard runs in the bun-test pass of `bin/check`.
@@ -57,6 +60,12 @@ const CLI = 'packages/nexus-cli';
  *  a literal here would put the legacy path back into the tree. */
 const OLD_CLI = CLI.replace('packages/', 'crates/');
 
+/** The core crate — moved out of crates/ by this branch. */
+const CORE = 'packages/nexus-core';
+/** Its pre-move location, derived so this guard never spells it literally —
+ *  a literal here would put the legacy path back into the tree. */
+const OLD_CORE = CORE.replace('packages/', 'crates/');
+
 /** The 16 genre crates that moved out of crates/genres/ into packages/genres/. */
 const GENRES = [
   'battleroyal',
@@ -85,7 +94,7 @@ const NEW_ROOT = 'packages/genres';
 
 /** Path deps every genre crate must resolve from its new depth. */
 const PATH_DEPS = {
-  'nexus-core': '../../../crates/nexus-core',
+  'nexus-core': '../../nexus-core',
   'nexus-script': '../../../crates/nexus-script',
 } as const;
 
@@ -103,10 +112,10 @@ const NAMING_FILES = [
 
 /** Other subtrees stay at their merged locations — HAL, styles, net, physics and
  * the agent crate moved independently of the genre move, so the genre guard must
- * not disturb them. The assets, audio and CLI crates left crates/ with this
+ * not disturb them. The core, assets, audio and CLI crates left crates/ with this
  * branch, so their new homes are asserted here too. */
 const UNMOVED_PATHS = [
-  'crates/nexus-core',
+  CORE,
   'packages/nexus-hal',
   'packages/nexus-assets',
   'crates/nexus-renderer',
@@ -243,6 +252,7 @@ function staleRootIn(text: string): string | undefined {
   if (text.includes(OLD_ASSETS)) return OLD_ASSETS;
   if (text.includes(OLD_AUDIO)) return OLD_AUDIO;
   if (text.includes(OLD_CLI)) return OLD_CLI;
+  if (text.includes(OLD_CORE)) return OLD_CORE;
   return undefined;
 }
 
@@ -298,7 +308,7 @@ describe('HAL workspace relocation', () => {
     for (const manifest of Object.values(consumers)) {
       dependency(manifest, 'nexus-hal', HAL);
     }
-    dependency(`${HAL}/Cargo.toml`, 'nexus-core', 'crates/nexus-core');
+    dependency(`${HAL}/Cargo.toml`, 'nexus-core', CORE);
   });
 
   it('keeps the private Bun adapter and frozen lock metadata consistent', () => {
@@ -356,7 +366,7 @@ describe('assets workspace relocation', () => {
   });
 
   it('resolves the outbound path deps from the new depth', () => {
-    dependency(`${ASSETS}/Cargo.toml`, 'nexus-core', 'crates/nexus-core');
+    dependency(`${ASSETS}/Cargo.toml`, 'nexus-core', CORE);
     dependency(`${ASSETS}/Cargo.toml`, 'nexus-hal', HAL);
   });
 
@@ -388,7 +398,7 @@ describe('audio workspace relocation', () => {
   });
 
   it('resolves the outbound path deps from the new depth', () => {
-    dependency(`${AUDIO}/Cargo.toml`, 'nexus-core', 'crates/nexus-core');
+    dependency(`${AUDIO}/Cargo.toml`, 'nexus-core', CORE);
     dependency(`${AUDIO}/Cargo.toml`, 'nexus-hal', HAL);
     dependency(`${AUDIO}/Cargo.toml`, 'nexus-assets', ASSETS);
   });
@@ -445,6 +455,49 @@ describe('cli workspace relocation', () => {
     expect(coverage).toContain(`- ${CLI}/`);
     expect(labels).not.toContain(OLD_CLI);
     expect(coverage).not.toContain(OLD_CLI);
+  });
+});
+
+describe('core workspace relocation', () => {
+  it('keeps the four Rust crate files only at the new root', () => {
+    for (const file of CRATE_FILES) {
+      expect(exists(CORE, file)).toBe(true);
+    }
+    expect(exists(OLD_CORE)).toBe(false);
+    expect(toml(`${CORE}/Cargo.toml`).package.name).toBe('nexus-core');
+  });
+
+  it('registers core exactly once in the root Cargo workspace', () => {
+    const members = cargoMembers(readText('Cargo.toml'));
+    expect(members.filter((member) => member === CORE)).toHaveLength(1);
+    expect(members).not.toContain(OLD_CORE);
+  });
+
+  it('keeps the SPDX header on every moved file', () => {
+    for (const file of CRATE_FILES) {
+      const head = readText(CORE, file).split('\n').slice(0, 15).join('\n');
+      expect(head).toContain('SPDX-License-Identifier:');
+    }
+  });
+
+  it('derives the legacy core path instead of spelling it, and flags it', () => {
+    // Spelling the legacy path here would put it straight back into the tree
+    // and break the tree-wide rule this guard exists to hold.
+    expect(read(SELF)).not.toContain(OLD_CORE);
+    // The guard must still catch a file that holds the old path…
+    expect(staleRootIn(`path = "${OLD_CORE}"`)).toBe(OLD_CORE);
+    expect(staleRootIn(`path = "${CORE}"`)).toBeUndefined();
+    // …and no file outside this guard may hold it.
+    expect(staleLocationRefs().filter((hit) => hit.stale === OLD_CORE)).toEqual([]);
+  });
+
+  it('keeps the area/core label and the core coverage flag on the new root', () => {
+    const labels = block(read('.github/labeler.yml'), 'area/core:', 'area/renderer:');
+    const coverage = block(read('codecov.yml'), '  core:', '  systems:');
+    expect(labels).toContain(`- ${CORE}/**`);
+    expect(coverage).toContain(`- ${CORE}/`);
+    expect(labels).not.toContain(OLD_CORE);
+    expect(coverage).not.toContain(OLD_CORE);
   });
 });
 
@@ -537,7 +590,7 @@ describe('workspace layout', () => {
       if (!exists(spec)) fail(`${spec} does not exist`);
 
       // The moved crates sit one level deeper: every path dep must be
-      // ../../../crates/<dep> and must resolve to a real crate.
+      // the declared PATH_DEPS location and must resolve to a real crate.
       for (const [dep, expectedPath] of Object.entries(PATH_DEPS)) {
         const declared = new RegExp(`${dep}\\s*=\\s*\\{\\s*path\\s*=\\s*"([^"]+)"`).exec(
           cargoToml,

@@ -31,7 +31,6 @@ nexus-engine/
 │   ├── games/
 │   └── initial/
 ├── crates/                          # remaining engine crates (systems + sub-crates)
-│   ├── nexus-core/
 │   ├── nexus-renderer/
 │   ├── nexus-script/
 │   ├── nexus-editor/
@@ -62,6 +61,7 @@ nexus-engine/
 │   ├── nexus-assets/                # relocated system crate (asset registry, importers)
 │   ├── nexus-audio/                 # relocated system crate (audio graph, DSP)
 │   ├── nexus-cli/                   # relocated CLI crate (nexus new / add / generate / build / test / deploy / agent)
+│   ├── nexus-core/                  # relocated system crate (ECS, scheduler, substrate)
 │   ├── nexus-hal/                   # Rust crate + private Bun workspace adapter
 │   ├── nexus-net/                   # relocated system crate (transport, quinn)
 │   ├── nexus-physics/               # relocated system crate (rapier)
@@ -108,7 +108,7 @@ ships the agent crate's own dependency-free adapter, and `packages/styles/*`,
 [workspace]
 resolver = "2"
 members = [
-  "crates/nexus-core",
+  "packages/nexus-core",
   "packages/nexus-hal",
   "packages/nexus-assets",
   "crates/nexus-renderer",

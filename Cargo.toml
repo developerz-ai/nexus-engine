@@ -8,7 +8,7 @@
 [workspace]
 resolver = "2"
 members = [
-  "crates/nexus-core",
+  "packages/nexus-core",
   "packages/nexus-hal",
   "packages/nexus-assets",
   "crates/nexus-renderer",

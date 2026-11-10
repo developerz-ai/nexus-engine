@@ -124,7 +124,7 @@ The JSON block always precedes the markdown. Automation parses the JSON; humans 
 
 | Glob | Reason it's protected |
 |---|---|
-| `crates/nexus-core/src/**` | Substrate — extensions cannot reach into the substrate |
+| `packages/nexus-core/src/**` | Substrate — extensions cannot reach into the substrate |
 | `crates/nexus-renderer/src/**` | Render pipeline — use `RenderPass` plugins |
 | `packages/nexus-physics/src/**` | Physics core — use `PhysicsBackend` |
 | `packages/nexus-audio/src/**` | Audio core — use `AudioBackend` / `DspPack` |
