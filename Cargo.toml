@@ -13,7 +13,7 @@ members = [
   "packages/nexus-assets",
   "crates/nexus-renderer",
   "packages/nexus-physics",
-  "crates/nexus-audio",
+  "packages/nexus-audio",
   "packages/nexus-net",
   "crates/nexus-script",
   "packages/nexus-agent",

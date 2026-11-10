@@ -27,7 +27,7 @@ area/physics:
 area/audio:
   - changed-files:
       - any-glob-to-any-file:
-          - crates/nexus-audio/**
+          - packages/nexus-audio/**
 
 area/networking:
   - changed-files:
