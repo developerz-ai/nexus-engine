@@ -18,15 +18,13 @@ import {
   chmodSync,
   mkdirSync,
   mkdtempSync,
-  readdirSync,
   readFileSync,
   rmSync,
   statSync,
-  symlinkSync,
   writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { REPO_ROOT } from './helpers';
 
 const BIN_DIR = join(REPO_ROOT, 'bin');
@@ -67,7 +65,15 @@ if [ -n "$STUB_CARGO_FAIL" ] && [ "$*" = "$STUB_CARGO_FAIL" ]; then
   printf 'cargo %s\\n' "$*" >> "$STUB_LOG"
   exit 1
 fi
+if [ -n "$STUB_REPO" ] && [ "$PWD" != "$STUB_REPO" ]; then exit 90; fi
 case "$1" in
+  audit)
+    printf 'cargo %s\\n' "$*" >> "$STUB_LOG"
+    if [ ! -x "$HOME/.cargo/bin/cargo-audit" ]; then
+      echo 'error: no such command: audit' >&2
+      exit 101
+    fi
+    exec "$HOME/.cargo/bin/cargo-audit" ;;
   nextest | deny)
     sub="$1"
     shift
@@ -93,8 +99,27 @@ printf 'cargo-deny 0.16.2\\n'
 exit 0
 `;
 
+const STUB_AUDIT = `#!/bin/sh
+printf 'audit stub diagnostic\\n' >&2
+exit "\${STUB_AUDIT_STATUS:-0}"
+`;
+
+// Only fixture data is enumerated; the real repository/index is never queried.
+const STUB_GIT = `#!/bin/bash
+printf 'git %s\\n' "$*" >> "$STUB_LOG"
+if [[ "$PWD" != "$STUB_REPO" || "$*" != 'ls-files -z -- crates/** packages/** scripts/** docs/** .github/**' ]]; then
+  echo 'unexpected enumeration scope' >&2
+  exit 90
+fi
+cat "$STUB_TRACKED"
+if [[ "$STUB_GIT_STATUS" != 0 ]]; then echo 'fixture enumeration failed' >&2; fi
+exit "$STUB_GIT_STATUS"
+`;
+
 const STUB_BUN = `#!/bin/sh
 printf 'bun %s\\n' "$*" >> "$STUB_LOG"
+if [ -n "$STUB_REPO" ] && [ "$PWD" != "$STUB_REPO/scripts" ]; then exit 90; fi
+if [ "$*" = "$STUB_BUN_FAIL" ]; then exit 1; fi
 case "$1" in
   --version) printf '1.4.4\\n' ;;
 esac
@@ -174,6 +199,9 @@ interface FixtureOptions {
   omit?: readonly string[];
   /** exact argv the cargo stub fails on, e.g. 'fmt --version' */
   cargoFail?: string;
+  bunFail?: string;
+  auditStatus?: number;
+  gitStatus?: number;
   /** install a curl stub whose downloads always fail */
   failCurl?: boolean;
   /** install a curl stub that serves a real archive for the requested tool */
@@ -203,6 +231,7 @@ function sharedContext(options: FixtureOptions = {}): Sandbox {
   mkdirSync(bunBin, { recursive: true });
   const log = join(root, 'stub.log');
   writeFileSync(log, '');
+  writeFileSync(join(root, 'tracked'), '');
 
   const omit = options.omit ?? [];
   if (!omit.includes('cargo')) writeStub(join(cargoBin, 'cargo'), STUB_CARGO);
@@ -211,6 +240,8 @@ function sharedContext(options: FixtureOptions = {}): Sandbox {
     writeStub(join(cargoBin, 'cargo-nextest'), STUB_NEXTTEST);
   }
   if (!omit.includes('cargo-deny')) writeStub(join(cargoBin, 'cargo-deny'), STUB_DENY);
+  if (!omit.includes('cargo-audit')) writeStub(join(cargoBin, 'cargo-audit'), STUB_AUDIT);
+  writeStub(join(cargoBin, 'git'), STUB_GIT);
   if (!omit.includes('bun')) writeStub(join(bunBin, 'bun'), STUB_BUN);
   if (options.failCurl) writeStub(join(cargoBin, 'curl'), STUB_CURL);
   if (options.okCurl) writeStub(join(cargoBin, 'curl'), OK_CURL);
@@ -221,8 +252,13 @@ function sharedContext(options: FixtureOptions = {}): Sandbox {
     HOME: home,
     PATH: GIT_DIR ? `${BARE_PATH}:${GIT_DIR}` : BARE_PATH,
     STUB_LOG: log,
+    STUB_CARGO_FAIL: options.cargoFail ?? '',
+    STUB_BUN_FAIL: options.bunFail ?? '',
+    STUB_AUDIT_STATUS: String(options.auditStatus ?? 0),
+    STUB_GIT_STATUS: String(options.gitStatus ?? 0),
+    STUB_REPO: '',
+    STUB_TRACKED: join(root, 'tracked'),
   };
-  if (options.cargoFail) env.STUB_CARGO_FAIL = options.cargoFail;
   return { root, home, log, env };
 }
 
@@ -251,47 +287,14 @@ async function spawnScript(
 
 /** Run one of the repo's bin/ scripts against the sandbox. */
 async function runScript(name: string, sandbox: Sandbox): Promise<RunResult> {
-  return spawnScript(join(BIN_DIR, name), REPO_ROOT, sandbox.env);
-}
-
-/**
- * A PATH directory holding every tool on the real PATH except git.
- *
- * The sweep has to skip itself when git is unreachable, but the rest of the
- * gate still needs bash (the shebang), dirname, mktemp and whatever else the
- * sweep may shell out to — so the farm mirrors the real PATH and drops git
- * only. The first directory on PATH wins for a given name, as PATH itself
- * does.
- */
-function pathWithoutGit(farm: string): string {
-  mkdirSync(farm, { recursive: true });
-  for (const dir of (process.env.PATH ?? '').split(':')) {
-    if (dir.length === 0) continue;
-    let entries: string[];
-    try {
-      entries = readdirSync(dir);
-    } catch {
-      continue;
-    }
-    for (const entry of entries) {
-      if (entry === 'git') continue;
-      const source = join(dir, entry);
-      try {
-        const st = statSync(source);
-        if (!st.isFile() || (st.mode & 0o111) === 0) continue;
-        symlinkSync(source, join(farm, entry));
-      } catch {
-        // Already linked (an earlier PATH entry won) or not linkable.
-        continue;
-      }
-    }
+  const script = name === 'check' ? join(sandbox.root, 'repo', 'bin', name) : join(BIN_DIR, name);
+  if (name === 'check') {
+    sandbox.env.STUB_REPO = join(sandbox.root, 'repo');
+    mkdirSync(dirname(script), { recursive: true });
+    mkdirSync(join(sandbox.env.STUB_REPO, 'scripts'), { recursive: true });
+    writeStub(script, readFileSync(join(BIN_DIR, name), 'utf8'));
   }
-  return farm;
-}
-
-/** Run git in the test process' own environment — the sandbox stubs none of it. */
-async function runGit(args: string[], cwd: string): Promise<RunResult> {
-  return spawnScript('git', cwd, process.env as Record<string, string>, args);
+  return spawnScript(script, name === 'check' ? sandbox.env.STUB_REPO : REPO_ROOT, sandbox.env);
 }
 
 /** Every stubbed call, in the order the script made them. */
@@ -302,6 +305,26 @@ function calls(sandbox: Sandbox): string[] {
     .filter((line) => line.length > 0);
 }
 
+const HARD_CALLS = [
+  'cargo fmt --all -- --check',
+  'cargo clippy --workspace --all-targets -- -D warnings',
+  'cargo check --workspace --all-targets',
+  'cargo-nextest run --workspace --profile ci',
+  'cargo-deny check',
+  'bun test',
+  'bun x biome check .',
+];
+const ROOTS = ['crates', 'packages', 'scripts', 'docs', '.github'];
+
+function scanFiles(sandbox: Sandbox, files: Record<string, string>): void {
+  for (const [name, content] of Object.entries(files)) {
+    const path = join(sandbox.root, 'repo', name);
+    mkdirSync(dirname(path), { recursive: true });
+    writeFileSync(path, content);
+  }
+  writeFileSync(sandbox.env.STUB_TRACKED ?? '', `${Object.keys(files).join('\0')}\0`);
+}
+
 describe('bin scripts', () => {
   it('bin/check finds the gate tools in $HOME and runs the whole gate list', async () => {
     const sandbox = sharedContext();
@@ -310,18 +333,175 @@ describe('bin scripts', () => {
       expect(r.exitCode).toBe(0);
       const probes = ['cargo fmt --version', 'cargo clippy --version'];
       expect(calls(sandbox).filter((call) => !probes.includes(call))).toEqual([
-        'cargo fmt --all -- --check',
-        'cargo clippy --workspace --all-targets -- -D warnings',
-        'cargo check --workspace --all-targets',
-        'cargo-nextest run --workspace --profile ci',
-        'cargo-deny check',
-        'bun test',
-        'bun x biome check .',
+        ...HARD_CALLS,
+        'git ls-files -z -- crates/** packages/** scripts/** docs/** .github/**',
+        'cargo audit',
       ]);
+      expect(r.stdout).toContain('SPDX headers OK');
+      expect(r.stderr).toContain('audit stub diagnostic');
     } finally {
       rmSync(sandbox.root, { recursive: true, force: true });
     }
   });
+
+  it('bin/check command and scope expectations match CI', () => {
+    const ci = readFileSync(join(REPO_ROOT, '.github/workflows/ci.yml'), 'utf8');
+    for (const call of HARD_CALLS) {
+      const command = call
+        .replace('cargo-nextest ', 'cargo nextest ')
+        .replace('cargo-deny ', 'cargo deny ');
+      expect(ci).toContain(`run: ${command}`);
+    }
+    expect(ci).toContain('working-directory: scripts\n        run: bun test');
+    expect(ci).toContain('working-directory: scripts\n        run: bun x biome check .');
+    expect(ci).toContain('run: cargo audit');
+    expect(ci).toMatch(/rust-audit:[\s\S]*?continue-on-error: true/);
+    expect(ci).toContain(
+      "git ls-files -z -- 'crates/**' 'packages/**' 'scripts/**' 'docs/**' '.github/**'",
+    );
+  });
+
+  for (const [index, call] of HARD_CALLS.entries()) {
+    it(`bin/check fails fast on ${call}, never reaching advisory success`, async () => {
+      const command = call
+        .replace('cargo-nextest ', 'cargo nextest ')
+        .replace('cargo-deny ', 'cargo deny ');
+      const sandbox = sharedContext(
+        command.startsWith('cargo ')
+          ? { cargoFail: command.slice(6) }
+          : { bunFail: command.slice(4) },
+      );
+      try {
+        const r = await runScript('check', sandbox);
+        expect(r.exitCode).toBe(1);
+        // cargo records a failing subcommand before dispatching to its stub.
+        expect(calls(sandbox).slice(2)).toEqual([...HARD_CALLS.slice(0, index), command]);
+      } finally {
+        rmSync(sandbox.root, { recursive: true, force: true });
+      }
+    });
+  }
+
+  for (const unavailable of [false, true]) {
+    it(`bin/check reports ${unavailable ? 'unavailable' : 'failing'} audit without blocking`, async () => {
+      const sandbox = sharedContext(unavailable ? { omit: ['cargo-audit'] } : { auditStatus: 17 });
+      try {
+        const r = await runScript('check', sandbox);
+        expect(r.exitCode).toBe(0);
+        expect(calls(sandbox)).toContain('cargo audit');
+        expect(r.stderr).toContain(
+          unavailable ? 'no such command: audit' : 'audit stub diagnostic',
+        );
+        expect(r.stderr).toContain('advisory');
+        expect(r.stderr).toContain(unavailable ? '101' : '17');
+      } finally {
+        rmSync(sandbox.root, { recursive: true, force: true });
+      }
+    });
+  }
+
+  for (const root of ROOTS) {
+    it(`bin/check rejects missing SPDX under ${root}, including spaces`, async () => {
+      const sandbox = sharedContext();
+      const name = `${root}/nested/missing header.txt`;
+      try {
+        scanFiles(sandbox, { [name]: 'no header\n' });
+        const r = await runScript('check', sandbox);
+        expect(r.exitCode).toBe(1);
+        expect(r.stderr).toContain(name);
+        expect(calls(sandbox)).not.toContain('cargo audit');
+      } finally {
+        rmSync(sandbox.root, { recursive: true, force: true });
+      }
+    });
+  }
+
+  for (const line of [15, 16]) {
+    it(`bin/check ${line === 15 ? 'accepts' : 'rejects'} SPDX on line ${line}`, async () => {
+      const sandbox = sharedContext();
+      try {
+        scanFiles(sandbox, {
+          'docs/header with spaces\nand newline.md': `${'line\n'.repeat(line - 1)}SPDX-License-Identifier: MIT\n`,
+        });
+        const r = await runScript('check', sandbox);
+        expect(r.exitCode).toBe(line === 15 ? 0 : 1);
+        expect(r.stdout.includes('SPDX headers OK')).toBe(line === 15);
+      } finally {
+        rmSync(sandbox.root, { recursive: true, force: true });
+      }
+    });
+  }
+
+  it('bin/check accepts markers without tightening CI policy, even with long lines', async () => {
+    const sandbox = sharedContext();
+    try {
+      scanFiles(sandbox, {
+        'docs/long.md': `SPDX-License-Identifier: Apache-2.0\n${'x'.repeat(100_000)}\n`,
+      });
+      const r = await runScript('check', sandbox);
+      expect(r.exitCode).toBe(0);
+    } finally {
+      rmSync(sandbox.root, { recursive: true, force: true });
+    }
+  });
+
+  it('bin/check applies all CI exemptions across all five roots', async () => {
+    const sandbox = sharedContext();
+    const exempt = [
+      ...[
+        'lock',
+        'png',
+        'jpg',
+        'jpeg',
+        'webp',
+        'ico',
+        'gif',
+        'svg',
+        'wasm',
+        'bin',
+        'json',
+        'snap',
+      ].map((ext) => `fixture.${ext}`),
+      'bun.lock',
+      'Cargo.lock',
+      'package-lock.json',
+      'node_modules/nested/file.ts',
+      'target/nested/file.rs',
+      '.git/nested/file',
+      'snapshots/file.txt',
+      '.placeholder',
+      '.bun-version',
+      '.keep',
+      '.nvmrc',
+    ];
+    try {
+      const files = Object.fromEntries(
+        ROOTS.flatMap((root) => exempt.map((name) => [`${root}/${name}`, 'no header\n'])),
+      );
+      scanFiles(sandbox, files);
+      const r = await runScript('check', sandbox);
+      expect(r.exitCode).toBe(0);
+      expect(r.stdout).toContain('SPDX headers OK');
+    } finally {
+      rmSync(sandbox.root, { recursive: true, force: true });
+    }
+  });
+
+  for (const partial of [false, true]) {
+    it(`bin/check propagates enumeration failure (${partial ? 'partial output' : 'empty output'})`, async () => {
+      const sandbox = sharedContext({ gitStatus: 42 });
+      try {
+        if (partial) scanFiles(sandbox, { 'docs/valid.md': 'SPDX-License-Identifier: MIT\n' });
+        const r = await runScript('check', sandbox);
+        expect(r.exitCode).toBe(42);
+        expect(r.stderr).toContain('fixture enumeration failed');
+        expect(r.stdout).not.toContain('SPDX headers OK');
+        expect(calls(sandbox)).not.toContain('cargo audit');
+      } finally {
+        rmSync(sandbox.root, { recursive: true, force: true });
+      }
+    });
+  }
 
   it('bin/check exits 69 with a setup hint when a gate tool is missing', async () => {
     const sandbox = sharedContext({ omit: ['cargo-nextest'] });
@@ -354,133 +534,6 @@ describe('bin scripts', () => {
       expect(r.exitCode).toBe(69);
       expect(r.stderr).toContain('clippy');
       expect(r.stderr).toContain('run ./bin/setup');
-    } finally {
-      rmSync(sandbox.root, { recursive: true, force: true });
-    }
-  });
-
-  it('bin/check passes the SPDX header sweep on a clean tree', async () => {
-    const sandbox = sharedContext();
-    try {
-      const r = await runScript('check', sandbox);
-      expect(r.exitCode).toBe(0);
-      expect(r.stdout).toContain(SPDX_OK_MESSAGE);
-    } finally {
-      rmSync(sandbox.root, { recursive: true, force: true });
-    }
-  });
-
-  it('bin/check fails the SPDX header sweep on a tracked file without a header', async () => {
-    const sandbox = sharedContext();
-    try {
-      // A repo of its own: bin/check sweeps the tree it sits in, so the copy
-      // below is the tree the sweep sees.
-      const repo = join(sandbox.root, 'spdx-repo');
-      const headerless = 'crates/nexus-core/headerless.rs';
-      mkdirSync(join(repo, 'bin'), { recursive: true });
-      mkdirSync(join(repo, 'crates', 'nexus-core'), { recursive: true });
-      // the last step of the gate is `cd scripts` — the directory has to exist
-      mkdirSync(join(repo, 'scripts'), { recursive: true });
-      const script = join(repo, 'bin', 'check');
-      writeFileSync(script, readFileSync(join(BIN_DIR, 'check')));
-      chmodSync(script, 0o755);
-      writeFileSync(join(repo, headerless), 'pub fn no_spdx_header() {}\n');
-      const init = await runGit(['init', '--quiet'], repo);
-      expect(init.exitCode).toBe(0);
-      const add = await runGit(['add', '-f', headerless], repo);
-      expect(add.exitCode).toBe(0);
-      const r = await spawnScript(script, repo, sandbox.env);
-      expect(r.exitCode).toBe(1);
-      expect(r.stderr).toContain('Missing SPDX header in 1 file(s)');
-      expect(r.stderr).toContain(headerless);
-      expect(r.stdout).not.toContain(SPDX_OK_MESSAGE);
-      // set -e stops the script at spdx_sweep's exit 1, so the cargo chain
-      // (bin/check:149) must never run: nothing besides the two component
-      // probes may reach the stub log.
-      const probes = ['cargo fmt --version', 'cargo clippy --version'];
-      expect(calls(sandbox).filter((call) => !probes.includes(call))).toEqual([]);
-    } finally {
-      rmSync(sandbox.root, { recursive: true, force: true });
-    }
-  });
-
-  it('bin/check enforces the exact 15-line SPDX header window and exempts .json files', async () => {
-    const sandbox = sharedContext();
-    try {
-      // A repo of its own, same as the headerless case above.
-      const repo = join(sandbox.root, 'spdx-window-repo');
-      const atLine15 = 'crates/nexus-core/header-at-line-15.rs';
-      const atLine16 = 'crates/nexus-core/header-at-line-16.rs';
-      const exemptJson = 'crates/nexus-core/exempt.json';
-      mkdirSync(join(repo, 'bin'), { recursive: true });
-      mkdirSync(join(repo, 'crates', 'nexus-core'), { recursive: true });
-      mkdirSync(join(repo, 'scripts'), { recursive: true });
-      const script = join(repo, 'bin', 'check');
-      writeFileSync(script, readFileSync(join(BIN_DIR, 'check')));
-      chmodSync(script, 0o755);
-
-      // The sweep checks lines 1..15 inclusive (bin/check:124-132): a header
-      // on line 15 is the last line still inside the window (passes); one
-      // line later, on line 16, is just outside it (fails). A tracked
-      // `.json` file with no header at all is exempt regardless (bin/check:110).
-      const filler14 = Array.from({ length: 14 }, (_, i) => `// filler ${i + 1}`).join('\n');
-      writeFileSync(
-        join(repo, atLine15),
-        `${filler14}\n// SPDX-License-Identifier: MIT\npub fn at_line_15() {}\n`,
-      );
-      const filler15 = Array.from({ length: 15 }, (_, i) => `// filler ${i + 1}`).join('\n');
-      writeFileSync(
-        join(repo, atLine16),
-        `${filler15}\n// SPDX-License-Identifier: MIT\npub fn at_line_16() {}\n`,
-      );
-      writeFileSync(join(repo, exemptJson), '{"no":"header"}\n');
-
-      const init = await runGit(['init', '--quiet'], repo);
-      expect(init.exitCode).toBe(0);
-      const add = await runGit(['add', '-f', atLine15, atLine16, exemptJson], repo);
-      expect(add.exitCode).toBe(0);
-      const r = await spawnScript(script, repo, sandbox.env);
-      expect(r.exitCode).toBe(1);
-      expect(r.stderr).toContain('Missing SPDX header in 1 file(s)');
-      expect(r.stderr).toContain(atLine16);
-      expect(r.stderr).not.toContain(atLine15);
-      expect(r.stderr).not.toContain(exemptJson);
-    } finally {
-      rmSync(sandbox.root, { recursive: true, force: true });
-    }
-  });
-
-  it('bin/check reports a failed `git ls-files` and skips the sweep without reddening the gate', async () => {
-    const sandbox = sharedContext();
-    try {
-      // A fake git ahead of the real one on PATH always exits 1, as `git
-      // ls-files` would against a corrupt or unreadable index. The sweep
-      // must read this from git's own exit status (bin/check:99-104), not
-      // from `$!`, and still leave the gate green.
-      const fakeGitDir = join(sandbox.root, 'fake-git');
-      mkdirSync(fakeGitDir, { recursive: true });
-      writeStub(join(fakeGitDir, 'git'), '#!/bin/sh\nexit 1\n');
-      sandbox.env.PATH = `${fakeGitDir}:${sandbox.env.PATH}`;
-      const r = await runScript('check', sandbox);
-      expect(r.exitCode).toBe(0);
-      expect(r.stderr).toContain('git ls-files failed (exit 1)');
-      expect(r.stderr).toContain('skipping the SPDX header sweep');
-      expect(r.stdout).not.toContain(SPDX_OK_MESSAGE);
-    } finally {
-      rmSync(sandbox.root, { recursive: true, force: true });
-    }
-  });
-
-  it('bin/check skips the SPDX header sweep when git is not on PATH', async () => {
-    const sandbox = sharedContext();
-    try {
-      // Without git the sweep cannot run; it has to skip itself and leave the
-      // gate green rather than redden a build over an unusable environment.
-      sandbox.env.PATH = pathWithoutGit(join(sandbox.root, 'path-no-git'));
-      const r = await runScript('check', sandbox);
-      expect(r.exitCode).toBe(0);
-      expect(r.stderr).toContain('skipping the SPDX header sweep');
-      expect(r.stdout).not.toContain(SPDX_OK_MESSAGE);
     } finally {
       rmSync(sandbox.root, { recursive: true, force: true });
     }

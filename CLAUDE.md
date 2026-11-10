@@ -36,10 +36,19 @@ Rust 1.95 · edition 2021 · MSRV 1.95 (`Cargo.toml:33,38`) — key deps, pinned
 | `bun run scripts/check` | TS gate set (`scripts/bin/check.ts:33`) |
 | `bun test` | script tests (`package.json:8`) |
 
-`./bin/check` runs CI's `docs / spdx` SPDX-header sweep first (`bin/check:85` — mirrors ci.yml:288-334; blocking: exits 1 on a missing header), then this chain (`bin/check:149`), verbatim:
+`./bin/check` runs these hard gates in order, fail-fast, then CI's blocking `docs / spdx` SPDX-header sweep:
 ```
-cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings && cargo check --workspace --all-targets && cargo nextest run --workspace --profile ci && cargo deny check && (cd scripts && bun test && bun x biome check .)
+cargo fmt --all -- --check
+cargo clippy --workspace --all-targets -- -D warnings
+cargo check --workspace --all-targets
+cargo nextest run --workspace --profile ci
+cargo deny check
+(cd scripts; bun test; bun x biome check .)
 ```
+The **blocking SPDX sweep** matches CI's tracked-file policy (`.github/workflows/ci.yml:297-334`): `crates/`, `packages/`, `scripts/`, `docs/`, `.github/`; identical generated/binary/lockfile/pin exemptions; `SPDX-License-Identifier:` within the first 15 lines. Missing headers and file-enumeration failures fail the gate; filenames are NUL-delimited.
+
+Finally, `cargo audit` is attempted as **advisory, nonblocking**, matching CI (`.github/workflows/ci.yml:181-204`). Failure or unavailability retains diagnostics and reports its exit status but does not fail an otherwise clean gate. `bin/setup` does not provision cargo-audit; audit is not a preflight requirement. Earlier hard failures stop execution and cannot be masked by the advisory step. Policy: `docs/specs/scripts/overview.md`.
+
 `bun run scripts/check` gates (`scripts/bin/check.ts:33`): fmt · clippy · biome · ruff · shellcheck · deny. naga is opt-in via `--only naga`, not in the default set.
 
 ## Structure

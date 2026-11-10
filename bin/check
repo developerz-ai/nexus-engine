@@ -64,86 +64,60 @@ if ! cargo clippy --version >/dev/null 2>&1; then
   exit 69
 fi
 
-# ── docs / spdx — Law 7 SPDX header sweep (mirrors ci.yml:288-334) ───────────
-# The same five tracked subtrees, the same exemptions, the same 15-line window,
-# the same two messages and the same exit 1 as CI's `docs / spdx` job. The file
-# list comes from `git ls-files` (NUL-delimited, so a path with a space is
-# safe) and the header window is read with the `read` builtin — no `head`/`grep`
-# fork per file, so the sweep costs a fraction of a second on ~750 files.
-#
-# If git is missing, or the file list cannot be built, the sweep is SKIPPED with
-# a loud notice and the gate stays green: an unusable git is an environment
-# problem, not a Law 7 violation. CI's own job passes vacuously in the same
-# situation, so the gate never reddens the build over it.
-#
-# git's exit status comes from the command that wrote the list, never from
-# `$!`: bash only sets `$!` to a process substitution's pid from 4.4 on, so on
-# bash 3.2 (stock macOS) it stays empty — the old capture then reported a git
-# failure that never happened and skipped the Law 7 check on a green build.
-# The list goes to a temp file instead: git's own status decides, on every
-# bash, and the temp file is removed on every exit path of the sweep.
-spdx_sweep() {
-  local path line n found count=0
-  local missing_list
-  local list_file git_rc=0
-  missing_list=()
-  if ! command -v git >/dev/null 2>&1; then
-    echo "bin/check: git not found — skipping the SPDX header sweep; CI job 'docs / spdx' still enforces it" >&2
-    return 0
-  fi
-  list_file="$(mktemp "${TMPDIR:-/tmp}/nexus-spdx-list.XXXXXX" 2>/dev/null)" || list_file=""
-  if [ -z "$list_file" ]; then
-    echo "bin/check: no temp file for the SPDX header list — skipping the sweep; CI job 'docs / spdx' still enforces it" >&2
-    return 0
-  fi
-  git -c safe.directory='*' ls-files -z -- 'crates/**' 'packages/**' 'scripts/**' 'docs/**' '.github/**' > "$list_file" || git_rc=$?
-  if [ "$git_rc" -ne 0 ]; then
-    rm -f "$list_file"
-    echo "bin/check: git ls-files failed (exit ${git_rc}) — skipping the SPDX header sweep; CI job 'docs / spdx' still enforces it" >&2
-    return 0
-  fi
-  while IFS= read -r -d '' path; do
-    case "$path" in
-      # Exemptions: lockfiles, binaries, JSON without comments, indexes.
-      *.lock|*.png|*.jpg|*.jpeg|*.webp|*.ico|*.gif|*.svg|*.wasm|*.bin)
-        continue ;;
-      *.json|*/bun.lock|*/Cargo.lock|*/package-lock.json)
-        continue ;;
-      */node_modules/*|*/target/*|*/.git/*)
-        continue ;;
-      *.snap|*/snapshots/*)
-        continue ;;
-      # Single-value pins / placeholders that have no comment syntax.
-      */.placeholder|*/.bun-version|*/.keep|*/.nvmrc)
-        continue ;;
-    esac
-    # A path the index still lists but the worktree no longer holds is not in the
-    # tree: CI checks out a commit, so it never sees this state. Skip it.
-    [ -f "$path" ] || continue
-    # Law 7 intent: header must be near top-of-file, not buried in a blob
-    # somewhere. Restrict to first 15 lines.
-    found=0
-    n=0
-    while IFS= read -r line || [ -n "$line" ]; do
-      n=$((n + 1))
-      case "$line" in
-        *SPDX-License-Identifier:*) found=1; break ;;
-      esac
-      [ "$n" -ge 15 ] && break
-    done < "$path"
-    if [ "$found" -ne 1 ]; then
-      missing_list+=("$path")
-      count=$((count + 1))
-    fi
-  done < "$list_file"
-  rm -f "$list_file"
-  if [ "$count" -gt 0 ]; then
-    printf 'Missing SPDX header in %d file(s):\n' "$count" >&2
-    printf '  %s\n' "${missing_list[@]}" >&2
-    return 1
-  fi
-  echo "SPDX headers OK on all tracked files under crates/, packages/, scripts/, docs/, .github/"
-}
-spdx_sweep
+cargo fmt --all -- --check
+cargo clippy --workspace --all-targets -- -D warnings
+cargo check --workspace --all-targets
+cargo nextest run --workspace --profile ci
+cargo deny check
+(
+  cd scripts
+  bun test
+  bun x biome check .
+)
 
-cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings && cargo check --workspace --all-targets && cargo nextest run --workspace --profile ci && cargo deny check && (cd scripts && bun test && bun x biome check .)
+# Match CI's tracked-file SPDX policy. Capture enumeration separately: failures
+# inside process substitution would otherwise be lost by the reading loop.
+tracked_files=$(mktemp)
+trap 'rm -f "$tracked_files"' EXIT
+if git ls-files -z -- 'crates/**' 'packages/**' 'scripts/**' 'docs/**' '.github/**' > "$tracked_files"; then
+  :
+else
+  status=$?
+  echo "bin/check: tracked-file enumeration failed (exit $status)" >&2
+  exit "$status"
+fi
+missing=()
+while IFS= read -r -d '' f; do
+  case "$f" in
+    *.lock|*.png|*.jpg|*.jpeg|*.webp|*.ico|*.gif|*.svg|*.wasm|*.bin)
+      continue ;;
+    *.json|*/bun.lock|*/Cargo.lock|*/package-lock.json)
+      continue ;;
+    */node_modules/*|*/target/*|*/.git/*)
+      continue ;;
+    *.snap|*/snapshots/*)
+      continue ;;
+    */.placeholder|*/.bun-version|*/.keep|*/.nvmrc)
+      continue ;;
+  esac
+  # Consume all 15 lines: grep -q/-m1 could SIGPIPE head on long lines under
+  # pipefail, rejecting a valid header. Acceptance stays identical to CI.
+  if ! head -n 15 "$f" | grep 'SPDX-License-Identifier:' > /dev/null; then
+    missing+=("$f")
+  fi
+done < "$tracked_files"
+if [[ ${#missing[@]} -gt 0 ]]; then
+  printf 'Missing SPDX header in %d file(s):\n' "${#missing[@]}" >&2
+  printf '  %s\n' "${missing[@]}" >&2
+  exit 1
+fi
+echo "SPDX headers OK on all tracked files under crates/, packages/, scripts/, docs/, .github/"
+
+# CI treats audit as advisory. Attempt it even when cargo-audit is unavailable;
+# retain cargo's diagnostics without making it a setup requirement or hard gate.
+if cargo audit; then
+  echo "bin/check: cargo audit completed (advisory)" >&2
+else
+  status=$?
+  echo "bin/check: cargo audit failed or unavailable (exit $status; advisory, nonblocking)" >&2
+fi
