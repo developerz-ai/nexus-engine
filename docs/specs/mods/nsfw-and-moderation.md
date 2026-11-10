@@ -57,7 +57,7 @@ Engine does NOT verify age. That's a legal-jurisdiction problem and varies by re
 - Thunderstore: community-level policy.
 - Self-hosted: site operator's responsibility.
 
-Engine surfaces the marketplace's verification status (yes/no) and the player's local content setting. If a marketplace claims "user is verified," engine trusts that flag. → `docs/guides/mods/marketplaces/integrations-matrix.md`.
+Engine surfaces the marketplace's verification status (yes/no) and the player's local content setting. If a marketplace claims "user is verified," engine trusts that flag. → `docs/guides/mods/integrations-matrix.md`.
 
 ## Hash Blocklist
 
