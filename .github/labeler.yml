@@ -37,7 +37,7 @@ area/networking:
 area/scripting:
   - changed-files:
       - any-glob-to-any-file:
-          - crates/nexus-script/**
+          - packages/nexus-script/**
 
 area/agent:
   - changed-files:

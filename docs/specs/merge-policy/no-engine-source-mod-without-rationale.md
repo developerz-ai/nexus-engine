@@ -129,7 +129,7 @@ The JSON block always precedes the markdown. Automation parses the JSON; humans 
 | `packages/nexus-physics/src/**` | Physics core — use `PhysicsBackend` |
 | `packages/nexus-audio/src/**` | Audio core — use `AudioBackend` / `DspPack` |
 | `packages/nexus-net/src/**` | Net stack — use `NetTransport` |
-| `crates/nexus-scripting/src/**` | VM glue — use `ScriptVm` |
+| `packages/nexus-script/src/**` | VM glue — use `ScriptVm` |
 | `packages/nexus-assets/src/**` | Pipeline — use `AssetSource` / `AssetImporter` |
 | `packages/nexus-agent/src/**` | Agent RPC — wire-stable, requires ADR for any addition |
 | `packages/nexus-editor/src/**` | Editor core — use editor extensions |
