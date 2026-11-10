@@ -2,7 +2,36 @@
 // Copyright (c) 2026 Nexus Engine contributors
 
 import { describe, expect, it } from 'bun:test';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { loadVersions } from '../lib/versions';
 import { assertEnvelopeShape, parseEnvelope, runShim } from './helpers';
+
+describe('tool pins', () => {
+  it('keeps the Biome pin aligned with the manifest and lockfile', () => {
+    const versions = loadVersions(fileURLToPath(new URL('../lib/versions.toml', import.meta.url)));
+    const manifest = JSON.parse(
+      readFileSync(new URL('../package.json', import.meta.url), 'utf8'),
+    ) as {
+      devDependencies: Record<string, string>;
+    };
+    const lock = JSON.parse(
+      readFileSync(new URL('../../bun.lock', import.meta.url), 'utf8').replace(
+        /,\s*([}\]])/g,
+        '$1',
+      ),
+    ) as {
+      workspaces: Record<string, { devDependencies: Record<string, string> }>;
+      packages: Record<string, string[]>;
+    };
+    const biome = versions.typescript?.biome;
+
+    expect(biome).toMatch(/^\d+\.\d+\.\d+$/);
+    expect(manifest.devDependencies['@biomejs/biome']).toBe(biome);
+    expect(lock.workspaces.scripts?.devDependencies['@biomejs/biome']).toBe(biome);
+    expect(lock.packages['@biomejs/biome']?.[0]).toBe(`@biomejs/biome@${biome}`);
+  });
+});
 
 describe('bootstrap', () => {
   it('--help exits 0 and prints usage', async () => {
