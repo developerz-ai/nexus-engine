@@ -14,7 +14,7 @@ Multiple crates wired together. Real internal APIs. Mocked external boundaries o
 | Engine + script VM | `crates/nexus-scripting/tests/` |
 | Client + server (in-process, two `tokio` runtimes) | `packages/nexus-net/tests/` |
 | CLI + engine | `packages/nexus-cli/tests/` |
-| Editor host + engine | `crates/nexus-editor/tests/` |
+| Editor host + engine | `packages/nexus-editor/tests/` |
 | Game template + engine | `nexus-game-template/tests/scaffold.rs` |
 
 ## Rust
