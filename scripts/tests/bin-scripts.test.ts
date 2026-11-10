@@ -20,7 +20,7 @@ const BIN_DIR = join(REPO_ROOT, 'bin');
 // find those tools in the fake $HOME on their own.
 const BARE_PATH = '/usr/bin:/bin';
 
-// The JSON crates/nexus-cli prints (crates/nexus-cli/src/main.rs).
+// The JSON packages/nexus-cli prints (packages/nexus-cli/src/main.rs).
 const NEXUS_CLI_JSON =
   '{"tool":"nexus","version":"0.1.0","status":"stub","spec":"docs/game-template/cli.md"}';
 
