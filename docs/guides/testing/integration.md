@@ -11,7 +11,7 @@ Multiple crates wired together. Real internal APIs. Mocked external boundaries o
 |----------|-----------|
 | Two engine crates exchanging data | `tests/<topic>.rs` in the consumer crate |
 | Engine + asset pipeline (real files, real import) | `packages/nexus-assets/tests/import_*.rs` |
-| Engine + script VM | `crates/nexus-scripting/tests/` |
+| Engine + script VM | `packages/nexus-script/tests/` |
 | Client + server (in-process, two `tokio` runtimes) | `packages/nexus-net/tests/` |
 | CLI + engine | `packages/nexus-cli/tests/` |
 | Editor host + engine | `packages/nexus-editor/tests/` |

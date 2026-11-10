@@ -21,4 +21,4 @@ workspace = true
 
 [dependencies]
 nexus-core = { path = "../../../crates/nexus-core", version = "0.1.0" }
-nexus-script = { path = "../../../crates/nexus-script", version = "0.1.0" }
+nexus-script = { path = "../../../packages/nexus-script", version = "0.1.0" }

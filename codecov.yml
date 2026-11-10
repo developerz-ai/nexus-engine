@@ -56,7 +56,7 @@ flags:
       - packages/nexus-audio/
       - packages/nexus-net/
       - packages/nexus-assets/
-      - crates/nexus-script/
+      - packages/nexus-script/
   agent:
     paths:
       - packages/nexus-agent/
