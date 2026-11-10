@@ -11,6 +11,7 @@
 //   5. the CLI crate        → packages/nexus-cli/    (this branch)
 //   6. the editor crate     → packages/nexus-editor/ (this branch)
 //   7. the engine facade    → packages/nexus-engine/ (this branch)
+//   8. the script crate     → packages/nexus-script/ (this branch)
 //
 // A half-done move is silent. Drop "packages/genres/*" from the root
 // Cargo.toml members and `cargo check --workspace` / `cargo nextest` stay
@@ -28,8 +29,12 @@
 // The editor crate moved the same way, re-anchoring its four path deps
 // (nexus-core and nexus-renderer stay in crates/, HAL and agent are siblings).
 // The engine facade moved the same way: its nine path deps split at the new
-// depth — nexus-core, nexus-renderer and nexus-script stay under crates/ one
-// level deeper, the six crates under packages/ become siblings.
+// depth — nexus-core and nexus-renderer stay under crates/ one level deeper,
+// the seven crates under packages/ become siblings. The script crate moved
+// the same way after them: its single outbound path dep (nexus-core)
+// re-anchors one level deeper, and its inbound consumers — the engine
+// facade, the agent crate and the 16 genre crates — re-anchor to sibling
+// depth under packages/.
 //
 // Every invariant below is asserted statically — no cargo, no network — so
 // the guard runs in the bun-test pass of `bin/check`.
@@ -76,6 +81,12 @@ const ENGINE = 'packages/nexus-engine';
  *  a literal here would put the legacy path back into the tree. */
 const OLD_ENGINE = ENGINE.replace('packages/', 'crates/');
 
+/** The script crate — moved out of crates/ by this branch. */
+const SCRIPT = 'packages/nexus-script';
+/** Its pre-move location, derived so this guard never spells it literally —
+ *  a literal here would put the legacy path back into the tree. */
+const OLD_SCRIPT = SCRIPT.replace('packages/', 'crates/');
+
 /** The 16 genre crates that moved out of crates/genres/ into packages/genres/. */
 const GENRES = [
   'battleroyal',
@@ -105,7 +116,7 @@ const NEW_ROOT = 'packages/genres';
 /** Path deps every genre crate must resolve from its new depth. */
 const PATH_DEPS = {
   'nexus-core': '../../../crates/nexus-core',
-  'nexus-script': '../../../crates/nexus-script',
+  'nexus-script': '../../../packages/nexus-script',
 } as const;
 
 /** Files that must name the new packages/genres location. */
@@ -123,15 +134,15 @@ const NAMING_FILES = [
 /** Other subtrees stay at their merged locations — HAL, styles, net, physics and
  * the agent crate moved independently of the genre move, so the genre guard must
  * not disturb them. The assets, audio and CLI crates left crates/ with this
- * branch, so their new homes are asserted here too. The editor and engine
- * facade crates left crates/ with this branch as well. */
+ * branch, so their new homes are asserted here too. The editor, engine
+ * facade and script crates left crates/ with this branch as well. */
 const UNMOVED_PATHS = [
   'crates/nexus-core',
   'packages/nexus-hal',
   'packages/nexus-assets',
   'crates/nexus-renderer',
   'packages/nexus-audio',
-  'crates/nexus-script',
+  SCRIPT,
   'packages/nexus-agent',
   'packages/nexus-editor',
   'packages/nexus-cli',
@@ -265,6 +276,7 @@ function staleRootIn(text: string): string | undefined {
   if (text.includes(OLD_CLI)) return OLD_CLI;
   if (text.includes(OLD_EDITOR)) return OLD_EDITOR;
   if (text.includes(OLD_ENGINE)) return OLD_ENGINE;
+  if (text.includes(OLD_SCRIPT)) return OLD_SCRIPT;
   return undefined;
 }
 
@@ -529,11 +541,12 @@ describe('engine workspace relocation', () => {
   });
 
   it('resolves the outbound path deps from the new depth', () => {
-    // Three deps stay under crates/ and are now one level deeper; the six
-    // crates under packages/ are siblings of the facade.
+    // Two deps stay under crates/ and are now one level deeper; the seven
+    // crates under packages/ — nexus-script joined them with this move —
+    // are siblings of the facade.
     dependency(`${ENGINE}/Cargo.toml`, 'nexus-core', 'crates/nexus-core');
     dependency(`${ENGINE}/Cargo.toml`, 'nexus-renderer', 'crates/nexus-renderer');
-    dependency(`${ENGINE}/Cargo.toml`, 'nexus-script', 'crates/nexus-script');
+    dependency(`${ENGINE}/Cargo.toml`, 'nexus-script', SCRIPT);
     dependency(`${ENGINE}/Cargo.toml`, 'nexus-hal', HAL);
     dependency(`${ENGINE}/Cargo.toml`, 'nexus-assets', ASSETS);
     dependency(`${ENGINE}/Cargo.toml`, 'nexus-physics', 'packages/nexus-physics');
@@ -551,6 +564,52 @@ describe('engine workspace relocation', () => {
     expect(staleRootIn(`path = "${ENGINE}"`)).toBeUndefined();
     // …and no file outside this guard may hold it.
     expect(staleLocationRefs().filter((hit) => hit.stale === OLD_ENGINE)).toEqual([]);
+  });
+});
+
+describe('script workspace relocation', () => {
+  it('keeps the four Rust crate files only at the new root', () => {
+    for (const file of CRATE_FILES) {
+      expect(exists(SCRIPT, file)).toBe(true);
+    }
+    expect(exists(OLD_SCRIPT)).toBe(false);
+    expect(toml(`${SCRIPT}/Cargo.toml`).package.name).toBe('nexus-script');
+  });
+
+  it('registers the script crate exactly once in the root Cargo workspace', () => {
+    const members = cargoMembers(readText('Cargo.toml'));
+    expect(members.filter((member) => member === SCRIPT)).toHaveLength(1);
+    expect(members).not.toContain(OLD_SCRIPT);
+  });
+
+  it('resolves the outbound path dep from the new depth', () => {
+    // nexus-core stays under crates/ and is now one level deeper.
+    dependency(`${SCRIPT}/Cargo.toml`, 'nexus-core', 'crates/nexus-core');
+  });
+
+  it('resolves the inbound engine and agent dependencies at the new root', () => {
+    dependency(`${ENGINE}/Cargo.toml`, 'nexus-script', SCRIPT);
+    dependency(`${AGENT}/Cargo.toml`, 'nexus-script', SCRIPT);
+  });
+
+  it('derives the legacy script path instead of spelling it, and flags it', () => {
+    // Spelling the legacy path here would put it straight back into the tree
+    // and break the tree-wide rule this guard exists to hold.
+    expect(read(SELF)).not.toContain(OLD_SCRIPT);
+    // The guard must still catch a file that holds the old path…
+    expect(staleRootIn(`path = "${OLD_SCRIPT}"`)).toBe(OLD_SCRIPT);
+    expect(staleRootIn(`path = "${SCRIPT}"`)).toBeUndefined();
+    // …and no file outside this guard may hold it.
+    expect(staleLocationRefs().filter((hit) => hit.stale === OLD_SCRIPT)).toEqual([]);
+  });
+
+  it('keeps the area/scripting label and the systems coverage flag on the new root', () => {
+    const labels = block(read('.github/labeler.yml'), 'area/scripting:', 'area/agent:');
+    const coverage = block(read('codecov.yml'), '  systems:', '  agent:');
+    expect(labels).toContain(`- ${SCRIPT}/**`);
+    expect(coverage).toContain(`- ${SCRIPT}/`);
+    expect(labels).not.toContain(OLD_SCRIPT);
+    expect(coverage).not.toContain(OLD_SCRIPT);
   });
 });
 
