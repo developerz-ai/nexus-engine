@@ -16,7 +16,7 @@ Related specs:
 
 | Role | Crate | File of record |
 |---|---|---|
-| Provider (asset registry, IO, decode) | `nexus-assets` | `crates/assets/src/lib.rs` |
+| Provider (asset registry, IO, decode) | `nexus-assets` | `packages/nexus-assets/src/lib.rs` |
 | Consumer (GPU uploader, samplers, pipelines) | `nexus-renderer` | `crates/renderer/src/gpu_upload.rs` |
 | Shared | `nexus-core` | `AssetId` defined in `crates/core/src/asset_id.rs` |
 
