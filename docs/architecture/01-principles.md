@@ -222,7 +222,7 @@ which requires a documented Context, Decision, and Consequences entry.
 **Statement.** Every editor operation has a matching agent JSON-RPC method. Every agent JSON-RPC method either has a matching editor surface or is explicitly tagged `surfaces = ["headless"]` with a justification. The editor is `agent_client_0` — same RPC, same handshake, same capability gating — never a privileged backdoor.
 
 **Test of conformance.**
-- The two registries `crates/nexus-editor/registry/editor_actions.toml` and `packages/nexus-agent/registry/rpc_methods.toml` agree under the auditor in `scripts/check-rpc-parity`.
+- The two registries `packages/nexus-editor/registry/editor_actions.toml` and `packages/nexus-agent/registry/rpc_methods.toml` agree under the auditor in `scripts/check-rpc-parity`.
 - Every editor action `id` equals its `rpc` method name (one-to-one names; sub-namespaced by dots).
 - For every action, programmatically invoking the matching RPC produces a snapshot-hash-equal world delta to the editor-driven invocation.
 - A PR that adds an editor button without an RPC, or adds an editor-tagged RPC without a button, fails CI with the corresponding `PARITY_*` error code (→ `docs/specs/editor/rpc-parity.md`).

@@ -54,9 +54,9 @@ Finally, `cargo audit` is attempted as **advisory, nonblocking**, matching CI (`
 ## Structure
 | Path | Count | Contents |
 |---|---|---|
-| `crates/` | 7 | 6 system + `crates/sdks/nexus-agent-sdk-rs` 1 · 14 `.rs` files |
-| `packages/` | 28 | `packages/nexus-hal` 1 system crate + `packages/nexus-assets` `packages/nexus-net` `packages/nexus-physics` `packages/nexus-agent` `packages/nexus-audio` `packages/nexus-cli` 6 relocated system crates + `packages/genres/` 16 + `packages/styles/` 5 · 56 `.rs` files · HAL's and the agent crate's private Bun workspace adapters |
-| system crates | 13 | `crates/nexus-core` `packages/nexus-hal` `packages/nexus-assets` `crates/nexus-renderer` `packages/nexus-physics` `packages/nexus-audio` `packages/nexus-net` `crates/nexus-script` `packages/nexus-agent` `crates/nexus-editor` `packages/nexus-cli` `crates/nexus-merge` `crates/nexus-engine` |
+| `crates/` | 6 | 5 system + `crates/sdks/nexus-agent-sdk-rs` 1 · 12 `.rs` files |
+| `packages/` | 29 | `packages/nexus-hal` 1 system crate + `packages/nexus-assets` `packages/nexus-net` `packages/nexus-physics` `packages/nexus-agent` `packages/nexus-audio` `packages/nexus-cli` `packages/nexus-editor` 7 relocated system crates + `packages/genres/` 16 + `packages/styles/` 5 · 58 `.rs` files · HAL's and the agent crate's private Bun workspace adapters |
+| system crates | 13 | `crates/nexus-core` `packages/nexus-hal` `packages/nexus-assets` `crates/nexus-renderer` `packages/nexus-physics` `packages/nexus-audio` `packages/nexus-net` `crates/nexus-script` `packages/nexus-agent` `packages/nexus-editor` `packages/nexus-cli` `crates/nexus-merge` `crates/nexus-engine` |
 | `games/` | 4 | `games/nexus-fps` `games/nexus-platformer` `games/nexus-rpg` `games/nexus-rts` |
 | `tools/` | 2 | `tools/nexus-codegen` `tools/nexus-scenario` |
 | `scripts/` | 62 | Bun workspace · 14 scripts under `scripts/bin/` · one test per bin · count excludes `scripts/CLAUDE.md` |
@@ -325,7 +325,7 @@ When in doubt: vision → `docs/architecture/00-vision.md` · law → `docs/arch
 2. Pick from `docs/architecture/decisions-open.md` (`[DECISION NEEDED]`) and `docs/architecture/benchmarks-pending.md` (`[BENCHMARK NEEDED]`); spawn the relevant subagent from the routing table above.
 3. Cross-check `docs/architecture/cross-agent-flags.md` if the task touches a file authored by multiple agents.
 
-Engine source exists but is Phase 0 scaffold — 35 crates, 70 `.rs` files under `crates/` (7 crates, 14 files) and `packages/` (HAL + net + physics + agent + assets + audio + cli + 5 styles + 16 genres, 28 crates, 56 files), 4 games, 2 tools; every crate, game and tool declares `Status: stub (Phase 0 scaffold)` (`crates/nexus-core/src/lib.rs:7`). The tree stays spec-driven (Law 2): new behavior starts at a spec.
+Engine source exists but is Phase 0 scaffold — 35 crates, 70 `.rs` files under `crates/` (6 crates, 12 files) and `packages/` (HAL + net + physics + agent + assets + audio + cli + editor + 5 styles + 16 genres, 29 crates, 58 files), 4 games, 2 tools; every crate, game and tool declares `Status: stub (Phase 0 scaffold)` (`crates/nexus-core/src/lib.rs:7`). The tree stays spec-driven (Law 2): new behavior starts at a spec.
 
 ## Note
 No git worktrees — work directly in this checkout. If a task needs subagents, run them as a team in this same checkout: split the work into disjoint pieces so no two agents touch the same files.

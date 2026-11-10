@@ -63,7 +63,7 @@ flags:
       - crates/sdks/
   editor_cli:
     paths:
-      - crates/nexus-editor/
+      - packages/nexus-editor/
       - packages/nexus-cli/
   genres_styles:
     paths:
