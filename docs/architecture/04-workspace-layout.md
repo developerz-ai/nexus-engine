@@ -32,7 +32,6 @@ nexus-engine/
 │   └── initial/
 ├── crates/                          # remaining engine crates (systems + sub-crates)
 │   ├── nexus-core/
-│   ├── nexus-assets/
 │   ├── nexus-renderer/
 │   ├── nexus-audio/
 │   ├── nexus-script/
@@ -62,6 +61,7 @@ nexus-engine/
 │   │   ├── nexus-genre-visualnovel/
 │   │   └── nexus-genre-openworld/
 │   ├── nexus-agent/                 # agent API crate (see §nexus-agent)
+│   ├── nexus-assets/                # relocated system crate (asset registry, importers)
 │   ├── nexus-hal/                   # Rust crate + private Bun workspace adapter
 │   ├── nexus-net/                   # relocated system crate (transport, quinn)
 │   ├── nexus-physics/               # relocated system crate (rapier)
@@ -86,18 +86,20 @@ nexus-engine/
 
 ---
 
-`nexus-hal`, the five style modules, `nexus-net`, `nexus-physics`, `nexus-agent` and
-the sixteen genre crates live under `packages/`; every remaining engine crate,
-including the SDKs, stays under `crates/`, and dependency boundaries are unchanged.
+`nexus-hal`, the five style modules, `nexus-net`, `nexus-physics`, `nexus-agent`,
+`nexus-assets` and the sixteen genre crates live under `packages/`; every remaining
+engine crate, including the SDKs, stays under `crates/`, and dependency boundaries
+are unchanged.
 The root Cargo workspace includes `packages/nexus-hal`, `packages/nexus-net`,
-`packages/nexus-physics`, `packages/nexus-agent` and `packages/{genres,styles}/*`.
+`packages/nexus-physics`, `packages/nexus-assets`, `packages/nexus-agent` and
+`packages/{genres,styles}/*`.
 The Bun workspace includes `scripts`, `packages/nexus-hal`, `packages/genres` and
 `packages/nexus-agent`. HAL's private, dependency-free `@nexus-engine/nexus-hal`
 adapter registers the Rust package without adding a JavaScript implementation, and
 `@nexus-engine/genres` groups the genre crates the same way; `packages/nexus-agent`
 ships the agent crate's own dependency-free adapter, and `packages/styles/*`,
-`packages/nexus-net` and `packages/nexus-physics` stay Rust-only, without Bun
-adapters.
+`packages/nexus-net`, `packages/nexus-physics` and `packages/nexus-assets` stay
+Rust-only, without Bun adapters.
 
 ## Workspace root `Cargo.toml` (shape only)
 
@@ -108,7 +110,7 @@ resolver = "2"
 members = [
   "crates/nexus-core",
   "packages/nexus-hal",
-  "crates/nexus-assets",
+  "packages/nexus-assets",
   "crates/nexus-renderer",
   "packages/nexus-physics",
   "crates/nexus-audio",

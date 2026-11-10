@@ -54,16 +54,16 @@ Finally, `cargo audit` is attempted as **advisory, nonblocking**, matching CI (`
 ## Structure
 | Path | Count | Contents |
 |---|---|---|
-| `crates/` | 10 | 9 system + `crates/sdks/nexus-agent-sdk-rs` 1 · 20 `.rs` files |
-| `packages/` | 25 | `packages/nexus-hal` 1 system crate + `packages/nexus-net` `packages/nexus-physics` `packages/nexus-agent` 3 relocated system crates + `packages/genres/` 16 + `packages/styles/` 5 · 50 `.rs` files · HAL's and the agent crate's private Bun workspace adapters |
-| system crates | 13 | `crates/nexus-core` `packages/nexus-hal` `crates/nexus-assets` `crates/nexus-renderer` `packages/nexus-physics` `crates/nexus-audio` `packages/nexus-net` `crates/nexus-script` `packages/nexus-agent` `crates/nexus-editor` `crates/nexus-cli` `crates/nexus-merge` `crates/nexus-engine` |
+| `crates/` | 9 | 8 system + `crates/sdks/nexus-agent-sdk-rs` 1 · 18 `.rs` files |
+| `packages/` | 26 | `packages/nexus-hal` 1 system crate + `packages/nexus-assets` `packages/nexus-net` `packages/nexus-physics` `packages/nexus-agent` 4 relocated system crates + `packages/genres/` 16 + `packages/styles/` 5 · 52 `.rs` files · HAL's and the agent crate's private Bun workspace adapters |
+| system crates | 13 | `crates/nexus-core` `packages/nexus-hal` `packages/nexus-assets` `crates/nexus-renderer` `packages/nexus-physics` `crates/nexus-audio` `packages/nexus-net` `crates/nexus-script` `packages/nexus-agent` `crates/nexus-editor` `crates/nexus-cli` `crates/nexus-merge` `crates/nexus-engine` |
 | `games/` | 4 | `games/nexus-fps` `games/nexus-platformer` `games/nexus-rpg` `games/nexus-rts` |
 | `tools/` | 2 | `tools/nexus-codegen` `tools/nexus-scenario` |
 | `scripts/` | 62 | Bun workspace · 14 scripts under `scripts/bin/` · one test per bin · count excludes `scripts/CLAUDE.md` |
 | `docs/` | 413 `.md` | `docs/architecture/` · `docs/specs/` · `docs/contracts/` · `docs/guides/` · `docs/prior-art/` · `docs/game-template/` · `docs/games/` |
 | `.claude/` | 119 / 14 / 15 | agents / commands / skills |
 
-Cargo workspace = `crates/` + `packages/` + `games/` + `tools/` (`Cargo.toml:10-30`). Bun workspace = `scripts/` + `packages/nexus-hal/` + `packages/genres/` + `packages/nexus-agent/` + `packages/styles/*` (`package.json:5`); HAL's and the agent crate's private adapters add no JS implementation, the `packages/styles/*` glob matches nothing (no per-style `package.json`), and `packages/nexus-net` / `packages/nexus-physics` are Cargo-workspace members, not Bun workspaces.
+Cargo workspace = `crates/` + `packages/` + `games/` + `tools/` (`Cargo.toml:10-30`). Bun workspace = `scripts/` + `packages/nexus-hal/` + `packages/genres/` + `packages/nexus-agent/` + `packages/styles/*` (`package.json:5`); HAL's and the agent crate's private adapters add no JS implementation, the `packages/styles/*` glob matches nothing (no per-style `package.json`), and `packages/nexus-net` / `packages/nexus-physics` / `packages/nexus-assets` are Cargo-workspace members, not Bun workspaces.
 
 ## Conventions
 | Rule | Where |
