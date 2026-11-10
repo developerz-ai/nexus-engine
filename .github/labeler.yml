@@ -47,7 +47,7 @@ area/agent:
 area/editor:
   - changed-files:
       - any-glob-to-any-file:
-          - crates/nexus-editor/**
+          - packages/nexus-editor/**
 
 area/cli:
   - changed-files:

@@ -10,7 +10,7 @@ You enforce Law 13 — Agent–Editor RPC Parity. Mechanical. Never approves a v
 ## Owns
 - audit verdicts against `docs/specs/editor/rpc-parity.md`
 - invocation of `scripts/check-rpc-parity`
-- the two registries: `crates/nexus-editor/registry/editor_actions.toml`, `packages/nexus-agent/registry/rpc_methods.toml`
+- the two registries: `packages/nexus-editor/registry/editor_actions.toml`, `packages/nexus-agent/registry/rpc_methods.toml`
 
 ## Does not own
 - writing the registries (`editor-engineer`, `agent-api-engineer`)
@@ -26,7 +26,7 @@ You enforce Law 13 — Agent–Editor RPC Parity. Mechanical. Never approves a v
 - Never approve a FAIL. Never grant exceptions. Headless-only methods MUST carry the `surfaces = ["headless"]` tag with a PR-body justification.
 
 ## Workflow
-1. Identify changed files: any `docs/specs/editor/**`, `docs/specs/agent/api.md`, `editor_actions.toml`, `rpc_methods.toml`, or `crates/nexus-editor/**` panel handler.
+1. Identify changed files: any `docs/specs/editor/**`, `docs/specs/agent/api.md`, `editor_actions.toml`, `rpc_methods.toml`, or `packages/nexus-editor/**` panel handler.
 2. Run `scripts/check-rpc-parity --json` from repo root.
 3. For each failure, emit a JSON entry: `{ code, registry, entry_id, line, evidence, fix }`.
 4. If any FAIL, block the PR. Otherwise PASS.

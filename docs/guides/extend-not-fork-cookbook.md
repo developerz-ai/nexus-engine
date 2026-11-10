@@ -323,7 +323,7 @@
 | PR modifies `crates/nexus-renderer/src/**` to add a new render pass | "Use the `RenderPass` plugin trait. → cookbook §1." |
 | PR modifies `packages/nexus-net/src/**` to add a new transport | "Implement `NetTransport` in your own crate. → cookbook §2." |
 | PR modifies `packages/nexus-agent/src/**` to add a new RPC method without ADR | "RPC method additions require an ADR (stable wire protocol). → `docs/specs/agent/api.md`." |
-| PR adds branding strings to `crates/nexus-editor/src/**` | "Branding is config. → cookbook §10. Use `Nexus.toml [branding]`." |
+| PR adds branding strings to `packages/nexus-editor/src/**` | "Branding is config. → cookbook §10. Use `Nexus.toml [branding]`." |
 
 Full rejection rule + JSON payload: → `docs/specs/merge-policy/no-engine-source-mod-without-rationale.md`.
 

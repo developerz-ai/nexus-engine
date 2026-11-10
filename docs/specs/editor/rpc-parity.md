@@ -21,7 +21,7 @@ The editor is a fast human cursor over the AI's keyboard. Mouse for pointing; ch
 
 Both registries are TOML, hand-checked, and machine-parsed. Lives at:
 
-- `crates/nexus-editor/registry/editor_actions.toml`
+- `packages/nexus-editor/registry/editor_actions.toml`
 - `packages/nexus-agent/registry/rpc_methods.toml`
 
 ### `editor_actions.toml`
