@@ -22,14 +22,29 @@ describe('check', () => {
     expect(r.exitCode).toBe(2);
   });
 
-  it('--dry-run --json marks all gates skipped', async () => {
+  it('--dry-run --json selects exactly the six default gates, all skipped', async () => {
     const r = await runShim('check', ['--dry-run', '--json']);
     expect(r.exitCode).toBe(0);
     const env = parseEnvelope(r.stdout);
     assertEnvelopeShape(env);
-    const gates = env.data.gates as { skipped?: boolean }[];
-    expect(gates.length).toBeGreaterThan(0);
+    const gates = env.data.gates as { gate: string; skipped?: boolean }[];
+    expect(gates.map((g) => g.gate)).toEqual([
+      'fmt',
+      'clippy',
+      'biome',
+      'ruff',
+      'shellcheck',
+      'deny',
+    ]);
     for (const g of gates) expect(g.skipped).toBe(true);
+  });
+
+  it('--only naga --dry-run --json selects only naga, skipped', async () => {
+    const r = await runShim('check', ['--only', 'naga', '--dry-run', '--json']);
+    expect(r.exitCode).toBe(0);
+    const env = parseEnvelope(r.stdout);
+    assertEnvelopeShape(env);
+    expect(env.data.gates).toEqual([{ gate: 'naga', ok: true, skipped: true }]);
   });
 
   it('rejects --only with invalid value', async () => {

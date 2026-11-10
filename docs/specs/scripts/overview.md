@@ -68,7 +68,7 @@ Full contract: `→ docs/specs/scripts/cli-contract.md`.
 | Script | One-line purpose |
 |---|---|
 | `bootstrap` | install toolchains (rustup, nextest, bun, ruff, sccache) |
-| `check` | run all gates: fmt, clippy, biome, ruff, shellcheck, naga, cargo-deny |
+| `check` | run six default gates in order: fmt, clippy, biome, ruff, shellcheck, deny; naga opt-in via `--only naga` |
 | `build` | wrap `cargo build` with sccache + features |
 | `test` | nextest + scripts-tests + lua tests |
 | `scenario` | run a TOML scenario via `nexus run --scenario` |
@@ -83,6 +83,52 @@ Full contract: `→ docs/specs/scripts/cli-contract.md`.
 | `sync-docs-index` | regenerate `docs/INDEX.md` from filesystem |
 
 Game-repo seeded set: `→ docs/game-template/scripts/seed-list.md`.
+
+## Local CI-Parity Contract (`bin/check`)
+
+`./bin/check` mirrors the quality checks in `.github/workflows/ci.yml`; that workflow is authoritative. It is distinct from `scripts/check`, whose six defaults remain defined in `scripts/bin/check.ts:33`. Naga is opt-in there, not a default gate or a CI-parity addition. Do not add ruff, shellcheck, or naga to `bin/check` to achieve parity.
+
+The historical baseline comprised seven blocking checks: fmt, clippy, cargo check, nextest, deny, script tests, and Biome. The resumed working tree already includes the two parity additions: a blocking SPDX sweep and advisory audit. This describes local source, not verified execution or the state of remote main. The table maps all nine CI checks to their current `bin/check` counterparts: eight block; audit is advisory.
+
+| CI check | CI source anchor | Current local policy | `bin/check` source anchor |
+|---|---|---|---|
+| rust-fmt: `cargo fmt --all -- --check` | [L68](../../../.github/workflows/ci.yml#L68) | Blocking | [L30](../../../bin/check#L30) |
+| rust-clippy: `cargo clippy --workspace --all-targets -- -D warnings` | [L92](../../../.github/workflows/ci.yml#L92) | Blocking | [L31](../../../bin/check#L31) |
+| rust-check: `cargo check --workspace --all-targets` | [L115](../../../.github/workflows/ci.yml#L115) | Blocking | [L32](../../../bin/check#L32) |
+| rust-test: `cargo nextest run --workspace --profile ci` | [L143](../../../.github/workflows/ci.yml#L143) | Blocking | [L33](../../../bin/check#L33) |
+| rust-deny: `cargo deny check` | [L179](../../../.github/workflows/ci.yml#L179) | Blocking | [L34](../../../bin/check#L34) |
+| rust-audit: `cargo audit` | [L181–204](../../../.github/workflows/ci.yml#L181-L204) | Advisory attempt, nonblocking | [L79–86](../../../bin/check#L79-L86) |
+| scripts-test: `bun test` in `scripts/` | [L245–247](../../../.github/workflows/ci.yml#L245-L247) | Blocking | [L35–37](../../../bin/check#L35-L37) |
+| scripts-lint: `bun x biome check .` in `scripts/` | [L281–286](../../../.github/workflows/ci.yml#L281-L286) | Blocking | [L35–38](../../../bin/check#L35-L38) |
+| docs-spdx: tracked-file header sweep | [L297–334](../../../.github/workflows/ci.yml#L297-L334) | Blocking | [L41–77](../../../bin/check#L41-L77) |
+
+Checkout, tool installation, caches, frozen dependency installation, and artifact upload are infrastructure steps, not additional quality gates. Parity concerns gate membership and blocking policy, not a rewrite of CI environments or matrices. Neither `.github/workflows/ci.yml` nor `scripts/bin/check.ts` changes for these additions.
+
+### Failure and provisioning semantics
+
+- Preserve nonzero failure from every existing hard gate and from the SPDX sweep, stopping before later checks or audit. A later successful command or advisory audit must never replace a hard-gate failure with exit 0; appending commands after an unguarded `&&` chain is not sufficient.
+- Preserve existing required-tool preflight failures: exit 69 with guidance to run `./bin/setup`.
+- Attempt `cargo audit` after all blocking checks pass, retaining its diagnostics and reporting success or its nonzero exit status. Report audit failure or unavailability visibly, but neither may fail an otherwise clean gate. Cargo-audit is not a required preflight tool; these additions do not change setup, dependencies, or lockfiles.
+
+### SPDX acceptance policy
+
+Match CI's tracked-file scope with NUL-delimited enumeration:
+
+```sh
+git ls-files -z -- 'crates/**' 'packages/**' 'scripts/**' 'docs/**' '.github/**'
+```
+
+Use exactly CI's case-pattern exemptions ([L309–321](../../../.github/workflows/ci.yml#L309-L321)):
+
+```text
+*.lock|*.png|*.jpg|*.jpeg|*.webp|*.ico|*.gif|*.svg|*.wasm|*.bin
+*.json|*/bun.lock|*/Cargo.lock|*/package-lock.json
+*/node_modules/*|*/target/*|*/.git/*
+*.snap|*/snapshots/*
+*/.placeholder|*/.bun-version|*/.keep|*/.nvmrc
+```
+
+Every remaining file must contain `SPDX-License-Identifier:` within its first 15 lines. This is the CI marker-presence rule, not an additional license-value or copyright check. Missing headers or failed file enumeration must exit nonzero; an enumeration error must not be mistaken for an empty successful scan. Preserve filenames containing spaces or newlines through enumeration, inspection, and diagnostics. Regression tests use isolated temporary fixtures, not mutations of the real Git index.
 
 ## Discovery
 
