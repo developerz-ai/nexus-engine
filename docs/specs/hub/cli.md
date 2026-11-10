@@ -102,7 +102,7 @@ Reads project's `Nexus.toml` to populate the `project` field. Output is the stru
 nexus hub install nexus-genre-soulslike-core [--version '^0.3'] [--features ...]
 ```
 
-Wraps `cargo add` then registers the crate in `Nexus.toml` per Agent 29's resolution (→ `docs/specs/crates/nexus-add-resolution.md`, to be authored by Agent 29). Steps:
+Wraps `cargo add` then registers the crate in `Nexus.toml` per Agent 29's resolution (→ `docs/specs/scripts/nexus-add-resolution.md`). Steps:
 
 ```
 1. Resolve crate version satisfying --version (or latest verified)
@@ -244,7 +244,7 @@ These examples become the basis of `docs/guides/hub/agent-recipes.md`.
 ## Cross-references
 
 - Top-level CLI: `docs/specs/coder/cli.md`, `docs/guides/scripts-for-ai-agents.md`
-- Install resolution: `docs/specs/crates/nexus-add-resolution.md` (Agent 29 — may not yet exist)
+- Install resolution: `docs/specs/scripts/nexus-add-resolution.md`
 - HTTP API: `api.md`
 - Authentication: `identity.md`
 - Telemetry on install: `telemetry.md`
