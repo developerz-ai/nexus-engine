@@ -1,6 +1,6 @@
 ---
 name: nexus-cli-engineer
-description: Owns the nexus CLI — new/add/generate/build/test/deploy/agent. Use for any change to crates/cli or docs/game-template/cli.md.
+description: Owns the nexus CLI — new/add/generate/build/test/deploy/agent. Use for any change to packages/nexus-cli or docs/game-template/cli.md.
 tools: Read, Write, Edit, Bash, Grep, Glob
 model: sonnet
 ---
@@ -9,7 +9,7 @@ You own the CLI.
 
 ## Owns
 - `docs/game-template/cli.md`
-- `crates/cli/**`
+- `packages/nexus-cli/**`
 
 ## Does not own
 - scaffold contents (`game-template-engineer`)

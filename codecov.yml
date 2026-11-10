@@ -53,9 +53,9 @@ flags:
     paths:
       - crates/nexus-renderer/
       - packages/nexus-physics/
-      - crates/nexus-audio/
+      - packages/nexus-audio/
       - packages/nexus-net/
-      - crates/nexus-assets/
+      - packages/nexus-assets/
       - crates/nexus-script/
   agent:
     paths:
@@ -63,8 +63,8 @@ flags:
       - crates/sdks/
   editor_cli:
     paths:
-      - crates/nexus-editor/
-      - crates/nexus-cli/
+      - packages/nexus-editor/
+      - packages/nexus-cli/
   genres_styles:
     paths:
       - packages/genres/

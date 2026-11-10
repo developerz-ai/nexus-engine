@@ -321,8 +321,9 @@ ensure_gate_tool "cargo-deny" "$deny_version" \
 # the bun workspaces, and bun.lock lives there), so one frozen install
 # provisions every bun workspace: scripts, packages/nexus-hal (the private HAL
 # adapter), packages/genres and packages/nexus-agent. packages/nexus-net,
-# packages/nexus-physics and packages/styles/* are Rust-only — no
-# package.json, so bun ignores them.
+# packages/nexus-physics, packages/nexus-assets, packages/nexus-audio,
+# packages/nexus-cli and packages/styles/* are Rust-only — no package.json,
+# so bun ignores them.
 if ! bun install --frozen-lockfile; then
   echo "bin/setup: bun install --frozen-lockfile failed" >&2
   exit 1

@@ -1,11 +1,15 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Nexus Engine contributors
 //
-// scripts/tests/workspace-layout.test.ts — house-layout guards for the two
+// scripts/tests/workspace-layout.test.ts — house-layout guards for the
 // member-group moves this branch carries together (Law 3, Law 7, Law 14):
 //
-//   1. crates/nexus-hal/  → packages/nexus-hal/   (this branch)
-//   2. crates/genres/     → packages/genres/      (main)
+//   1. crates/nexus-hal/    → packages/nexus-hal/    (this branch)
+//   2. crates/genres/       → packages/genres/       (main)
+//   3. the assets crate     → packages/nexus-assets/ (this branch)
+//   4. the audio crate      → packages/nexus-audio/  (this branch)
+//   5. the CLI crate        → packages/nexus-cli/    (this branch)
+//   6. the editor crate     → packages/nexus-editor/ (this branch)
 //
 // A half-done move is silent. Drop "packages/genres/*" from the root
 // Cargo.toml members and `cargo check --workspace` / `cargo nextest` stay
@@ -13,7 +17,15 @@
 // crates/** only and the moved crates are never header-checked; forget the
 // bun workspace entry and `bun install --frozen-lockfile` fails only at
 // `bin/setup`. The same holds for HAL: leave a path dep pointing at
-// crates/nexus-hal and the workspace stops resolving.
+// crates/nexus-hal and the workspace stops resolving — and for assets:
+// a path dep left pointing at the crate's old home resolves to nothing.
+// The audio crate moved the same way: it sits one level deeper now, so
+// every one of its path deps has to be re-anchored to the new depth.
+// The CLI crate moved the same way but it is Rust-only with no path deps
+// at all, so nothing had to be re-anchored — yet a stale member path or
+// a stale mention in a doc still points at a crate that is gone.
+// The editor crate moved the same way, re-anchoring its four path deps
+// (nexus-core and nexus-renderer stay in crates/, HAL and agent are siblings).
 //
 // Every invariant below is asserted statically — no cargo, no network — so
 // the guard runs in the bun-test pass of `bin/check`.
@@ -29,6 +41,30 @@ const OLD_HAL = 'crates/nexus-hal';
 
 /** The agent API crate — moved by this branch, alongside HAL. */
 const AGENT = 'packages/nexus-agent';
+
+/** The assets crate — moved out of crates/ by this branch. */
+const ASSETS = 'packages/nexus-assets';
+/** Its pre-move location, derived so this guard never spells it literally —
+ *  a literal here would put the legacy path back into the tree. */
+const OLD_ASSETS = ASSETS.replace('packages/', 'crates/');
+
+/** The audio crate — moved out of crates/ by this branch. */
+const AUDIO = 'packages/nexus-audio';
+/** Its pre-move location, derived so this guard never spells it literally —
+ *  a literal here would put the legacy path back into the tree. */
+const OLD_AUDIO = AUDIO.replace('packages/', 'crates/');
+
+/** The CLI crate — moved out of crates/ by this branch. */
+const CLI = 'packages/nexus-cli';
+/** Its pre-move location, derived so this guard never spells it literally —
+ *  a literal here would put the legacy path back into the tree. */
+const OLD_CLI = CLI.replace('packages/', 'crates/');
+
+/** The editor crate — moved out of crates/ by this branch. */
+const EDITOR = 'packages/nexus-editor';
+/** Its pre-move location, derived so this guard never spells it literally —
+ *  a literal here would put the legacy path back into the tree. */
+const OLD_EDITOR = EDITOR.replace('packages/', 'crates/');
 
 /** The 16 genre crates that moved out of crates/genres/ into packages/genres/. */
 const GENRES = [
@@ -76,17 +112,18 @@ const NAMING_FILES = [
 
 /** Other subtrees stay at their merged locations — HAL, styles, net, physics and
  * the agent crate moved independently of the genre move, so the genre guard must
- * not disturb them. */
+ * not disturb them. The assets, audio and CLI crates left crates/ with this
+ * branch, so their new homes are asserted here too. */
 const UNMOVED_PATHS = [
   'crates/nexus-core',
   'packages/nexus-hal',
-  'crates/nexus-assets',
+  'packages/nexus-assets',
   'crates/nexus-renderer',
-  'crates/nexus-audio',
+  'packages/nexus-audio',
   'crates/nexus-script',
   'packages/nexus-agent',
-  'crates/nexus-editor',
-  'crates/nexus-cli',
+  'packages/nexus-editor',
+  'packages/nexus-cli',
   'crates/nexus-merge',
   'crates/nexus-engine',
   'packages/nexus-net',
@@ -209,9 +246,19 @@ function* walkFiles(dir: string): Generator<string> {
   }
 }
 
-/** Repo-relative paths whose text still mentions the pre-move location. */
-function staleLocationRefs(): string[] {
-  const hits: string[] = [];
+/** The pre-move location a file's text still names, if any. */
+function staleRootIn(text: string): string | undefined {
+  if (text.includes(OLD_ROOT)) return OLD_ROOT;
+  if (text.includes(OLD_ASSETS)) return OLD_ASSETS;
+  if (text.includes(OLD_AUDIO)) return OLD_AUDIO;
+  if (text.includes(OLD_CLI)) return OLD_CLI;
+  if (text.includes(OLD_EDITOR)) return OLD_EDITOR;
+  return undefined;
+}
+
+/** Repo-relative paths whose text still mentions a pre-move location. */
+function staleLocationRefs(): { file: string; stale: string }[] {
+  const hits: { file: string; stale: string }[] = [];
   for (const file of walkFiles(REPO_ROOT)) {
     if (SKIP_EXT.has(extname(file).toLowerCase())) continue;
     if (statSync(file).size > 512_000) continue;
@@ -221,7 +268,8 @@ function staleLocationRefs(): string[] {
     // SELF comparison and every reported hit are forward-slash repo-relative.
     const rel = relative(REPO_ROOT, file).replaceAll('\\', '/');
     if (rel === SELF) continue;
-    if (text.includes(OLD_ROOT)) hits.push(rel);
+    const stale = staleRootIn(text);
+    if (stale !== undefined) hits.push({ file: rel, stale });
   }
   return hits;
 }
@@ -248,8 +296,17 @@ describe('HAL workspace relocation', () => {
   });
 
   it('resolves every inbound dependency and the outbound core dependency', () => {
-    for (const consumer of ['assets', 'audio', 'editor', 'engine', 'renderer']) {
-      dependency(`crates/nexus-${consumer}/Cargo.toml`, 'nexus-hal', HAL);
+    // assets left crates/ for packages/, so its manifest no longer sits beside
+    // the other consumers — the manifest paths are listed, not derived.
+    const consumers: Record<string, string> = {
+      assets: `${ASSETS}/Cargo.toml`,
+      audio: `${AUDIO}/Cargo.toml`,
+      editor: `${EDITOR}/Cargo.toml`,
+      engine: 'crates/nexus-engine/Cargo.toml',
+      renderer: 'crates/nexus-renderer/Cargo.toml',
+    };
+    for (const manifest of Object.values(consumers)) {
+      dependency(manifest, 'nexus-hal', HAL);
     }
     dependency(`${HAL}/Cargo.toml`, 'nexus-core', 'crates/nexus-core');
   });
@@ -290,6 +347,157 @@ describe('HAL workspace relocation', () => {
     const review = read('.coderabbit.yaml');
     expect(review).toContain('    - path: "{crates,packages}/**/src/**/*.rs"\n');
     expect(review.split('/src/**/*.rs"').length - 1).toBe(1);
+  });
+});
+
+describe('assets workspace relocation', () => {
+  it('keeps the four Rust crate files only at the new root', () => {
+    for (const file of CRATE_FILES) {
+      expect(exists(ASSETS, file)).toBe(true);
+    }
+    expect(exists(OLD_ASSETS)).toBe(false);
+    expect(toml(`${ASSETS}/Cargo.toml`).package.name).toBe('nexus-assets');
+  });
+
+  it('registers assets exactly once in the root Cargo workspace', () => {
+    const members = cargoMembers(readText('Cargo.toml'));
+    expect(members.filter((member) => member === ASSETS)).toHaveLength(1);
+    expect(members).not.toContain(OLD_ASSETS);
+  });
+
+  it('resolves the outbound path deps from the new depth', () => {
+    dependency(`${ASSETS}/Cargo.toml`, 'nexus-core', 'crates/nexus-core');
+    dependency(`${ASSETS}/Cargo.toml`, 'nexus-hal', HAL);
+  });
+
+  it('derives the legacy assets path instead of spelling it, and flags it', () => {
+    // Spelling the legacy path here would put it straight back into the tree
+    // and break the tree-wide rule this guard exists to hold.
+    expect(read(SELF)).not.toContain(OLD_ASSETS);
+    // The guard must still catch a file that holds the old path…
+    expect(staleRootIn(`path = "${OLD_ASSETS}"`)).toBe(OLD_ASSETS);
+    expect(staleRootIn(`path = "${ASSETS}"`)).toBeUndefined();
+    // …and no file outside this guard may hold it.
+    expect(staleLocationRefs().filter((hit) => hit.stale === OLD_ASSETS)).toEqual([]);
+  });
+});
+
+describe('audio workspace relocation', () => {
+  it('keeps the four Rust crate files only at the new root', () => {
+    for (const file of CRATE_FILES) {
+      expect(exists(AUDIO, file)).toBe(true);
+    }
+    expect(exists(OLD_AUDIO)).toBe(false);
+    expect(toml(`${AUDIO}/Cargo.toml`).package.name).toBe('nexus-audio');
+  });
+
+  it('registers audio exactly once in the root Cargo workspace', () => {
+    const members = cargoMembers(readText('Cargo.toml'));
+    expect(members.filter((member) => member === AUDIO)).toHaveLength(1);
+    expect(members).not.toContain(OLD_AUDIO);
+  });
+
+  it('resolves the outbound path deps from the new depth', () => {
+    dependency(`${AUDIO}/Cargo.toml`, 'nexus-core', 'crates/nexus-core');
+    dependency(`${AUDIO}/Cargo.toml`, 'nexus-hal', HAL);
+    dependency(`${AUDIO}/Cargo.toml`, 'nexus-assets', ASSETS);
+  });
+
+  it('resolves the inbound engine dependency at the new root', () => {
+    dependency('crates/nexus-engine/Cargo.toml', 'nexus-audio', AUDIO);
+  });
+
+  it('derives the legacy audio path instead of spelling it, and flags it', () => {
+    // Spelling the legacy path here would put it straight back into the tree
+    // and break the tree-wide rule this guard exists to hold.
+    expect(read(SELF)).not.toContain(OLD_AUDIO);
+    // The guard must still catch a file that holds the old path…
+    expect(staleRootIn(`path = "${OLD_AUDIO}"`)).toBe(OLD_AUDIO);
+    expect(staleRootIn(`path = "${AUDIO}"`)).toBeUndefined();
+    // …and no file outside this guard may hold it.
+    expect(staleLocationRefs().filter((hit) => hit.stale === OLD_AUDIO)).toEqual([]);
+  });
+});
+
+describe('cli workspace relocation', () => {
+  /** The CLI crate is a binary crate — it owns src/main.rs, not src/lib.rs. */
+  const CLI_FILES = ['Cargo.toml', 'README.md', 'src/main.rs', 'tests/smoke.rs'] as const;
+
+  it('keeps the four Rust crate files only at the new root', () => {
+    for (const file of CLI_FILES) {
+      expect(exists(CLI, file)).toBe(true);
+    }
+    expect(exists(OLD_CLI)).toBe(false);
+    expect(toml(`${CLI}/Cargo.toml`).package.name).toBe('nexus-cli');
+  });
+
+  it('registers the CLI exactly once in the root Cargo workspace', () => {
+    const members = cargoMembers(readText('Cargo.toml'));
+    expect(members.filter((member) => member === CLI)).toHaveLength(1);
+    expect(members).not.toContain(OLD_CLI);
+  });
+
+  it('derives the legacy CLI path instead of spelling it, and flags it', () => {
+    // Spelling the legacy path here would put it straight back into the tree
+    // and break the tree-wide rule this guard exists to hold.
+    expect(read(SELF)).not.toContain(OLD_CLI);
+    // The guard must still catch a file that holds the old path…
+    expect(staleRootIn(`path = "${OLD_CLI}"`)).toBe(OLD_CLI);
+    expect(staleRootIn(`path = "${CLI}"`)).toBeUndefined();
+    // …and no file outside this guard may hold it.
+    expect(staleLocationRefs().filter((hit) => hit.stale === OLD_CLI)).toEqual([]);
+  });
+
+  it('keeps the area/cli label and the editor_cli coverage flag on the new root', () => {
+    const labels = block(read('.github/labeler.yml'), 'area/cli:', 'area/scripts:');
+    const coverage = block(read('codecov.yml'), '  editor_cli:', '  genres_styles:');
+    expect(labels).toContain(`- ${CLI}/**`);
+    expect(coverage).toContain(`- ${CLI}/`);
+    expect(labels).not.toContain(OLD_CLI);
+    expect(coverage).not.toContain(OLD_CLI);
+  });
+});
+
+describe('editor workspace relocation', () => {
+  it('keeps the four Rust crate files only at the new root', () => {
+    for (const file of CRATE_FILES) {
+      expect(exists(EDITOR, file)).toBe(true);
+    }
+    expect(exists(OLD_EDITOR)).toBe(false);
+    expect(toml(`${EDITOR}/Cargo.toml`).package.name).toBe('nexus-editor');
+  });
+
+  it('registers the editor exactly once in the root Cargo workspace', () => {
+    const members = cargoMembers(readText('Cargo.toml'));
+    expect(members.filter((member) => member === EDITOR)).toHaveLength(1);
+    expect(members).not.toContain(OLD_EDITOR);
+  });
+
+  it('resolves the outbound path deps from the new depth', () => {
+    dependency(`${EDITOR}/Cargo.toml`, 'nexus-core', 'crates/nexus-core');
+    dependency(`${EDITOR}/Cargo.toml`, 'nexus-renderer', 'crates/nexus-renderer');
+    dependency(`${EDITOR}/Cargo.toml`, 'nexus-hal', HAL);
+    dependency(`${EDITOR}/Cargo.toml`, 'nexus-agent', AGENT);
+  });
+
+  it('derives the legacy editor path instead of spelling it, and flags it', () => {
+    // Spelling the legacy path here would put it straight back into the tree
+    // and break the tree-wide rule this guard exists to hold.
+    expect(read(SELF)).not.toContain(OLD_EDITOR);
+    // The guard must still catch a file that holds the old path…
+    expect(staleRootIn(`path = "${OLD_EDITOR}"`)).toBe(OLD_EDITOR);
+    expect(staleRootIn(`path = "${EDITOR}"`)).toBeUndefined();
+    // …and no file outside this guard may hold it.
+    expect(staleLocationRefs().filter((hit) => hit.stale === OLD_EDITOR)).toEqual([]);
+  });
+
+  it('keeps the area/editor label and the editor_cli coverage flag on the new root', () => {
+    const labels = block(read('.github/labeler.yml'), 'area/editor:', 'area/cli:');
+    const coverage = block(read('codecov.yml'), '  editor_cli:', '  genres_styles:');
+    expect(labels).toContain(`- ${EDITOR}/**`);
+    expect(coverage).toContain(`- ${EDITOR}/`);
+    expect(labels).not.toContain(OLD_EDITOR);
+    expect(coverage).not.toContain(OLD_EDITOR);
   });
 });
 
@@ -486,8 +694,8 @@ describe('workspace layout', () => {
     }
 
     // --- No leftover reference to the pre-move location ------------------
-    for (const file of staleLocationRefs()) {
-      fail(`${file} still references ${OLD_ROOT}`);
+    for (const { file, stale } of staleLocationRefs()) {
+      fail(`${file} still references ${stale}`);
     }
 
     expect(violations).toEqual([]);

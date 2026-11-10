@@ -222,7 +222,7 @@ which requires a documented Context, Decision, and Consequences entry.
 **Statement.** Every editor operation has a matching agent JSON-RPC method. Every agent JSON-RPC method either has a matching editor surface or is explicitly tagged `surfaces = ["headless"]` with a justification. The editor is `agent_client_0` — same RPC, same handshake, same capability gating — never a privileged backdoor.
 
 **Test of conformance.**
-- The two registries `crates/nexus-editor/registry/editor_actions.toml` and `packages/nexus-agent/registry/rpc_methods.toml` agree under the auditor in `scripts/check-rpc-parity`.
+- The two registries `packages/nexus-editor/registry/editor_actions.toml` and `packages/nexus-agent/registry/rpc_methods.toml` agree under the auditor in `scripts/check-rpc-parity`.
 - Every editor action `id` equals its `rpc` method name (one-to-one names; sub-namespaced by dots).
 - For every action, programmatically invoking the matching RPC produces a snapshot-hash-equal world delta to the editor-driven invocation.
 - A PR that adds an editor button without an RPC, or adds an editor-tagged RPC without a button, fails CI with the corresponding `PARITY_*` error code (→ `docs/specs/editor/rpc-parity.md`).
@@ -260,7 +260,7 @@ which requires a documented Context, Decision, and Consequences entry.
 **Statement.** Nexus is closed for source modification, open for extension. Every public engine API is a stable extension surface. Every common need has a sanctioned plugin lane (compile-time crate, Cargo feature, runtime plugin, mod, script, agent RPC, editor override). A PR that modifies engine-core source for a feature expressible as an extension is rejected without human review.
 
 **Test of conformance.**
-- No PR touches `crates/nexus-{core,renderer,physics,audio,networking,scripting,assets,editor}/src/**` or `packages/nexus-agent/src/**` without a linked `Status: Accepted` ADR. Enforced by `nexus-merge` rule `no-engine-source-mod-without-rationale` (`docs/specs/merge-policy/no-engine-source-mod-without-rationale.md`).
+- No PR touches `crates/nexus-{core,renderer,physics,audio,networking,scripting,assets}/src/**`, `packages/nexus-editor/src/**` or `packages/nexus-agent/src/**` without a linked `Status: Accepted` ADR. Enforced by `nexus-merge` rule `no-engine-source-mod-without-rationale` (`docs/specs/merge-policy/no-engine-source-mod-without-rationale.md`).
 - Every extension surface is documented as such: trait declared in its system spec, registered in `docs/specs/crates/categories.md`, stability tier in `docs/specs/crates/stable-api.md`.
 - Every common forking motivation has a cookbook entry (`docs/guides/extend-not-fork-cookbook.md`); ≥ 14 entries at v1.0.
 - Engine majors ship a compat shim crate (`nexus-engine-compat-(N-1)`) for one-major back, per `docs/specs/crates/stable-api.md` §"The Compat Shim Pattern".

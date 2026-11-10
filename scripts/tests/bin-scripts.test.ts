@@ -53,7 +53,7 @@ const GIT_DIR = ((): string | undefined => {
 const SPDX_OK_MESSAGE =
   'SPDX headers OK on all tracked files under crates/, packages/, scripts/, docs/, .github/';
 
-// The JSON crates/nexus-cli prints (crates/nexus-cli/src/main.rs).
+// The JSON packages/nexus-cli prints (packages/nexus-cli/src/main.rs).
 const NEXUS_CLI_JSON =
   '{"tool":"nexus","version":"0.1.0","status":"stub","spec":"docs/game-template/cli.md"}';
 

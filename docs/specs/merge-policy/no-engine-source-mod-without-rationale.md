@@ -127,12 +127,12 @@ The JSON block always precedes the markdown. Automation parses the JSON; humans 
 | `crates/nexus-core/src/**` | Substrate — extensions cannot reach into the substrate |
 | `crates/nexus-renderer/src/**` | Render pipeline — use `RenderPass` plugins |
 | `packages/nexus-physics/src/**` | Physics core — use `PhysicsBackend` |
-| `crates/nexus-audio/src/**` | Audio core — use `AudioBackend` / `DspPack` |
+| `packages/nexus-audio/src/**` | Audio core — use `AudioBackend` / `DspPack` |
 | `packages/nexus-net/src/**` | Net stack — use `NetTransport` |
 | `crates/nexus-scripting/src/**` | VM glue — use `ScriptVm` |
-| `crates/nexus-assets/src/**` | Pipeline — use `AssetSource` / `AssetImporter` |
+| `packages/nexus-assets/src/**` | Pipeline — use `AssetSource` / `AssetImporter` |
 | `packages/nexus-agent/src/**` | Agent RPC — wire-stable, requires ADR for any addition |
-| `crates/nexus-editor/src/**` | Editor core — use editor extensions |
+| `packages/nexus-editor/src/**` | Editor core — use editor extensions |
 
 Engine-shipped extension crates (`packages/styles/`, `packages/genres/`, `crates/nexus-engine-compat-*/`) are NOT in the trigger set. They are themselves extensions to the core.
 
@@ -244,7 +244,7 @@ This spec is a single, focused gate: **don't modify engine-core source for a fea
 ## Open questions
 
 - `[DECISION NEEDED]` Should the bot rejection auto-close after 30 days of no contributor response, or stay open forever? Default proposal: stay open; contributors come back.
-- `[DECISION NEEDED]` Whether to also gate `crates/nexus-cli/src/**`. Default proposal: NO — CLI is a tool, not engine surface; ordinary review applies.
+- `[DECISION NEEDED]` Whether to also gate `packages/nexus-cli/src/**`. Default proposal: NO — CLI is a tool, not engine surface; ordinary review applies.
 - `[VERIFY]` Glob list above against the final workspace layout in `docs/architecture/04-workspace-layout.md`.
 
 ## Mastermind routing note

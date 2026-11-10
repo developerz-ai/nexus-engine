@@ -10,11 +10,11 @@ Multiple crates wired together. Real internal APIs. Mocked external boundaries o
 | Boundary | Tested in |
 |----------|-----------|
 | Two engine crates exchanging data | `tests/<topic>.rs` in the consumer crate |
-| Engine + asset pipeline (real files, real import) | `crates/nexus-assets/tests/import_*.rs` |
+| Engine + asset pipeline (real files, real import) | `packages/nexus-assets/tests/import_*.rs` |
 | Engine + script VM | `crates/nexus-scripting/tests/` |
 | Client + server (in-process, two `tokio` runtimes) | `packages/nexus-net/tests/` |
-| CLI + engine | `crates/nexus-cli/tests/` |
-| Editor host + engine | `crates/nexus-editor/tests/` |
+| CLI + engine | `packages/nexus-cli/tests/` |
+| Editor host + engine | `packages/nexus-editor/tests/` |
 | Game template + engine | `nexus-game-template/tests/scaffold.rs` |
 
 ## Rust

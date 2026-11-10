@@ -220,7 +220,7 @@ crashes/
   "target":   "parse_gltf",
   "input":    "crashes/parse_gltf-abc123.bin",
   "panic":    "index out of bounds: 0..=0 / 5",
-  "location": { "file": "crates/nexus-assets/src/gltf/parse.rs", "line": 142 },
+  "location": { "file": "packages/nexus-assets/src/gltf/parse.rs", "line": 142 },
   "minimized": true,
   "size_bytes": 12
 }
