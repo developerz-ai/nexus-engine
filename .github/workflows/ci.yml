@@ -209,9 +209,9 @@ jobs:
   # "packages/nexus-agent", "packages/styles/*"]`, so `bun install` and the
   # lockfile (bun.lock) live at the repo root. We install at the root — the
   # frozen install provisions every bun workspace — then `cd scripts/` for the
-  # suite-specific commands. packages/nexus-net, packages/nexus-physics and
-  # packages/nexus-assets are Cargo workspace members, not bun ones (Rust
-  # crates, no package.json).
+  # suite-specific commands. packages/nexus-net, packages/nexus-physics,
+  # packages/nexus-assets and packages/nexus-audio are Cargo workspace
+  # members, not bun ones (Rust crates, no package.json).
   scripts-test:
     name: scripts / test
     runs-on: ubuntu-latest

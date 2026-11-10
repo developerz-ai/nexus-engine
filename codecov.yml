@@ -53,7 +53,7 @@ flags:
     paths:
       - crates/nexus-renderer/
       - packages/nexus-physics/
-      - crates/nexus-audio/
+      - packages/nexus-audio/
       - packages/nexus-net/
       - packages/nexus-assets/
       - crates/nexus-script/
