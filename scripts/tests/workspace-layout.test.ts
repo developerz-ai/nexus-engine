@@ -274,6 +274,16 @@ function genresStylesPaths(text: string): unknown[] {
 /** This guard file — it has to name the pre-move location in order to detect it. */
 const SELF = 'scripts/tests/workspace-layout.test.ts';
 
+/**
+ * Gate files the automation lane may not edit: the merge proof accepts no
+ * transform for them, so a relocation PR must keep each byte-identical to
+ * its base branch. An ownership rule left pointing at a pre-move path is
+ * inert there — GitHub ignores rules whose path no longer exists, and the
+ * file is advisory by its own header — so the sweep exempts it instead of
+ * demanding an edit the merge gate would refuse.
+ */
+const PLATFORM_FROZEN_GATES = new Set(['.github/CODEOWNERS']);
+
 /** Every file under `dir`, skipping non-repo directories. */
 function* walkFiles(dir: string): Generator<string> {
   if (!existsSync(dir)) return;
@@ -315,6 +325,7 @@ function staleLocationRefs(): { file: string; stale: string }[] {
     // SELF comparison and every reported hit are forward-slash repo-relative.
     const rel = relative(REPO_ROOT, file).replaceAll('\\', '/');
     if (rel === SELF) continue;
+    if (PLATFORM_FROZEN_GATES.has(rel)) continue;
     const stale = staleRootIn(text);
     if (stale !== undefined) hits.push({ file: rel, stale });
   }
