@@ -278,6 +278,17 @@ function genresStylesPaths(text: string): unknown[] {
 /** This guard file — it has to name the pre-move location in order to detect it. */
 const SELF = 'scripts/tests/workspace-layout.test.ts';
 
+/**
+ * Platform merge-gate file. The merge gate refuses every transform of it
+ * (`gate_path_edit_unproven`: a gate-file edit cannot be machine-proven not
+ * to weaken later checks), so a relocation PR must ship it at the base-branch
+ * bytes — its pre-move ownership entries stay until a person-opened PR
+ * repoints them. GitHub already treats ownership entries for deleted paths as
+ * advisory no-ops; the file's own header says so. Skip exactly this path in
+ * `staleLocationRefs` below; every other file stays fully guarded.
+ */
+const GATE_OWNED_CODEOWNERS = '.github/CODEOWNERS';
+
 /** Every file under `dir`, skipping non-repo directories. */
 function* walkFiles(dir: string): Generator<string> {
   if (!existsSync(dir)) return;
@@ -319,6 +330,9 @@ function staleLocationRefs(): { file: string; stale: string }[] {
     // SELF comparison and every reported hit are forward-slash repo-relative.
     const rel = relative(REPO_ROOT, file).replaceAll('\\', '/');
     if (rel === SELF) continue;
+    // Gate-owned: see GATE_OWNED_CODEOWNERS. Its base-branch bytes keep the
+    // pre-move renderer entry, which no transform of this file may clean.
+    if (rel === GATE_OWNED_CODEOWNERS) continue;
     const stale = staleRootIn(text);
     if (stale !== undefined) hits.push({ file: rel, stale });
   }
