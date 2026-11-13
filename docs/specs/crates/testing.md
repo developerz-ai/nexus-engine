@@ -125,7 +125,7 @@ tests/visual/
 └── sphere.diff.png      ← generated on regression, uploaded as CI artifact
 ```
 
-→ `docs/guides/testing/visual-regression.md` `[NEW — to be authored by Agent 04]`.
+→ `docs/guides/testing/visual.md`.
 
 ## Headless smoke (always)
 

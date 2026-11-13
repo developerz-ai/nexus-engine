@@ -50,7 +50,7 @@ Schema: `schemas/nexus-error-v1.schema.json` (workspace root). CI validates ever
 | `EDITOR` | editor | `EDITOR.PROJECT_INVALID` |
 | `CLI` | tooling | `CLI.INVALID_ARG`, `CLI.NETWORK` |
 
-Codes are stable. Renames are breaking changes. Code registry: `docs/contracts/error-codes.md` (mirrors each crate's error enum) — `[AGENT: 14]` to maintain.
+Codes are stable. Renames are breaking changes. Error definitions are owned by per-system contracts; see the [renderer Error Contract](../../contracts/core-renderer.md#error-contract) and [scripting Error Contract](../../contracts/core-scripting.md#error-contract).
 
 `SPECIFIC` is `SCREAMING_SNAKE_CASE`. Never localized. → `naming.md`
 
@@ -292,17 +292,16 @@ Every boundary serializes to universal JSON. Every consumer deserializes back in
 
 ## Error code registry
 
-`docs/contracts/error-codes.md` (Agent 14 maintains) is the source of truth. Every code listed there:
-- one row per code
-- columns: `code`, `domain`, `meaning`, `caller_action`, `since_version`, `owning_crate`
-- adding a code = updating this file = part of the PR
+Error definitions are distributed across per-system Error Contract sections, not a central registry. Existing references:
+- [Core ⇄ Renderer](../../contracts/core-renderer.md#error-contract)
+- [Core ⇄ Scripting](../../contracts/core-scripting.md#error-contract)
 
-CI rejects PRs that emit a code not registered.
+Each system owns its error definitions and required caller actions. Adding or changing an error requires updating the owning contract in the same PR. No central error-code registry CI check is installed.
 
 ## Cross-link
 
 - → `logging.md` (`trace_id` correlation)
-- → `docs/contracts/error-codes.md` (Agent 14)
+- → `docs/contracts/core-renderer.md#error-contract` · `docs/contracts/core-scripting.md#error-contract` (per-system error definitions)
 - → `docs/guides/merge-system.md` (Agent 16, error-driven gating)
 - → `rust.md`, `typescript.md`, `python.md`, `lua.md`, `sql.md`
 - → `docs/specs/agent/telemetry.md` (errors as telemetry events)

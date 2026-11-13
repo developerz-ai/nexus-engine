@@ -173,16 +173,18 @@ No violations found in sample. Per-file SPDX header coverage was not exhaustivel
 
 `grep + path-resolve` on all `[text](path.md)` and `→ \`path.md\`` references → 24 broken refs in 23 files. Most are *placeholder* patterns intentional in templates (`<a>-<b>.md`, `<system>/<file>.md`, `{aws,gcp,…}.md`). Genuinely broken (≈ 8 unique):
 
-| Source file | Broken target | Fix |
-|---|---|---|
-| `docs/guides/coding-style/errors.md` | `docs/contracts/error-codes.md` | Author the file or relink to per-system error contract section. |
-| `docs/specs/hub/cli.md` | `docs/specs/crates/nexus-add-resolution.md` | Retarget to `docs/specs/scripts/nexus-add-resolution.md` (real location). |
-| `docs/specs/merge-policy/no-engine-source-mod-without-rationale.md` | `docs/specs/guides/extend-not-fork-cookbook.md` | Retarget to `docs/guides/extend-not-fork-cookbook.md`. |
-| `docs/guides/glossary.md` | `docs/specs/core/navmesh.md` | Author or remove the gloss entry. |
-| `docs/specs/scripting-first/overview.md` | `docs/specs/scripting/ffi.md` | Author or retarget to a sibling. |
-| `docs/specs/crates/testing.md` | `docs/guides/testing/visual-regression.md` | Author the guide or link to `visual-regression-engineer` subagent's spec. |
-| `docs/specs/mods/nsfw-and-moderation.md` | `docs/guides/mods/marketplaces/integrations-matrix.md` | Retarget to `docs/guides/mods/integrations-matrix.md`. |
-| `docs/guides/deploy/targets/agones.md` | `docs/guides/deploy/targets/{aws,gcp,azure,digitalocean,hetzner,self-host}.md` | Expand the brace-set OR convert to a table of links. |
+Follow-up: seven entries below are resolved to existing documents; the original broken targets are retained only as historical evidence. The Agones entry remains outstanding and outside this repair's scope.
+
+| Source file | Original broken target (historical) | Status | Resolution / remaining fix |
+|---|---|---|---|
+| `docs/guides/coding-style/errors.md` | `docs/contracts/error-codes.md` | **Resolved** | All three references now point to `docs/contracts/core-renderer.md#error-contract` and `docs/contracts/core-scripting.md#error-contract`; ownership is per-system, with no claim of an installed central-registry CI check. |
+| `docs/specs/hub/cli.md` | `docs/specs/crates/nexus-add-resolution.md` | **Resolved** | Both references now point to `docs/specs/scripts/nexus-add-resolution.md`; obsolete not-yet-authored annotations removed. |
+| `docs/specs/merge-policy/no-engine-source-mod-without-rationale.md` | `docs/specs/guides/extend-not-fork-cookbook.md` | **Resolved** | Markdown reference now uses `docs/guides/extend-not-fork-cookbook.md#1-i-need-a-custom-rendering-technique-eg-my-own-gi`, preserving the recipe-1 fragment. |
+| `docs/guides/glossary.md` | `docs/specs/core/navmesh.md` | **Resolved** | Definition retained; `docs/specs/deformable-terrain/overview.md#composes` is explicitly a planned-subsystem integration reference, not a canonical navmesh implementation spec. |
+| `docs/specs/scripting-first/overview.md` | `docs/specs/scripting/ffi.md` | **Resolved** | Retargeted to `docs/contracts/core-scripting.md`, which documents the provided API and Rust host bindings. |
+| `docs/specs/crates/testing.md` | `docs/guides/testing/visual-regression.md` | **Resolved** | Retargeted to `docs/guides/testing/visual.md` (Visual Regression Tests); obsolete to-be-authored annotation removed. |
+| `docs/specs/mods/nsfw-and-moderation.md` | `docs/guides/mods/marketplaces/integrations-matrix.md` | **Resolved** | Retargeted to `docs/guides/mods/integrations-matrix.md`. |
+| `docs/guides/deploy/targets/agones.md` | `docs/guides/deploy/targets/{aws,gcp,azure,digitalocean,hetzner,self-host}.md` | **Outstanding — out of scope** | Expand the brace-set OR convert to a table of links. |
 
 The remaining ~16 placeholder-pattern broken refs are legitimate documentation (showing template syntax in `docs/guides/cross-linking.md`, `docs/guides/spec-format.md`, `docs/guides/style-guide.md`, etc.) and do not need fixing.
 
@@ -195,7 +197,7 @@ Full raw list reproducible by running the broken-link sweep script (a one-pager 
 Highest-confidence picks. None require any of the open `[DECISION NEEDED]` to land first.
 
 1. **Author the missing trait spec `docs/specs/genres/plugin-trait.md`** (universal `GenrePlugin` trait). Flagged by Agent 12 in `docs/specs/crates/categories.md:109`. Unblocks every `genre`-category crate spec.
-2. **Fix the 8 genuinely-broken cross-links above.** Pure plumbing; no architecture decisions. Hand to `docs-style-enforcer` or do inline.
+2. **Fix the outstanding Agones brace-set cross-link above.** The other seven entries are resolved; no further repair is requested for them. Hand the Agones item to `docs-style-enforcer` or do inline.
 3. **Install `yq` (or add a Python fallback) and regenerate `scripts/index.json`.** Today `scripts/index-scripts` exits with `yq required`. Trivial bootstrap fix that restores the script-index automation.
 4. **Run the `decision-log-keeper` subagent against `docs/architecture/decisions-open.md`** and resolve the bottom-up: pick a topic with the founder-approved default already declared, ratify in the affected files, move the line to `decisions-resolved.md`. Aim to drain 20–30 in one session.
 5. **Begin engine-implementation kickoff** by writing the first crate skeleton for **`nexus-core`** (per `docs/architecture/04-workspace-layout.md`). Spec is solid; subagent ownership is clear (`ecs-engineer` + `memory-engineer` + `jobs-engineer`). This is the lowest-risk first compile target and validates the entire spec-first → impl pipeline. Pair with `principle-keeper` to verify Law 14 / Law 15 conformance from the very first PR.

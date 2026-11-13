@@ -137,7 +137,7 @@ Conventions:
 |---|---|
 | **Nanite** | UE5 virtualized geometry; conceptual reference. → `docs/specs/assets/lod.md` [PENDING]. |
 | **Narrow phase** | Per-pair exact collision test after broad phase. → `docs/specs/physics/collision.md`. |
-| **Navmesh** | Navigation mesh; pathfinding surface from world geometry. → `docs/specs/core/navmesh.md` [PENDING]. |
+| **Navmesh** | Navigation mesh; pathfinding surface from world geometry. Planned subsystem; integration reference (not a canonical navmesh implementation spec) → `docs/specs/deformable-terrain/overview.md#composes`. |
 | **Nexus.toml** | Per-game config: style lock, genre modules, target platforms. → `docs/game-template/nexus-toml.md`. |
 | **nexus-agent-sdk** | Python+Rust SDK every AI agent uses to drive Nexus. → `docs/specs/agent/sdk.md` [PENDING]. |
 | **nexus-cli** | Scaffolding/build CLI (Rails-equivalent). → `docs/game-template/cli.md`. |
