@@ -8,7 +8,7 @@
 ## Boundaries
 
 - Owns: scripting-first project layout convention (game logic lives in `scripts/`, not `src/`), heavy hot-reload pipeline (file-watch → recompile script → swap → preserve state), capability-elevation policy (game scripts vs mod scripts), mod-shares-game-API contract.
-- Does NOT own: VM implementation (→ `docs/specs/scripting/overview.md`), sandbox primitives (→ `docs/specs/scripting/sandbox.md`), Rust↔script FFI (→ `docs/specs/scripting/ffi.md`), mod distribution (→ `docs/specs/mods/overview.md`).
+- Does NOT own: VM implementation (→ `docs/specs/scripting/overview.md`), sandbox primitives (→ `docs/specs/scripting/sandbox.md`), Rust↔script FFI (→ `docs/contracts/core-scripting.md`), mod distribution (→ `docs/specs/mods/overview.md`).
 - Depends on: `nexus-scripting`, `nexus-scripting/sandbox`, `nexus-scripting/hotreload`, `nexus-mods` (for mod-vs-game capability gate).
 
 ## Composes

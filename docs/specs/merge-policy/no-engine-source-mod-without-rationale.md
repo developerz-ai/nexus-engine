@@ -94,7 +94,7 @@ This PR modifies engine-core source. Nexus is closed for source modification, op
 
 The change at **packages/nexus-renderer/src/gi.rs** is expressible as a **`RenderPass` plugin** in a community crate.
 
-**Cookbook recipe:** [§1 — I need a custom rendering technique](../guides/extend-not-fork-cookbook.md#1-i-need-a-custom-rendering-technique-eg-my-own-gi)
+**Cookbook recipe:** [§1 — I need a custom rendering technique](docs/guides/extend-not-fork-cookbook.md#1-i-need-a-custom-rendering-technique-eg-my-own-gi)
 **Suggested crate name:** `nexus-renderer-customgi`
 **Trait to implement:** `RenderPass`
 **Spec:** `docs/specs/renderer/gi.md`
