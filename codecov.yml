@@ -47,7 +47,7 @@ comment:
 flags:
   core:
     paths:
-      - crates/nexus-core/
+      - packages/nexus-core/
       - packages/nexus-hal/
   systems:
     paths:

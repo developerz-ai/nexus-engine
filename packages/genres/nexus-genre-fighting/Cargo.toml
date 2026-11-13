@@ -20,5 +20,5 @@ laws = ["2", "3", "7", "11", "12", "14"]
 workspace = true
 
 [dependencies]
-nexus-core = { path = "../../../crates/nexus-core", version = "0.1.0" }
-nexus-script = { path = "../../../packages/nexus-script", version = "0.1.0" }
+nexus-core = { path = "../../nexus-core", version = "0.1.0" }
+nexus-script = { path = "../../nexus-script", version = "0.1.0" }

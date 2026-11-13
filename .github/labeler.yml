@@ -10,7 +10,7 @@
 area/core:
   - changed-files:
       - any-glob-to-any-file:
-          - crates/nexus-core/**
+          - packages/nexus-core/**
           - packages/nexus-hal/**
 
 area/renderer:

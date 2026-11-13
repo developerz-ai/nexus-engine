@@ -137,7 +137,7 @@ if [ -z "$out" ]; then exit 1; fi
 name="\${out##*/}"
 name="\${name%.tar.gz}"
 name="\${name%%-[0-9]*}"
-dir="\$(dirname "$out")"
+dir="$(dirname "$out")"
 mkdir -p "$dir/pkg"
 printf '#!/bin/sh\\nexit 0\\n' > "$dir/pkg/$name"
 chmod 755 "$dir/pkg/$name"

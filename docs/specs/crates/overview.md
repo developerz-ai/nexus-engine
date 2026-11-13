@@ -18,7 +18,7 @@
 
 | Layer | Distribution | Trust | Sandbox | Engine API | Examples |
 |---|---|---|---|---|---|
-| Engine crates | This monorepo | Full | None | Internal | `crates/nexus-core`, `packages/nexus-renderer` |
+| Engine crates | This monorepo | Full | None | Internal | `packages/nexus-core`, `packages/nexus-renderer` |
 | **Third-party crates** (this spec) | **crates.io / alt registries** | **Full (source-visible)** | **None** | **Public stable** | **`nexus-genre-survival-extreme`, `nexus-style-anime`, `nexus-telemetry-honeycomb`** |
 | Mods → `docs/specs/mods/overview.md` | Mod marketplaces | Capability-gated | Rune / Lua VM | Mod SDK | Skins, gameplay tweaks, total conversions |
 

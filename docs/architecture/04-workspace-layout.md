@@ -30,8 +30,8 @@ nexus-engine/
 │   ├── game-template/
 │   ├── games/
 │   └── initial/
-├── crates/                          # remaining engine crates (systems + sub-crates)
-│   ├── nexus-core/
+├── crates/                          # empty — every engine crate now lives under packages/
+
 ├── packages/                        # members relocated out of crates/ (Rust, or Rust + a JS adapter)
 │   ├── genres/
 │   │   ├── nexus-genre-fps/
@@ -54,6 +54,7 @@ nexus-engine/
 │   ├── nexus-assets/                # relocated system crate (asset registry, importers)
 │   ├── nexus-audio/                 # relocated system crate (audio graph, DSP)
 │   ├── nexus-cli/                   # relocated CLI crate (nexus new / add / generate / build / test / deploy / agent)
+│   ├── nexus-core/                  # relocated system crate (ECS, scheduler, substrate)
 │   ├── nexus-editor/                # relocated system crate (scene tree, inspector, live reload)
 │   ├── nexus-engine/                # facade re-export crate (the public umbrella)
 │   ├── nexus-hal/                   # Rust crate + private Bun workspace adapter
@@ -86,11 +87,11 @@ nexus-engine/
 
 ---
 
-`nexus-hal`, the five style modules, `nexus-net`, `nexus-physics`, `nexus-renderer`,
+`nexus-core`, `nexus-hal`, the five style modules, `nexus-net`, `nexus-physics`, `nexus-renderer`,
 `nexus-agent`, `nexus-assets`, `nexus-audio`, `nexus-cli`, `nexus-editor`, `nexus-engine`, `nexus-script`, `nexus-merge` and the sixteen genre crates live under
-`packages/`, alongside the SDK subtree at `packages/sdks/`. The remaining engine crate
-stays under `crates/`, and dependency boundaries are unchanged.
-The root Cargo workspace includes `packages/nexus-hal`, `packages/nexus-net`,
+`packages/`, alongside the SDK subtree at `packages/sdks/`; no engine crate remains under
+`crates/`, and dependency boundaries are unchanged.
+The root Cargo workspace includes `packages/nexus-core`, `packages/nexus-hal`, `packages/nexus-net`,
 `packages/nexus-physics`, `packages/nexus-renderer`, `packages/nexus-assets`, `packages/nexus-audio`,
 `packages/nexus-cli`, `packages/nexus-editor`, `packages/nexus-agent`, `packages/nexus-engine`,
 `packages/nexus-script`, `packages/nexus-merge`, `packages/{genres,styles}/*` and
@@ -103,7 +104,7 @@ adapter registers the Rust package without adding a JavaScript implementation, a
 `@nexus-engine/genres` groups the genre crates the same way; `packages/nexus-agent`
 ships the agent crate's own dependency-free adapter, and `packages/styles/*`,
 `packages/nexus-net`, `packages/nexus-physics`, `packages/nexus-assets`,
-`packages/nexus-audio`, `packages/nexus-renderer`, `packages/nexus-cli`, `packages/nexus-editor`, `packages/nexus-engine`,
+`packages/nexus-audio`, `packages/nexus-core`, `packages/nexus-renderer`, `packages/nexus-cli`, `packages/nexus-editor`, `packages/nexus-engine`,
 `packages/nexus-script`, `packages/nexus-merge` and `packages/sdks/nexus-agent-sdk-rs` stay Cargo-only,
 without Bun adapters.
 
@@ -114,7 +115,7 @@ without Bun adapters.
 [workspace]
 resolver = "2"
 members = [
-  "crates/nexus-core",
+  "packages/nexus-core",
   "packages/nexus-hal",
   "packages/nexus-assets",
   "packages/nexus-renderer",
