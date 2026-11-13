@@ -12,6 +12,7 @@
 //   6. the editor crate     → packages/nexus-editor/ (this branch)
 //   7. the engine facade    → packages/nexus-engine/ (this branch)
 //   8. the script crate     → packages/nexus-script/ (this branch)
+//   9. the renderer crate   → packages/nexus-renderer/ (this branch)
 //   9. the merge crate      → packages/nexus-merge/  (this branch)
 //  10. the SDK subtree      → packages/sdks/         (this branch)
 //
@@ -29,14 +30,19 @@
 // at all, so nothing had to be re-anchored — yet a stale member path or
 // a stale mention in a doc still points at a crate that is gone.
 // The editor crate moved the same way, re-anchoring its four path deps
-// (nexus-core and nexus-renderer stay in crates/, HAL and agent are siblings).
+// (nexus-core stays in crates/, HAL, agent and the renderer are siblings).
 // The engine facade moved the same way: its nine path deps split at the new
-// depth — nexus-core and nexus-renderer stay under crates/ one level deeper,
-// the seven crates under packages/ become siblings. The script crate moved
+// depth — nexus-core alone stays under crates/ one level deeper,
+// the eight crates under packages/ become siblings. The script crate moved
 // the same way after them: its single outbound path dep (nexus-core)
 // re-anchors one level deeper, and its inbound consumers — the engine
 // facade, the agent crate and the 16 genre crates — re-anchor to sibling
 // depth under packages/.
+// The renderer crate moved the same way: it now sits beside HAL, assets and
+// the engine facade under packages/, so its own three path deps split at the
+// new depth (nexus-core stays under crates/ one level deeper, HAL and assets
+// are siblings) — and every consumer (the editor, the engine facade and the
+// five style crates) has to point at the new root instead of the old one.
 //
 // Every invariant below is asserted statically — no cargo, no network — so
 // the guard runs in the bun-test pass of `bin/check`.
@@ -88,6 +94,12 @@ const SCRIPT = 'packages/nexus-script';
 /** Its pre-move location, derived so this guard never spells it literally —
  *  a literal here would put the legacy path back into the tree. */
 const OLD_SCRIPT = SCRIPT.replace('packages/', 'crates/');
+
+/** The renderer crate — moved out of crates/ by this branch. */
+const RENDERER = 'packages/nexus-renderer';
+/** Its pre-move location, derived so this guard never spells it literally —
+ *  a literal here would put the legacy path back into the tree. */
+const OLD_RENDERER = RENDERER.replace('packages/', 'crates/');
 
 /** The merge crate stays Rust-only, with no dependencies to re-anchor. */
 const MERGE = 'packages/nexus-merge';
@@ -147,12 +159,12 @@ const NAMING_FILES = [
  * the agent crate moved independently of the genre move, so the genre guard must
  * not disturb them. The assets, audio and CLI crates left crates/ with this
  * branch, so their new homes are asserted here too. The editor, engine
- * facade, script and merge crates left crates/ with this branch as well. */
+ * facade, script, renderer and merge crates left crates/ with this branch as well. */
 const UNMOVED_PATHS = [
   'crates/nexus-core',
   'packages/nexus-hal',
   'packages/nexus-assets',
-  'crates/nexus-renderer',
+  RENDERER,
   'packages/nexus-audio',
   SCRIPT,
   'packages/nexus-agent',
@@ -266,6 +278,17 @@ function genresStylesPaths(text: string): unknown[] {
 /** This guard file — it has to name the pre-move location in order to detect it. */
 const SELF = 'scripts/tests/workspace-layout.test.ts';
 
+/**
+ * Platform merge-gate file. The merge gate refuses every transform of it
+ * (`gate_path_edit_unproven`: a gate-file edit cannot be machine-proven not
+ * to weaken later checks), so a relocation PR must ship it at the base-branch
+ * bytes — its pre-move ownership entries stay until a person-opened PR
+ * repoints them. GitHub already treats ownership entries for deleted paths as
+ * advisory no-ops; the file's own header says so. Skip exactly this path in
+ * `staleLocationRefs` below; every other file stays fully guarded.
+ */
+const GATE_OWNED_CODEOWNERS = '.github/CODEOWNERS';
+
 /** Every file under `dir`, skipping non-repo directories. */
 function* walkFiles(dir: string): Generator<string> {
   if (!existsSync(dir)) return;
@@ -289,6 +312,7 @@ function staleRootIn(text: string): string | undefined {
   if (text.includes(OLD_EDITOR)) return OLD_EDITOR;
   if (text.includes(OLD_ENGINE)) return OLD_ENGINE;
   if (text.includes(OLD_SCRIPT)) return OLD_SCRIPT;
+  if (text.includes(OLD_RENDERER)) return OLD_RENDERER;
   if (text.includes(OLD_MERGE)) return OLD_MERGE;
   if (text.includes(OLD_SDKS)) return OLD_SDKS;
   return undefined;
@@ -306,6 +330,9 @@ function staleLocationRefs(): { file: string; stale: string }[] {
     // SELF comparison and every reported hit are forward-slash repo-relative.
     const rel = relative(REPO_ROOT, file).replaceAll('\\', '/');
     if (rel === SELF) continue;
+    // Gate-owned: see GATE_OWNED_CODEOWNERS. Its base-branch bytes keep the
+    // pre-move renderer entry, which no transform of this file may clean.
+    if (rel === GATE_OWNED_CODEOWNERS) continue;
     const stale = staleRootIn(text);
     if (stale !== undefined) hits.push({ file: rel, stale });
   }
@@ -341,7 +368,7 @@ describe('HAL workspace relocation', () => {
       audio: `${AUDIO}/Cargo.toml`,
       editor: `${EDITOR}/Cargo.toml`,
       engine: `${ENGINE}/Cargo.toml`,
-      renderer: 'crates/nexus-renderer/Cargo.toml',
+      renderer: `${RENDERER}/Cargo.toml`,
     };
     for (const manifest of Object.values(consumers)) {
       dependency(manifest, 'nexus-hal', HAL);
@@ -513,7 +540,7 @@ describe('editor workspace relocation', () => {
 
   it('resolves the outbound path deps from the new depth', () => {
     dependency(`${EDITOR}/Cargo.toml`, 'nexus-core', 'crates/nexus-core');
-    dependency(`${EDITOR}/Cargo.toml`, 'nexus-renderer', 'crates/nexus-renderer');
+    dependency(`${EDITOR}/Cargo.toml`, 'nexus-renderer', RENDERER);
     dependency(`${EDITOR}/Cargo.toml`, 'nexus-hal', HAL);
     dependency(`${EDITOR}/Cargo.toml`, 'nexus-agent', AGENT);
   });
@@ -555,11 +582,10 @@ describe('engine workspace relocation', () => {
   });
 
   it('resolves the outbound path deps from the new depth', () => {
-    // Two deps stay under crates/ and are now one level deeper; the seven
-    // crates under packages/ — nexus-script joined them with this move —
-    // are siblings of the facade.
+    // Core alone stays under crates/ one level deeper; the eight crates
+    // under packages/ are siblings of the facade.
     dependency(`${ENGINE}/Cargo.toml`, 'nexus-core', 'crates/nexus-core');
-    dependency(`${ENGINE}/Cargo.toml`, 'nexus-renderer', 'crates/nexus-renderer');
+    dependency(`${ENGINE}/Cargo.toml`, 'nexus-renderer', RENDERER);
     dependency(`${ENGINE}/Cargo.toml`, 'nexus-script', SCRIPT);
     dependency(`${ENGINE}/Cargo.toml`, 'nexus-hal', HAL);
     dependency(`${ENGINE}/Cargo.toml`, 'nexus-assets', ASSETS);
@@ -624,6 +650,79 @@ describe('script workspace relocation', () => {
     expect(coverage).toContain(`- ${SCRIPT}/`);
     expect(labels).not.toContain(OLD_SCRIPT);
     expect(coverage).not.toContain(OLD_SCRIPT);
+  });
+});
+
+describe('renderer workspace relocation', () => {
+  /** The renderer crate owns a shaders placeholder on top of the four crate files. */
+  const RENDERER_FILES = [
+    'Cargo.toml',
+    'README.md',
+    'shaders/.keep',
+    'src/lib.rs',
+    'tests/smoke.rs',
+  ] as const;
+
+  /** The style crates that depend on the renderer. */
+  const STYLE_CRATES = ['2d', 'mixed', 'npr', 'pbr', 'pixel'] as const;
+
+  it('keeps the five renderer crate files only at the new root', () => {
+    for (const file of RENDERER_FILES) {
+      expect(exists(RENDERER, file)).toBe(true);
+      const header = readText(RENDERER, file).split('\n').slice(0, 15).join('\n');
+      expect(header).toContain('SPDX-License-Identifier: MIT');
+    }
+    expect(exists(OLD_RENDERER)).toBe(false);
+    expect(toml(`${RENDERER}/Cargo.toml`).package.name).toBe('nexus-renderer');
+  });
+
+  it('registers the renderer exactly once in the root Cargo workspace', () => {
+    const members = cargoMembers(readText('Cargo.toml'));
+    expect(members.filter((member) => member === RENDERER)).toHaveLength(1);
+    expect(members).not.toContain(OLD_RENDERER);
+  });
+
+  it('keeps the renderer Rust-only without a Bun adapter or lock entry', () => {
+    expect(exists(RENDERER, 'package.json')).toBe(false);
+    const members = json<{ workspaces: string[] }>('package.json').workspaces;
+    expect(members).not.toContain(RENDERER);
+    expect(parseBunLock().workspaces?.[RENDERER]).toBeUndefined();
+  });
+
+  it('resolves the outbound path deps from the new depth', () => {
+    // nexus-core stays under crates/ one level deeper; HAL and assets are
+    // siblings of the renderer crate.
+    dependency(`${RENDERER}/Cargo.toml`, 'nexus-core', 'crates/nexus-core');
+    dependency(`${RENDERER}/Cargo.toml`, 'nexus-hal', HAL);
+    dependency(`${RENDERER}/Cargo.toml`, 'nexus-assets', ASSETS);
+  });
+
+  it('resolves every inbound dependency on the new root', () => {
+    dependency(`${EDITOR}/Cargo.toml`, 'nexus-renderer', RENDERER);
+    dependency(`${ENGINE}/Cargo.toml`, 'nexus-renderer', RENDERER);
+    for (const style of STYLE_CRATES) {
+      dependency(`packages/styles/nexus-style-${style}/Cargo.toml`, 'nexus-renderer', RENDERER);
+    }
+  });
+
+  it('derives the legacy renderer path instead of spelling it, and flags it', () => {
+    // Spelling the legacy path here would put it straight back into the tree
+    // and break the tree-wide rule this guard exists to hold.
+    expect(read(SELF)).not.toContain(OLD_RENDERER);
+    // The guard must still catch a file that holds the old path…
+    expect(staleRootIn(`path = "${OLD_RENDERER}"`)).toBe(OLD_RENDERER);
+    expect(staleRootIn(`path = "${RENDERER}"`)).toBeUndefined();
+    // …and no file outside this guard may hold it.
+    expect(staleLocationRefs().filter((hit) => hit.stale === OLD_RENDERER)).toEqual([]);
+  });
+
+  it('keeps the area/renderer label and the systems coverage flag on the new root', () => {
+    const labels = block(read('.github/labeler.yml'), 'area/renderer:', 'area/physics:');
+    const coverage = block(read('codecov.yml'), '  systems:', '  agent:');
+    expect(labels).toContain(`- ${RENDERER}/**`);
+    expect(coverage).toContain(`- ${RENDERER}/`);
+    expect(labels).not.toContain(OLD_RENDERER);
+    expect(coverage).not.toContain(OLD_RENDERER);
   });
 });
 

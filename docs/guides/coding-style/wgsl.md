@@ -11,7 +11,7 @@ Validation: `naga-cli validate` runs in CI. Hot reload: every shader must round-
 
 | Path | Contains |
 |------|----------|
-| `crates/nexus-renderer/shaders/*.wgsl` | engine-provided shaders |
+| `packages/nexus-renderer/shaders/*.wgsl` | engine-provided shaders |
 | `crates/nexus-styles/<style>/shaders/*.wgsl` | style-pack shaders |
 | `<game>/assets/shaders/*.wgsl` | game-specific shaders |
 | `<game>/assets/shaders/*.wgsli` | include-only fragments (preprocessed) |

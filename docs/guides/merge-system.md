@@ -312,7 +312,7 @@ Options:
 ```
 nexus-merge ❌  stage: review   reviewer: errors
 
-crates/renderer/src/pass.rs:142
+packages/nexus-renderer/src/pass.rs:142
 > return Err("texture not found".into());
 
 Violates principle #10: structured errors only.

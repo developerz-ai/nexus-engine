@@ -17,7 +17,7 @@ Related specs:
 | Role | Crate | File of record |
 |---|---|---|
 | Provider (asset registry, IO, decode) | `nexus-assets` | `packages/nexus-assets/src/lib.rs` |
-| Consumer (GPU uploader, samplers, pipelines) | `nexus-renderer` | `crates/renderer/src/gpu_upload.rs` |
+| Consumer (GPU uploader, samplers, pipelines) | `nexus-renderer` | `packages/nexus-renderer/src/gpu_upload.rs` |
 | Shared | `nexus-core` | `AssetId` defined in `crates/core/src/asset_id.rs` |
 
 Pattern reference: wgpu `Queue::write_buffer` / `Queue::write_texture` (data copied immediately to staging, GPU upload deferred to next `submit`) — see https://docs.rs/wgpu/latest/wgpu/struct.Queue.html. UE5 virtual texture / streaming page server. bgfx "memory" lifetime model.

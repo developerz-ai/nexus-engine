@@ -10,7 +10,7 @@
 #   - docs/specs/renderer/shaders.md (when authored)
 #
 # No WGSL files exist yet; this file is policy. The `.keep` under
-# `crates/nexus-renderer/shaders/` preserves the expected target dir.
+# `packages/nexus-renderer/shaders/` preserves the expected target dir.
 
 [validation]
 # Strict means: every WGSL feature naga knows about is validated, including:
@@ -26,8 +26,8 @@ warnings_as_errors = true
 [targets]
 # Every shader Nexus ships goes here. Globs are evaluated from repo root.
 include = [
-  "crates/nexus-renderer/shaders/**/*.wgsl",
-  "crates/nexus-renderer/src/**/*.wgsl",
+  "packages/nexus-renderer/shaders/**/*.wgsl",
+  "packages/nexus-renderer/src/**/*.wgsl",
   "packages/styles/nexus-style-pbr/shaders/**/*.wgsl",
   "packages/styles/nexus-style-pbr/src/**/*.wgsl",
   "packages/styles/nexus-style-npr/shaders/**/*.wgsl",

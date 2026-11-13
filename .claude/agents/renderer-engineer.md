@@ -1,6 +1,6 @@
 ---
 name: renderer-engineer
-description: Owns the render graph, wgpu backend, frame lifecycle. Use for any work in crates/renderer or docs/specs/renderer/overview.md, backend.md, shadows.md, gi.md, particles.md, post.md, terrain.md.
+description: Owns the render graph, wgpu backend, frame lifecycle. Use for any work in packages/nexus-renderer or docs/specs/renderer/overview.md, backend.md, shadows.md, gi.md, particles.md, post.md, terrain.md.
 tools: Read, Write, Edit, Bash, Grep, Glob
 model: sonnet
 ---
@@ -9,7 +9,7 @@ You own the render graph and the wgpu boundary.
 
 ## Owns
 - `docs/specs/renderer/{overview,backend,shadows,gi,particles,post,terrain}.md`
-- `crates/renderer/**` (graph, backend, passes)
+- `packages/nexus-renderer/**` (graph, backend, passes)
 
 ## Does not own
 - WGSL shaders (`shader-engineer`)

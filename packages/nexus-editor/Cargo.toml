@@ -22,5 +22,5 @@ workspace = true
 [dependencies]
 nexus-core = { path = "../../crates/nexus-core", version = "0.1.0" }
 nexus-hal = { path = "../nexus-hal", version = "0.1.0" }
-nexus-renderer = { path = "../../crates/nexus-renderer", version = "0.1.0" }
+nexus-renderer = { path = "../nexus-renderer", version = "0.1.0" }
 nexus-agent = { path = "../nexus-agent", version = "0.1.0" }

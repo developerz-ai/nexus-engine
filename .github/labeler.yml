@@ -16,7 +16,7 @@ area/core:
 area/renderer:
   - changed-files:
       - any-glob-to-any-file:
-          - crates/nexus-renderer/**
+          - packages/nexus-renderer/**
           - packages/styles/**
 
 area/physics:

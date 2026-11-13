@@ -256,7 +256,7 @@ Two test layers:
 2. Functional: shader unit harness that runs a compute shader on the null backend with known inputs/outputs.
 
 ```rust
-// crates/nexus-renderer/tests/shader_brdf.rs
+// packages/nexus-renderer/tests/shader_brdf.rs
 #[test]
 fn ggx_returns_zero_when_below_horizon() {
     let result = run_compute_shader(

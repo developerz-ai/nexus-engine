@@ -23,7 +23,7 @@ You own memory. Predictability beats peak throughput.
 
 ## Workflow
 1. Read spec + budgets table.
-2. Impl per spec. Wire allocators into `crates/core/ecs`, `crates/renderer`, `crates/audio`, `crates/networking`.
+2. Impl per spec. Wire allocators into `crates/core/ecs`, `packages/nexus-renderer`, `crates/audio`, `crates/networking`.
 3. Add `dhat` regression test under `crates/core/memory/tests/dhat_*.rs`.
 4. `perf-engineer` runs alloc benches.
 

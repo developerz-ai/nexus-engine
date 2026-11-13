@@ -54,16 +54,16 @@ Finally, `cargo audit` is attempted as **advisory, nonblocking**, matching CI (`
 ## Structure
 | Path | Count | Contents |
 |---|---|---|
-| `crates/` | 2 | 2 system crates · 4 `.rs` files |
-| `packages/` | 33 | `packages/nexus-hal` 1 system crate + `packages/nexus-assets` `packages/nexus-net` `packages/nexus-physics` `packages/nexus-agent` `packages/nexus-audio` `packages/nexus-cli` `packages/nexus-editor` `packages/nexus-engine` `packages/nexus-script` `packages/nexus-merge` 10 relocated system crates + `packages/sdks/nexus-agent-sdk-rs` 1 SDK + `packages/genres/` 16 + `packages/styles/` 5 · 66 `.rs` files · HAL's and the agent crate's private Bun workspace adapters |
-| system crates | 13 | `crates/nexus-core` `packages/nexus-hal` `packages/nexus-assets` `crates/nexus-renderer` `packages/nexus-physics` `packages/nexus-audio` `packages/nexus-net` `packages/nexus-script` `packages/nexus-agent` `packages/nexus-editor` `packages/nexus-cli` `packages/nexus-merge` `packages/nexus-engine` |
+| `crates/` | 1 | 1 system crate · 2 `.rs` files |
+| `packages/` | 34 | `packages/nexus-hal` 1 system crate + `packages/nexus-assets` `packages/nexus-net` `packages/nexus-physics` `packages/nexus-renderer` `packages/nexus-agent` `packages/nexus-audio` `packages/nexus-cli` `packages/nexus-editor` `packages/nexus-engine` `packages/nexus-script` `packages/nexus-merge` 11 relocated system crates + `packages/sdks/nexus-agent-sdk-rs` 1 SDK + `packages/genres/` 16 + `packages/styles/` 5 · 68 `.rs` files · HAL's and the agent crate's private Bun workspace adapters |
+| system crates | 13 | `crates/nexus-core` `packages/nexus-hal` `packages/nexus-assets` `packages/nexus-renderer` `packages/nexus-physics` `packages/nexus-audio` `packages/nexus-net` `packages/nexus-script` `packages/nexus-agent` `packages/nexus-editor` `packages/nexus-cli` `packages/nexus-merge` `packages/nexus-engine` |
 | `games/` | 4 | `games/nexus-fps` `games/nexus-platformer` `games/nexus-rpg` `games/nexus-rts` |
 | `tools/` | 2 | `tools/nexus-codegen` `tools/nexus-scenario` |
 | `scripts/` | 62 | Bun workspace · 14 scripts under `scripts/bin/` · one test per bin · count excludes `scripts/CLAUDE.md` |
 | `docs/` | 413 `.md` | `docs/architecture/` · `docs/specs/` · `docs/contracts/` · `docs/guides/` · `docs/prior-art/` · `docs/game-template/` · `docs/games/` |
 | `.claude/` | 119 / 14 / 15 | agents / commands / skills |
 
-Cargo workspace = `crates/` + `packages/` + `games/` + `tools/` (`Cargo.toml:10-30`). Bun workspace = `scripts/` + `packages/nexus-hal/` + `packages/genres/` + `packages/nexus-agent/` + `packages/styles/*` (`package.json:5`); HAL's and the agent crate's private adapters add no JS implementation, the `packages/styles/*` glob matches nothing (no per-style `package.json`), and `packages/nexus-net` / `packages/nexus-physics` / `packages/nexus-assets` / `packages/nexus-audio` / `packages/nexus-cli` / `packages/nexus-engine` / `packages/nexus-script` / `packages/nexus-merge` / `packages/sdks/nexus-agent-sdk-rs` are Cargo-workspace members, not Bun workspaces. The SDK subtree is Cargo-only; Python remains a deferred placeholder outside the workspace.
+Cargo workspace = `crates/` + `packages/` + `games/` + `tools/` (`Cargo.toml:10-30`). Bun workspace = `scripts/` + `packages/nexus-hal/` + `packages/genres/` + `packages/nexus-agent/` + `packages/styles/*` (`package.json:5`); HAL's and the agent crate's private adapters add no JS implementation, the `packages/styles/*` glob matches nothing (no per-style `package.json`), and `packages/nexus-net` / `packages/nexus-physics` / `packages/nexus-assets` / `packages/nexus-audio` / `packages/nexus-renderer` / `packages/nexus-cli` / `packages/nexus-engine` / `packages/nexus-script` / `packages/nexus-merge` / `packages/sdks/nexus-agent-sdk-rs` are Cargo-workspace members, not Bun workspaces. The SDK subtree is Cargo-only; Python remains a deferred placeholder outside the workspace.
 
 ## Conventions
 | Rule | Where |
@@ -325,7 +325,7 @@ When in doubt: vision → `docs/architecture/00-vision.md` · law → `docs/arch
 2. Pick from `docs/architecture/decisions-open.md` (`[DECISION NEEDED]`) and `docs/architecture/benchmarks-pending.md` (`[BENCHMARK NEEDED]`); spawn the relevant subagent from the routing table above.
 3. Cross-check `docs/architecture/cross-agent-flags.md` if the task touches a file authored by multiple agents.
 
-Engine source exists but is Phase 0 scaffold — 35 crates, 70 `.rs` files under `crates/` (2 crates, 4 files) and `packages/` (HAL + net + physics + agent + assets + audio + cli + editor + engine + script + merge + 1 SDK + 5 styles + 16 genres, 33 crates, 66 files), 4 games, 2 tools; every crate, game and tool declares `Status: stub (Phase 0 scaffold)` (`crates/nexus-core/src/lib.rs:7`). The tree stays spec-driven (Law 2): new behavior starts at a spec.
+Engine source exists but is Phase 0 scaffold — 35 crates, 70 `.rs` files under `crates/` (1 crate, 2 files) and `packages/` (HAL + net + physics + agent + assets + audio + cli + editor + engine + script + renderer + merge + 1 SDK + 5 styles + 16 genres, 34 crates, 68 files), 4 games, 2 tools; every crate, game and tool declares `Status: stub (Phase 0 scaffold)` (`crates/nexus-core/src/lib.rs:7`). The tree stays spec-driven (Law 2): new behavior starts at a spec.
 
 ## Note
 No git worktrees — work directly in this checkout. If a task needs subagents, run them as a team in this same checkout: split the work into disjoint pieces so no two agents touch the same files.
