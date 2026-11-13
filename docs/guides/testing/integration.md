@@ -22,7 +22,7 @@ Multiple crates wired together. Real internal APIs. Mocked external boundaries o
 `crates/<name>/tests/` directory. One file per scenario family.
 
 ```
-crates/nexus-renderer/
+packages/nexus-renderer/
 └── tests/
     ├── common/
     │   └── mod.rs                  # shared fixtures (test world, null backend)

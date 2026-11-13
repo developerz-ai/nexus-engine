@@ -37,7 +37,7 @@ Skills: `.claude/skills/babysit-pr/` (driver) and siblings. Subagent fleet: `CLA
 
 Independent fixes → dispatch in parallel in one message:
 ```
-Agent({ subagent_type: "renderer-engineer", prompt: "Fix CR thread PRRT_a in crates/renderer/src/shadow.rs:142 — accepted, summary: …" })
+Agent({ subagent_type: "renderer-engineer", prompt: "Fix CR thread PRRT_a in packages/nexus-renderer/src/shadow.rs:142 — accepted, summary: …" })
 Agent({ subagent_type: "network-engineer",  prompt: "Fix CR thread PRRT_b in crates/networking/src/replication.rs:88 — accepted, summary: …" })
 Agent({ subagent_type: "spec-author",       prompt: "Add missing section to docs/specs/renderer/shadows.md per CR thread PRRT_c — accepted, summary: …" })
 ```

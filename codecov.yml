@@ -51,7 +51,7 @@ flags:
       - packages/nexus-hal/
   systems:
     paths:
-      - crates/nexus-renderer/
+      - packages/nexus-renderer/
       - packages/nexus-physics/
       - packages/nexus-audio/
       - packages/nexus-net/

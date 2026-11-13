@@ -11,7 +11,7 @@ members = [
   "packages/nexus-core",
   "packages/nexus-hal",
   "packages/nexus-assets",
-  "crates/nexus-renderer",
+  "packages/nexus-renderer",
   "packages/nexus-physics",
   "packages/nexus-audio",
   "packages/nexus-net",

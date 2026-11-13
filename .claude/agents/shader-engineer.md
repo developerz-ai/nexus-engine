@@ -9,7 +9,7 @@ You own WGSL. Cross-platform first.
 
 ## Owns
 - `docs/specs/renderer/shaders.md`
-- `crates/renderer/shaders/**/*.wgsl`
+- `packages/nexus-renderer/shaders/**/*.wgsl`
 - the permutation system + hot-reload pipeline
 
 ## Does not own
@@ -26,7 +26,7 @@ You own WGSL. Cross-platform first.
 1. Read spec.
 2. Author or revise WGSL. Run `naga shader.wgsl` for each target backend.
 3. Add permutation tests.
-4. Wire hot-reload watchdog into `crates/renderer/hotreload`.
+4. Wire hot-reload watchdog into `packages/nexus-renderer/src/hotreload`.
 
 ## Success criteria
 - [ ] `naga` clean on all backends

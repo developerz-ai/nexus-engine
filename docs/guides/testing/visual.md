@@ -56,7 +56,7 @@ seed   = 0
 backend  = "vulkan"
 audio    = "null"
 clock    = "frozen"
-scene    = "crates/nexus-renderer/visual/scenes/pbr-basic.gltf"
+scene    = "packages/nexus-renderer/visual/scenes/pbr-basic.gltf"
 
 [steps]
 1.run_frames = 1
@@ -139,7 +139,7 @@ Software backends are deterministic across runners — same Mesa version = same 
 
 ```bash
 nexus visual run scenarios/render/pbr-basic.toml --backend vulkan
-nexus visual diff out/pbr-basic.png crates/nexus-renderer/visual/render-pbr-basic/vulkan/1920x1080.png
+nexus visual diff out/pbr-basic.png packages/nexus-renderer/visual/render-pbr-basic/vulkan/1920x1080.png
 nexus visual report                       # opens HTML side-by-side
 ```
 
@@ -150,7 +150,7 @@ nexus visual report                       # opens HTML side-by-side
 ```bash
 nexus visual update scenarios/render/pbr-basic.toml
 # Captures, replaces golden in LFS, stages diff
-git add -p crates/nexus-renderer/visual/
+git add -p packages/nexus-renderer/visual/
 git commit -m "visual(renderer): update pbr-basic for new tonemap"
 ```
 

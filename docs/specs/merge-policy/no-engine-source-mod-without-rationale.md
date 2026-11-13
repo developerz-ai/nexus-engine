@@ -13,7 +13,7 @@
 
 A pull request that:
 
-1. Modifies any file under `crates/nexus-{core,renderer,physics,audio,networking,scripting,assets,editor}/src/**` or `packages/nexus-agent/src/**` AND
+1. Modifies any file under `crates/nexus-{core,physics,audio,networking,scripting,assets,editor}/src/**`, `packages/nexus-renderer/src/**` or `packages/nexus-agent/src/**` AND
 2. Does NOT link to an approved RFC/ADR (`docs/architecture/05-adr/NNNN-*.md` with Status: Accepted)
 
 is **auto-rejected** by `nexus-merge` with a structured rejection payload (below) before any other reviewer sees it.
@@ -54,7 +54,7 @@ The bot posts this as the first block in its comment. `nexus-coder` and downstre
   "pr": { "number": 1234, "repo": "sebyx07/nexus-engine", "sha": "abc123" },
   "violations": [
     {
-      "path": "crates/nexus-renderer/src/gi.rs",
+      "path": "packages/nexus-renderer/src/gi.rs",
       "change_type": "addition",
       "summary": "adds new public function `bake_lightprobes`",
       "expressible_as": "render-pass-plugin",
@@ -92,7 +92,7 @@ The bot's comment continues:
 
 This PR modifies engine-core source. Nexus is closed for source modification, open for extension (`docs/architecture/07-extend-dont-fork.md`).
 
-The change at **crates/nexus-renderer/src/gi.rs** is expressible as a **`RenderPass` plugin** in a community crate.
+The change at **packages/nexus-renderer/src/gi.rs** is expressible as a **`RenderPass` plugin** in a community crate.
 
 **Cookbook recipe:** [§1 — I need a custom rendering technique](docs/guides/extend-not-fork-cookbook.md#1-i-need-a-custom-rendering-technique-eg-my-own-gi)
 **Suggested crate name:** `nexus-renderer-customgi`
@@ -125,7 +125,7 @@ The JSON block always precedes the markdown. Automation parses the JSON; humans 
 | Glob | Reason it's protected |
 |---|---|
 | `packages/nexus-core/src/**` | Substrate — extensions cannot reach into the substrate |
-| `crates/nexus-renderer/src/**` | Render pipeline — use `RenderPass` plugins |
+| `packages/nexus-renderer/src/**` | Render pipeline — use `RenderPass` plugins |
 | `packages/nexus-physics/src/**` | Physics core — use `PhysicsBackend` |
 | `packages/nexus-audio/src/**` | Audio core — use `AudioBackend` / `DspPack` |
 | `packages/nexus-net/src/**` | Net stack — use `NetTransport` |

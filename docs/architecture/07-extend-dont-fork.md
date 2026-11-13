@@ -168,7 +168,7 @@ Recipe-per-reason mapping: → `docs/guides/extend-not-fork-cookbook.md`.
 
 ## Merge-bot enforcement
 
-A PR that modifies engine-core source (`crates/nexus-{core,renderer,physics,audio,networking,scripting,assets,editor}/src/**` or `packages/nexus-agent/src/**`) for a feature expressible as an extension is **auto-rejected**. The bot comment redirects the contributor to:
+A PR that modifies engine-core source (`crates/nexus-{core,physics,audio,networking,scripting,assets,editor}/src/**`, `packages/nexus-renderer/src/**` or `packages/nexus-agent/src/**`) for a feature expressible as an extension is **auto-rejected**. The bot comment redirects the contributor to:
 
 1. The migration cookbook entry for their use case.
 2. The right extension surface (crate / plugin / mod / script / agent RPC).

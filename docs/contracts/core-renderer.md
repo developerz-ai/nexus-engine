@@ -18,7 +18,7 @@ Related specs:
 |---|---|---|
 | Provider (data) | `nexus-core` | `crates/core/src/lib.rs` (ECS world, schedule) |
 | Provider (window/surface) | `nexus-hal` | `crates/hal/src/window.rs` |
-| Consumer | `nexus-renderer` | `crates/renderer/src/lib.rs` (impl `Plugin`) |
+| Consumer | `nexus-renderer` | `packages/nexus-renderer/src/lib.rs` (impl `Plugin`) |
 
 Pattern reference: Bevy `Plugin` trait — renderer registers itself into the core schedule, not the other way around. Cf. `bevyengine/bevy` `RenderPlugin`. Liskov-substitutable: any backend that satisfies `RendererBackend` (see §Provided API) is swappable. (Bertrand Meyer, *Object-Oriented Software Construction*, 2nd ed., ch. 11 — Design by Contract.)
 

@@ -55,7 +55,7 @@ done < /tmp/cr-accept.jsonl
 |---|---|
 | `crates/core/ecs/**` | `ecs-engineer` |
 | `crates/core/memory/**` | `memory-engineer` |
-| `crates/renderer/**` | `renderer-engineer` (style → `pbr-specialist` etc.) |
+| `packages/nexus-renderer/**` | `renderer-engineer` (style → `pbr-specialist` etc.) |
 | `crates/physics/**` | `physics-engineer` |
 | `crates/audio/**` | `audio-engineer` |
 | `crates/networking/**` | `network-engineer` |

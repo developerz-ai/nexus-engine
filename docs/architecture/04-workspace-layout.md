@@ -30,8 +30,8 @@ nexus-engine/
 │   ├── game-template/
 │   ├── games/
 │   └── initial/
-├── crates/                          # remaining engine crates (systems + sub-crates)
-│   └── nexus-renderer/
+├── crates/                          # empty — every engine crate now lives under packages/
+
 ├── packages/                        # members relocated out of crates/ (Rust, or Rust + a JS adapter)
 │   ├── genres/
 │   │   ├── nexus-genre-fps/
@@ -61,6 +61,7 @@ nexus-engine/
 │   ├── nexus-merge/                 # the AI maintainer's lint/check library
 │   ├── nexus-net/                   # relocated system crate (transport, quinn)
 │   ├── nexus-physics/               # relocated system crate (rapier)
+│   ├── nexus-renderer/              # relocated system crate (wgpu, naga)
 │   ├── nexus-script/                # relocated system crate (Lua + Rune scripting, hot reload, sandbox)
 │   ├── sdks/
 │   │   ├── nexus-agent-sdk-rs/       # Rust SDK (explicit Cargo member)
@@ -86,28 +87,25 @@ nexus-engine/
 
 ---
 
-`nexus-core`, `nexus-hal`, the five style modules, `nexus-net`, `nexus-physics`,
-`nexus-agent`, `nexus-assets`, `nexus-audio`, `nexus-cli`, `nexus-editor`,
-`nexus-engine`, `nexus-script`, `nexus-merge` and the sixteen genre crates live under
-`packages/`, alongside the SDK subtree at `packages/sdks/`. The remaining engine crate
-(`nexus-renderer`) stays under `crates/`, and dependency boundaries are unchanged. The
-root Cargo workspace includes `packages/nexus-core`, `packages/nexus-hal`,
-`packages/nexus-net`, `packages/nexus-physics`, `packages/nexus-assets`,
-`packages/nexus-audio`, `packages/nexus-cli`, `packages/nexus-editor`,
-`packages/nexus-agent`, `packages/nexus-engine`, `packages/nexus-script`,
-`packages/nexus-merge`, `packages/{genres,styles}/*` and the explicit member
-`packages/sdks/nexus-agent-sdk-rs`. Python remains deferred and excluded:
-`packages/sdks/nexus-agent-sdk-py` contains only a `.placeholder`, not a Cargo
-manifest; no SDK wildcard is registered.
+`nexus-core`, `nexus-hal`, the five style modules, `nexus-net`, `nexus-physics`, `nexus-renderer`,
+`nexus-agent`, `nexus-assets`, `nexus-audio`, `nexus-cli`, `nexus-editor`, `nexus-engine`, `nexus-script`, `nexus-merge` and the sixteen genre crates live under
+`packages/`, alongside the SDK subtree at `packages/sdks/`; no engine crate remains under
+`crates/`, and dependency boundaries are unchanged.
+The root Cargo workspace includes `packages/nexus-core`, `packages/nexus-hal`, `packages/nexus-net`,
+`packages/nexus-physics`, `packages/nexus-renderer`, `packages/nexus-assets`, `packages/nexus-audio`,
+`packages/nexus-cli`, `packages/nexus-editor`, `packages/nexus-agent`, `packages/nexus-engine`,
+`packages/nexus-script`, `packages/nexus-merge`, `packages/{genres,styles}/*` and
+the explicit member `packages/sdks/nexus-agent-sdk-rs`.
+Python remains deferred and excluded: `packages/sdks/nexus-agent-sdk-py` contains
+only a `.placeholder`, not a Cargo manifest; no SDK wildcard is registered.
 The Bun workspace includes `scripts`, `packages/nexus-hal`, `packages/genres` and
 `packages/nexus-agent`. HAL's private, dependency-free `@nexus-engine/nexus-hal`
 adapter registers the Rust package without adding a JavaScript implementation, and
 `@nexus-engine/genres` groups the genre crates the same way; `packages/nexus-agent`
 ships the agent crate's own dependency-free adapter, and `packages/styles/*`,
 `packages/nexus-net`, `packages/nexus-physics`, `packages/nexus-assets`,
-`packages/nexus-audio`, `packages/nexus-cli`, `packages/nexus-core`,
-`packages/nexus-editor`, `packages/nexus-engine`, `packages/nexus-script`,
-`packages/nexus-merge` and `packages/sdks/nexus-agent-sdk-rs` stay Cargo-only,
+`packages/nexus-audio`, `packages/nexus-core`, `packages/nexus-renderer`, `packages/nexus-cli`, `packages/nexus-editor`, `packages/nexus-engine`,
+`packages/nexus-script`, `packages/nexus-merge` and `packages/sdks/nexus-agent-sdk-rs` stay Cargo-only,
 without Bun adapters.
 
 ## Workspace root `Cargo.toml` (shape only)
@@ -120,7 +118,7 @@ members = [
   "packages/nexus-core",
   "packages/nexus-hal",
   "packages/nexus-assets",
-  "crates/nexus-renderer",
+  "packages/nexus-renderer",
   "packages/nexus-physics",
   "packages/nexus-audio",
   "packages/nexus-net",
