@@ -190,7 +190,9 @@ test("someone's home directory and the setup mode fire", () => {
     "someone's home directory",
   ]);
   expect(violations(`ANDROID_HOME=${['', 'home', 'sdk'].join('/')}`, [])).toEqual([]);
-  expect(violations(`see ${['~', 'workspace', 'jane', 'repo', 'docs', 'a.md'].join('/')}`, [])).toEqual(["someone's home directory"]);
+  expect(
+    violations(`see ${['~', 'workspace', 'jane', 'repo', 'docs', 'a.md'].join('/')}`, []),
+  ).toEqual(["someone's home directory"]);
   expect(violations('keys live in ~/.ssh/ and ~/.nexus/coder/keys.toml', [])).toEqual([]);
   expect(violations(`a ${['RUNNER', 'DZ'].reverse().join('-')} box`, [])).toEqual([
     'setup-mode name',
