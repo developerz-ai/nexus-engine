@@ -9,8 +9,7 @@
 #   - .config/nextest.toml              ([profile.ci] retries=2, junit out)
 #
 # Runner:
-#   GitHub-hosted ubuntu-latest (org rule: private repos on Ubicloud, public on
-#   GitHub-hosted — free for a public repo).
+#   GitHub-hosted ubuntu-latest (free for a public repo).
 #
 # Matrix scope:
 #   Linux only for Phase 1. Windows / macOS / WASM are DEFERRED to a later
@@ -51,7 +50,7 @@ jobs:
   # ─── Rust: fmt ──────────────────────────────────────────────────────────────
   rust-fmt:
     name: rust / fmt
-    # GitHub-hosted runner (org rule: private repos on Ubicloud, public on GitHub-hosted).
+    # GitHub-hosted runner.
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -245,6 +244,11 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: bun test (scripts/)
+        env:
+          # The public-tree guard's private words (scripts/tests/public-tree.test.ts). Required on
+          # this repository's own runs, where the secret exists; forks and Dependabot get none.
+          PUBLIC_TREE_PRIVATE_WORDS: ${{ secrets.PUBLIC_TREE_PRIVATE_WORDS }}
+          PUBLIC_TREE_PRIVATE_WORDS_REQUIRED: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && github.actor != 'dependabot[bot]' && '1' || '' }}
         working-directory: scripts
         run: bun test
 

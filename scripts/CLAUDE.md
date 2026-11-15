@@ -3,7 +3,7 @@
 
 # developerz-ai/nexus-engine — scripts
 
-> Workspace brain — established by dz-runner setup mode from this workspace, then owned by
+> Workspace brain — owned by
 > its maintainers. Correct it in place; setup never overwrites a brain that exists.
 
 The Bun/TypeScript agent-facing CLI layer (`@nexus-engine/scripts`); a Bun workspace package of the root `package.json`, independent of the Cargo workspace.

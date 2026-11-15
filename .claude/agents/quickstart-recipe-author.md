@@ -28,7 +28,7 @@ You own quick-start recipes.
 - AI-agent path: `nexus coder bootstrap-from-recipe <name>`.
 
 ## Non-negotiables — style
-- Compressed-config style (`/home/superuser/workspace/sebyx07/claude-code-bible/docs/11-compressed-config.md`).
+- Compressed-config style (`https://github.com/sebyx07/claude-code-bible/blob/main/docs/11-compressed-config.md`).
 - Lead with the rule. Fragments OK. Tables for inventory.
 - No emoji, no filler, no meta-framing.
 - MIT header on every file.

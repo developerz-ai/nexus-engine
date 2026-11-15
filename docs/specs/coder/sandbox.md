@@ -50,7 +50,7 @@ nexus-engine/                  ← main checkout
 
 Each subagent process is launched with `cwd = .nexus/coder/worktrees/slot-K/`. The tool runtime resolves every path against this cwd; any path that escapes (`..` traversal, absolute outside) → `E_PATH_OUTSIDE_WORKTREE` → kill subagent + audit.
 
-Pattern reference: Aider / Claude Code subagent worktrees. → `~/workspace/sebyx07/claude-code-bible/docs/02-skills-agents-commands.md`.
+Pattern reference: Aider / Claude Code subagent worktrees. → `https://github.com/sebyx07/claude-code-bible/blob/main/docs/02-skills-agents-commands.md`.
 
 ---
 

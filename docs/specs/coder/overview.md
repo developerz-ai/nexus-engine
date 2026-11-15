@@ -88,7 +88,7 @@ Pattern reference: spec-driven dev as practiced in Bevy RFC process and Rust RFC
 ## Prior art
 
 - **Aider** ✓ — architect/editor split, repo-map context, edit-format pluggability. We generalize from 2 roles to N roles. (Aider blog, *Separating code reasoning and editing*, 2024.)
-- **Claude Code subagents** ✓ — parallel pre-configured personas with their own tool restrictions. → `~/workspace/sebyx07/claude-code-bible/docs/02-skills-agents-commands.md`.
+- **Claude Code subagents** ✓ — parallel pre-configured personas with their own tool restrictions. → `https://github.com/sebyx07/claude-code-bible/blob/main/docs/02-skills-agents-commands.md`.
 - **Vercel AI SDK** ✓ — provider-agnostic tool loops, streaming structured output, multi-step `maxSteps`. → `sdk.vercel.ai`.
 - **OpenRouter** ✓ — one API, all frontier + cheap + free models, transparent pricing, automatic provider fallback. → `openrouter.ai/docs`.
 - **GitHub Copilot Workspace** ✓ — plan-then-implement loop; we steal the loop, ditch the SaaS lock-in.

@@ -7,7 +7,7 @@
 
 → Models + cache awareness: `docs/specs/coder/models.md`
 → Tools that fetch context dynamically: `docs/specs/coder/tools.md`
-→ Style reference for compressed config: `~/workspace/sebyx07/claude-code-bible/docs/11-compressed-config.md`
+→ Style reference for compressed config: `https://github.com/sebyx07/claude-code-bible/blob/main/docs/11-compressed-config.md`
 
 ---
 
@@ -206,7 +206,7 @@ hand to subagent process
 
 ## Prior art
 
-- **Claude Code CLAUDE.md** ✓ — proves that a small, dense, hierarchical context file dramatically improves agent productivity. → `~/workspace/sebyx07/claude-code-bible/docs/11-compressed-config.md`.
+- **Claude Code CLAUDE.md** ✓ — proves that a small, dense, hierarchical context file dramatically improves agent productivity. → `https://github.com/sebyx07/claude-code-bible/blob/main/docs/11-compressed-config.md`.
 - **Aider repo map** ✓ — tree-sitter-based summary keeps the model oriented without loading whole files. → `https://aider.chat/`.
 - **Cursor `.cursorrules`** ✓ — same hierarchical pattern, smaller scope.
 - **Anthropic prompt caching** ✓ — make the stable prefix cheap. → `https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching`.
