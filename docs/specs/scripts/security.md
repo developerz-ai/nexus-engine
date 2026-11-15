@@ -105,6 +105,22 @@ Trail consumed by nexus-merge for post-incident forensics: `→ docs/guides/merg
 - writing inside `.git/`
 - modifying `.gitignore` programmatically
 
+## Public-tree guard
+
+This repository is public, so every tracked file is a public document. `scripts/tests/public-tree.test.ts` (run by `bun test` in `scripts/`) fails when a tracked file carries:
+
+| Rule | Example of what it refuses |
+|---|---|
+| a host on the organisation's own domain other than the public site | an internal service endpoint |
+| a private repository of the organisation, or a bare tracker reference to one | `<org>/<private-repo>#12`, `<private-repo> #12` |
+| someone's home or workspace directory | `/home/<user>/…`, `~/workspace/<user>/…` (generic placeholders and dotfile paths such as `~/.ssh/` pass) |
+| the name of the setup mode that once wrote agent files | — |
+| a private word | the CI provider of the organisation's private repositories, an adopter |
+
+- **Private words are never in the tree**, whole or as fragments: the guard reads them from the `PUBLIC_TREE_PRIVATE_WORDS` repository secret (comma- or newline-separated). CI's `bun test (scripts/)` step passes it and sets `PUBLIC_TREE_PRIVATE_WORDS_REQUIRED=1` on this repository's own runs, where an empty value fails; a fork's or Dependabot's run gets no secret and skips that rule with a warning.
+- **A failure names the file and the rule, never the matched text** — CI logs are public.
+- **Each rule is proven to fire** on a fixture in the same file, and a test pins CI's exact env lines, so removing or weakening the wiring fails the suite.
+
 ## References
 
 - OWASP Bash hardening — https://owasp.org/www-community/Use_a_Bash_Strict_Mode

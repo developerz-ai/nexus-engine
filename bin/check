@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# one-command check (typecheck + lint + test) — established by dz-runner setup mode. One command; adjust as the repo grows.
+# one-command check (typecheck + lint + test) — owned by this repository's maintainers. One command; adjust as the repo grows.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 # bin/setup puts the gate tools in the cargo and bun bin dirs but leaves them off PATH, so a

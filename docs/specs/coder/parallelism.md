@@ -214,7 +214,7 @@ Pattern reference: Erlang process isolation. No shared mutable state ⇒ no dead
 ## Prior art
 
 - **Aider** ✓ — proves parallel agent runs are productive even with two roles. → `https://aider.chat/2024/09/26/architect.html`.
-- **Claude Code subagents** ✓ — parallel pre-configured workers, each with own tool scope. → `~/workspace/sebyx07/claude-code-bible/docs/02-skills-agents-commands.md`.
+- **Claude Code subagents** ✓ — parallel pre-configured workers, each with own tool scope. → `https://github.com/sebyx07/claude-code-bible/blob/main/docs/02-skills-agents-commands.md`.
 - **Cilk / `rayon`** ✓ — work-stealing reference.
 - **Bazel** ✓ — DAG executor for build steps, same pattern.
 - **GitHub Actions matrix** ✗ — coarse, no work-stealing, no dep-DAG inside a job.

@@ -1,5 +1,5 @@
 # .dz/maintainer/maintainer.yml — how the developerz.ai maintainer agent may act on developerz-ai/nexus-engine.
-# Proposed by dz-runner setup mode; MERGING this pull request is the opt-in.
+# Proposed by the onboarding; MERGING this pull request is the opt-in.
 #
 # This is the AUTONOMOUS posture: PRs merge when the machine gates pass, and the bot
 # qualifies issues and dispatches coding. Releases follow the `release:` block below.

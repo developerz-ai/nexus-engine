@@ -6,7 +6,7 @@ allowed-tools: Read Edit Grep Glob Bash(git *)
 
 # coderabbit-config
 
-Single file: `/home/superuser/workspace/sebyx07/nexus-engine/.coderabbit.yaml`. Schema: `https://coderabbit.ai/integrations/schema.v2.json`.
+Single file: `.coderabbit.yaml`. Schema: `https://coderabbit.ai/integrations/schema.v2.json`.
 
 ## When to edit
 | Trigger | Edit |
