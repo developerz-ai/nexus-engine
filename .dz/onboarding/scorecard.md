@@ -1,6 +1,6 @@
 # AI-first scorecard
 
-> Written by the developerz.ai maintainer agent — owned by this repository's maintainers. Each onboarding run rewrites this file whole; the latest run wins, and the same card is stored on the platform.
+> Written by the developerz.ai maintainer agent. Each onboarding run rewrites this file whole; the latest run wins, and the same card is stored on the platform.
 
 - Computed: 2026-11-03T16:07:13.673Z
 - Proof: **proved** — every command ran green at head.
