@@ -1,12 +1,12 @@
 ---
 name: open-pr
-description: Open a PR from current branch with conventional-commits title, spec/contract refs, scenario tests, benchmark deltas. Marks draft until CI green. Triggers: open pr, create pr, ship branch, gh pr create.
+description: Open a PR from current branch with conventional-commits title, spec/contract refs, scenario tests, benchmark deltas. Triggers: open pr, create pr, ship branch, gh pr create.
 allowed-tools: Bash(git *) Bash(gh *) Read Grep Glob
 ---
 
 # open-pr
 
-Open one PR. Conventional-commits title. Body templated. Draft until CI green.
+Open one PR. Conventional-commits title. Body templated.
 
 ## Preconditions
 | Check | Command | Fail |
@@ -65,9 +65,8 @@ TITLE="$(git log -1 --pretty=%s)"
 # 3. Write body to file (template above, filled)
 $EDITOR /tmp/pr-body.md
 
-# 4. Open as draft
+# 4. Open
 gh pr create \
-  --draft \
   --base main \
   --title "$TITLE" \
   --body-file /tmp/pr-body.md
@@ -83,7 +82,7 @@ gh pr view --json url -q .url
 
 ## Output (JSON, for babysit-pr to parse)
 ```json
-{ "pr_url": "...", "pr_number": 123, "draft": true, "title": "..." }
+{ "pr_url": "...", "pr_number": 123, "title": "..." }
 ```
 
 ## Refs

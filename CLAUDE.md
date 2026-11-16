@@ -237,7 +237,7 @@ Canonical order: `/babysit-pr [PR#]` → `/open-pr` → `/wait-for-ci` → `/pr-
 
 | Skill | Purpose |
 |---|---|
-| `open-pr` | open PR from current branch (CC title + spec body + scenario list + bench deltas); draft until green |
+| `open-pr` | open PR from current branch (CC title + spec body + scenario list + bench deltas) |
 | `wait-for-ci` | block until checks finish; emit JSON verdict; handle reruns + timeout |
 | `wait-for-coderabbit` | block until `coderabbitai[bot]` posts review; re-trigger via @coderabbitai review |
 | `coderabbit-triage` | classify each CR thread; emit accept/reject/discuss/resolve plan |
@@ -251,7 +251,7 @@ Canonical order: `/babysit-pr [PR#]` → `/open-pr` → `/wait-for-ci` → `/pr-
 | `pr-changelog` | Keep-a-Changelog entry from Conventional Commit title + spec ref |
 | `gh-graphql-helpers` | reusable `gh api graphql` snippets — single source of truth |
 | `coderabbit-config` | when/how to evolve `.coderabbit.yaml` |
-| `branch-conventions` | naming, base, draft, auto-merge, force-push policy (table-driven) |
+| `branch-conventions` | naming, base, auto-merge, force-push policy (table-driven) |
 
 CodeRabbit posts as `coderabbitai[bot]` (or `coderabbitai` on some API surfaces — both checked). **REST cannot resolve review threads** — use GraphQL `resolveReviewThread` (`.claude/skills/gh-graphql-helpers/SKILL.md` recipe #3). `nexus-merge` bot may approve in lieu of human review (`docs/guides/merge-system.md`).
 

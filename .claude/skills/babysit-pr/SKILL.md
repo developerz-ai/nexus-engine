@@ -12,15 +12,13 @@ Drive a PR from branch-push to merge. Idempotent — safe to re-invoke mid-loop.
 ```
 [branch]
   │
-  └─▶ open-pr ──▶ [opened, draft]
+  └─▶ open-pr ──▶ [opened]
         │
         └─▶ wait-for-ci ──▶ red ──▶ pr-rebase-and-recover ─┐
               │                                            │
               green                                        │
               │                                            │
-              └─▶ mark-ready-for-review                    │
-                    │                                      │
-                    └─▶ wait-for-coderabbit                │
+              └─▶ wait-for-coderabbit                      │
                           │                                │
                           └─▶ coderabbit-triage            │
                                 │                          │
@@ -60,26 +58,23 @@ while :; do
   fi
   [ "$VERDICT" = "timeout" ] && { emit_escalate "ci_timeout"; exit 2; }
 
-  # 2. Mark ready
-  gh pr ready "$PR" 2>/dev/null || true
-
-  # 3. CodeRabbit
+  # 2. CodeRabbit
   CR=$(claude-skill wait-for-coderabbit "$PR")
   STATE=$(echo "$CR" | jq -r .cr_state)
   if [ "$STATE" = "cr_no_show" ]; then
     echo "WARN: CR did not review — proceeding without CR (advisory only)"
   else
-    # 4. Triage
+    # 3. Triage
     PLAN=$(claude-skill coderabbit-triage "$PR")
     NACCEPT=$(echo "$PLAN" | jq '.counts.accept')
     NREJECT=$(echo "$PLAN" | jq '.counts.reject')
     NDISCUSS=$(echo "$PLAN" | jq '.counts.discuss')
 
-    # 5. Apply fixes
+    # 4. Apply fixes
     [ "$NACCEPT" -gt 0 ] && claude-skill fix-from-coderabbit "$PR"
-    # 6. Post replies
+    # 5. Post replies
     [ $((NREJECT + NDISCUSS)) -gt 0 ] && claude-skill coderabbit-reply "$PR"
-    # 7. Resolve fixed threads
+    # 6. Resolve fixed threads
     claude-skill coderabbit-resolve "$PR"
 
     # If we pushed fixes, loop CI again
@@ -89,7 +84,7 @@ while :; do
     fi
   fi
 
-  # 8. Merge gates
+  # 7. Merge gates
   GATES=$(gh pr view "$PR" --json mergeable,reviewDecision,statusCheckRollup)
   MERGEABLE=$(echo "$GATES" | jq -r .mergeable)
   APPROVED=$(echo "$GATES" | jq -r .reviewDecision)
@@ -131,7 +126,7 @@ Mastermind parses this on each tick to decide whether to keep waiting, spawn a f
 | Stage | Target | Hard cap |
 |---|---|---|
 | CI green | 15 min | 30 min |
-| CR review post | 5 min after ready | 20 min |
+| CR review post | 5 min after CI green | 20 min |
 | Triage → reply round | 5 min | 15 min |
 | PR open → merged (non-arch) | 1 h | 4 h |
 

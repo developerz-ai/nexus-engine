@@ -1,6 +1,6 @@
 ---
 name: branch-conventions
-description: Branch naming, base branch, draft policy, auto-merge policy, force-push policy. Short, table-driven. Triggers: branch naming, branch policy, where to branch from.
+description: Branch naming, base branch, auto-merge policy, force-push policy. Short, table-driven. Triggers: branch naming, branch policy, where to branch from.
 allowed-tools: Bash(git *) Bash(gh *) Read
 ---
 
@@ -37,14 +37,7 @@ Rules:
 
 Nexus is trunk-based. No `develop`. No long-lived feature branches (>3 days = rebase or split).
 
-## Draft policy
-| State | When |
-|---|---|
-| draft | branch < first CI run; impl incomplete; experimenting |
-| ready | impl complete; CI green; spec referenced |
-| draft (back) | force-pushed history rewrite; awaiting fresh CR review |
-
-Mark ready via `gh pr ready <PR>` or GraphQL `markPullRequestReadyForReview` (see `gh-graphql-helpers`).
+Real PRs only, never drafts (owner ruling 2026-11-16).
 
 ## Auto-merge policy
 | Condition | Auto-merge? |
