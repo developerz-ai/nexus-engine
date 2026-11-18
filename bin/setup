@@ -178,8 +178,8 @@ fi
 # shims — without it `scripts/check` exits 5 on a clean checkout, so it is
 # provisioned here like the cargo subcommands are. ruff is not in the default
 # gate set (the checkout has no Python sources, so a default ruff gate could
-# only fail); it is installed only for the opt-in `check --only ruff`, and a
-# default run does not need it.
+# only fail); it is attempted only as a convenience for the opt-in
+# `check --only ruff`, and a default run does not need it.
 # The shader validator is deliberately absent: the repo ships no shader
 # sources and no gate runs one.
 nextest_version="$(awk -F'"' '/^[[:space:]]*cargo-nextest[[:space:]]*=/ {print $2; exit}' scripts/lib/versions.toml 2>/dev/null || true)"
@@ -252,7 +252,8 @@ install_prebuilt() {
     rm -rf "$tmp"
     return 1
   fi
-  # The release publishes a checksum beside the archive; verify it when present.
+  # The release publishes a checksum beside the archive; verification is
+  # mandatory because this archive installs an executable on PATH.
   # Covers both naming styles in play: `<asset>.sha256` and `<asset>.sha256sum`.
   expected=""
   for sha_url in "${url%.tar.*}.sha256" "${url%.tar.*}.sha256sum" "${url}.sha256" "${url}.sha256sum"; do
@@ -261,15 +262,21 @@ install_prebuilt() {
       break
     fi
   done
-  if [ -n "$expected" ]; then
-    actual="$(sha256_of "$archive")"
-    if [ -z "$actual" ]; then
-      echo "bin/setup: no sha256 tool here; $tool $version installed unverified" >&2
-    elif [ "$expected" != "$actual" ]; then
-      echo "bin/setup: checksum mismatch for $tool $version" >&2
-      rm -rf "$tmp"
-      return 1
-    fi
+  if [ -z "$expected" ]; then
+    echo "bin/setup: no checksum available for $tool $version; refusing unverified archive" >&2
+    rm -rf "$tmp"
+    return 1
+  fi
+  actual="$(sha256_of "$archive")"
+  if [ -z "$actual" ]; then
+    echo "bin/setup: no sha256 tool here; refusing to install $tool $version" >&2
+    rm -rf "$tmp"
+    return 1
+  fi
+  if [ "$expected" != "$actual" ]; then
+    echo "bin/setup: checksum mismatch for $tool $version" >&2
+    rm -rf "$tmp"
+    return 1
   fi
   # `xf`, not `xzf`: shellcheck publishes .tar.xz, and tar detects the
   # compression from the archive itself for gz, xz and bz2 alike.
@@ -346,8 +353,10 @@ ensure_gate_tool "cargo-deny" "$deny_version" \
 # script puts on PATH, and the gate resolves these two by bare name.
 ensure_gate_tool "shellcheck" "$shellcheck_version" \
   "https://github.com/koalaman/shellcheck/releases/download/v$shellcheck_version/shellcheck-v$shellcheck_version.$shellcheck_asset.tar.xz" || exit 69
-ensure_gate_tool "ruff" "$ruff_version" \
-  "https://github.com/astral-sh/ruff/releases/download/$ruff_version/ruff-$ruff_triple.tar.gz" || exit 69
+if ! ensure_gate_tool "ruff" "$ruff_version" \
+  "https://github.com/astral-sh/ruff/releases/download/$ruff_version/ruff-$ruff_triple.tar.gz"; then
+  echo "bin/setup: ruff is unavailable; install it to use scripts/check --only ruff" >&2
+fi
 
 # ── scripts workspace ───────────────────────────────────────────────────────
 # The bun workspace root is the repo root (the root package.json declares

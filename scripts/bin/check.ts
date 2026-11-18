@@ -51,7 +51,18 @@ const SCRIPTS_DIR = process.env.NEXUS_ROOT
 // a hand-maintained list rots (this gate once named a TOML file).
 const SHEBANG = /^#!\s*\/(?:usr\/)?bin\/(?:env\s+)?(?:ba|da)?sh\b/;
 export function shellSources(): string[] {
-  return readdirSync(SCRIPTS_DIR)
+  let entries: string[];
+  try {
+    entries = readdirSync(SCRIPTS_DIR);
+  } catch {
+    nxThrow({
+      tag: 'GateFailed',
+      gate: 'shellcheck',
+      exitCode: 5,
+      message: `could not enumerate shellcheck inputs in ${SCRIPTS_DIR}`,
+    });
+  }
+  return entries
     .filter((name) => {
       try {
         return SHEBANG.test(
