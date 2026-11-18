@@ -98,7 +98,7 @@
       "path": "scripts/check",
       "lang": "typescript",
       "category": "test",
-      "description": "Run all quality gates: fmt, clippy, biome, ruff, shellcheck, naga, cargo-deny.",
+      "description": "Run the default quality gates: fmt, clippy, biome, shellcheck, deny. ruff and naga are opt-in via --only.",
       "since": "0.1.0",
       "idempotent": true,
       "flags": [

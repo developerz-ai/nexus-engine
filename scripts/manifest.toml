@@ -39,7 +39,9 @@ name        = "check"
 path        = "scripts/check"
 lang        = "typescript"
 category    = "test"
-description = "Run all quality gates: fmt, clippy, biome, ruff, shellcheck, naga, cargo-deny."
+# ruff is opt-in (--only ruff): the checkout has no Python sources yet, so the gate
+# could only fail. ruff.toml is kept for the future scripts/sdks-py. Same for naga.
+description = "Run the default quality gates: fmt, clippy, biome, shellcheck, deny. ruff and naga are opt-in via --only."
 since       = "0.1.0"
 idempotent  = true
 flags = [

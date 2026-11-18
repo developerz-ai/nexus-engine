@@ -49,7 +49,7 @@ When you do hive: a big task is not one agent doing more, it is a **team sharing
 | build | `cargo check -p <its crate> --all-targets` | `cargo check --workspace --all-targets` (Law 4) |
 | tests | `cargo nextest run -p <its crate>` | `cargo nextest run --workspace --profile ci` |
 | `scripts/**` | `bun test <its own test files>` + `bun x biome check <files it edited>`, from `scripts/` | `cd scripts && bun test && bun x biome check .` |
-| everything | — | `bun run check` (fmt · clippy · biome · ruff · shellcheck · deny), in the **background** |
+| everything | — | `bun run check` (fmt · clippy · biome · shellcheck · deny; ruff and naga are opt-in via `--only`), in the **background** |
 
 An agent owns *its own crate and its own tests*; whole-workspace green is the coordinator's job and nobody else's — once, at the end, in the **background** (it compiles the workspace; a foreground call looks hung). Two gates are easy to forget and both are hard CI failures: **`cargo deny check`**, and the **SPDX sweep** — every new file under `crates/`, `scripts/`, `docs/`, `.github/` needs `SPDX-License-Identifier:` in its first 15 lines, and agents that create files forget it constantly. Sweep for it before committing rather than learning it from `docs / spdx` going red. Touched WGSL → `naga validate`; Python → `ruff check .`.
 

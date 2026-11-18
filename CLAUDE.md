@@ -33,7 +33,7 @@ Rust 1.95 · edition 2021 · MSRV 1.95 (`Cargo.toml:33,38`) — key deps, pinned
 | `./bin/check` | THE gate. Exit 69 = gate tool missing. |
 | `./bin/dev` | `cargo run -p nexus-cli --` (`bin/dev:8`) |
 | `./bin/stop` | no-op (`bin/stop:7`) |
-| `bun run scripts/check` | TS gate set (`scripts/bin/check.ts:33`) |
+| `bun run scripts/check` | TS gate set (`scripts/bin/check.ts:40`) |
 | `bun test` | script tests (`package.json:8`) |
 
 `./bin/check` hard gates run in order, fail-fast (`bin/check:30`):
@@ -49,7 +49,7 @@ Then a **blocking SPDX sweep** matches CI's tracked-file policy (`.github/workfl
 
 Finally, `cargo audit` is attempted as **advisory, nonblocking**, matching CI (`.github/workflows/ci.yml:181-204`). Failure or unavailability retains diagnostics and reports its exit status but does not fail an otherwise clean gate. `bin/setup` does not provision cargo-audit; audit is not a preflight requirement. Earlier hard failures stop execution and cannot be masked by the advisory step. Policy: `docs/specs/scripts/overview.md`.
 
-`bun run scripts/check` gates (`scripts/bin/check.ts:33`): fmt · clippy · biome · ruff · shellcheck · deny. naga is opt-in via `--only naga`, not in the default set.
+`bun run scripts/check` gates (`scripts/bin/check.ts:40`): fmt · clippy · biome · shellcheck · deny. ruff and naga are opt-in via `--only ruff` / `--only naga` — ruff because the checkout has no Python sources, so a default ruff gate could only fail.
 
 ## Structure
 | Path | Count | Contents |
@@ -101,7 +101,7 @@ The 15 Laws — `docs/architecture/01-principles.md`.
 
 A PR that violates a law is rejected by `nexus-merge` without human review.
 
-**Editor scope, MCP, and parity.** Editor narrow on purpose — quick-load + place + inspect + scrub + telemetry. NOT a code editor. NOT a long-form authoring suite. Every editor operation = one agent JSON-RPC method; the CI auditor that blocks orphan buttons and orphan editor-surface RPCs (Law 13) is **PLANNED, not installed** — `scripts/check-rpc-parity` is absent from this checkout, the `scripts/check` gate set has no parity gate (`scripts/bin/check.ts:33`), and the spec that promises the binary (`docs/specs/editor/rpc-parity.md:98`) describes a tool the repo has not landed. The MCP server (`docs/specs/agent/mcp-server.md`) is the public interop layer — one server, every MCP host. Code editing lives in VS Code / Cursor / Zed via post-v1.0 extensions (`docs/specs/editor/vscode-extension.md`, `docs/specs/editor/zed-extension.md`).
+**Editor scope, MCP, and parity.** Editor narrow on purpose — quick-load + place + inspect + scrub + telemetry. NOT a code editor. NOT a long-form authoring suite. Every editor operation = one agent JSON-RPC method; the CI auditor that blocks orphan buttons and orphan editor-surface RPCs (Law 13) is **PLANNED, not installed** — `scripts/check-rpc-parity` is absent from this checkout, the `scripts/check` gate set has no parity gate (`scripts/bin/check.ts:40`), and the spec that promises the binary (`docs/specs/editor/rpc-parity.md:98`) describes a tool the repo has not landed. The MCP server (`docs/specs/agent/mcp-server.md`) is the public interop layer — one server, every MCP host. Code editing lives in VS Code / Cursor / Zed via post-v1.0 extensions (`docs/specs/editor/vscode-extension.md`, `docs/specs/editor/zed-extension.md`).
 
 ## The Four-Stage Pipeline (NEVER skip a stage)
 `spec → contract → impl → test` · spec-author → contract-author → domain-engineer → test-author
