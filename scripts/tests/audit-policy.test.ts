@@ -63,7 +63,6 @@ interface AuditConfig {
     show_tree?: boolean;
   };
   database?: { fetch?: boolean; stale?: boolean };
-  bans?: unknown;
 }
 
 const policy = (): AuditConfig => Bun.TOML.parse(read(POLICY)) as unknown as AuditConfig;
@@ -108,16 +107,12 @@ describe('cargo-audit policy content', () => {
     const { advisories } = policy();
     expect(advisories?.ignore).toEqual([]);
     expect(advisories?.severity_threshold).toBe('low');
-    expect(advisories?.informational_warnings).toEqual(
-      expect.arrayContaining(['unmaintained', 'unsound', 'notice']),
-    );
+    expect(advisories?.informational_warnings).toEqual(['unmaintained', 'unsound', 'notice']);
   });
 
   it('keeps the output policy', () => {
     const { output } = policy();
-    expect(output?.deny).toEqual(
-      expect.arrayContaining(['warnings', 'unmaintained', 'unsound', 'yanked']),
-    );
+    expect(output?.deny).toEqual(['warnings', 'unmaintained', 'unsound', 'yanked']);
     expect(output?.format).toBe('json');
     expect(output?.quiet).toBe(false);
     expect(output?.show_tree).toBe(true);
@@ -129,12 +124,24 @@ describe('cargo-audit policy content', () => {
     expect(database?.stale).toBe(false);
   });
 
-  it('parses under AuditConfig: no unknown [bans] table', () => {
-    // `AuditConfig` is `#[serde(deny_unknown_fields)]` and declares only
-    // advisories / database / output / target / yanked. A `[bans]` table makes
-    // cargo-audit exit 2, which `bin/check` swallows as advisory.
-    expect(policy().bans).toBeUndefined();
-    expect(read(POLICY)).not.toContain('[bans]');
+  it('uses only the known AuditConfig fields', () => {
+    // `AuditConfig` is `#[serde(deny_unknown_fields)]`; unknown tables and
+    // fields make cargo-audit exit 2, which `bin/check` swallows as advisory.
+    // Check complete key sets because Bun.TOML parses fields cargo-audit rejects.
+    const config = policy();
+    expect(Object.keys(config).sort()).toEqual(['advisories', 'database', 'output']);
+    expect(Object.keys(config.advisories ?? {}).sort()).toEqual([
+      'ignore',
+      'informational_warnings',
+      'severity_threshold',
+    ]);
+    expect(Object.keys(config.output ?? {}).sort()).toEqual([
+      'deny',
+      'format',
+      'quiet',
+      'show_tree',
+    ]);
+    expect(Object.keys(config.database ?? {}).sort()).toEqual(['fetch', 'stale']);
   });
 
   it('parses under DenyOption: no "notice" token in deny', () => {
