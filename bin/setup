@@ -170,13 +170,22 @@ else
 fi
 
 # ── gate tools ─────────────────────────────────────────────────────────────
-# The gate runs two cargo subcommands. Both publish prebuilt release archives;
-# building them from source is a ~10 minute detour, so the archive is the only
-# path — a failed download is a setup failure, never a slower fallback.
+# The gate runs two cargo subcommands plus two standalone linters. All four
+# publish prebuilt release archives; building them from source is a ~10 minute
+# detour, so the archive is the only path — a failed download is a setup
+# failure, never a slower fallback.
+# shellcheck backs the default shellcheck gate over the `scripts/*` shebang
+# shims — without it `scripts/check` exits 5 on a clean checkout, so it is
+# provisioned here like the cargo subcommands are. ruff is not in the default
+# gate set (the checkout has no Python sources, so a default ruff gate could
+# only fail); it is attempted only as a convenience for the opt-in
+# `check --only ruff`, and a default run does not need it.
 # The shader validator is deliberately absent: the repo ships no shader
 # sources and no gate runs one.
 nextest_version="$(awk -F'"' '/^[[:space:]]*cargo-nextest[[:space:]]*=/ {print $2; exit}' scripts/lib/versions.toml 2>/dev/null || true)"
 deny_version="$(awk -F'"' '/^[[:space:]]*cargo-deny[[:space:]]*=/ {print $2; exit}' scripts/lib/versions.toml 2>/dev/null || true)"
+shellcheck_version="$(awk -F'"' '/^[[:space:]]*shellcheck[[:space:]]*=/ {print $2; exit}' scripts/lib/versions.toml 2>/dev/null || true)"
+ruff_version="$(awk -F'"' '/^[[:space:]]*ruff[[:space:]]*=/ {print $2; exit}' scripts/lib/versions.toml 2>/dev/null || true)"
 if [ -z "$nextest_version" ]; then
   nextest_version="0.9.85"
   echo "bin/setup: scripts/lib/versions.toml pins no cargo-nextest; using $nextest_version" >&2
@@ -184,6 +193,14 @@ fi
 if [ -z "$deny_version" ]; then
   deny_version="0.16.2"
   echo "bin/setup: scripts/lib/versions.toml pins no cargo-deny; using $deny_version" >&2
+fi
+if [ -z "$shellcheck_version" ]; then
+  shellcheck_version="0.10.0"
+  echo "bin/setup: scripts/lib/versions.toml pins no shellcheck; using $shellcheck_version" >&2
+fi
+if [ -z "$ruff_version" ]; then
+  ruff_version="0.7.4"
+  echo "bin/setup: scripts/lib/versions.toml pins no ruff; using $ruff_version" >&2
 fi
 case "$(uname -s)" in
   Linux) gate_os="linux" ;;
@@ -195,12 +212,19 @@ case "$(uname -m)" in
   aarch64 | arm64) gate_cpu="aarch64" ;;
   *) echo "bin/setup: no prebuilt gate tools for $(uname -m)" >&2; exit 69 ;;
 esac
+# shellcheck names its assets `<os>.<cpu>` and ships .tar.xz; ruff ships the
+# Rust target triple as .tar.gz. Note the asymmetry: ruff's asset name carries
+# no version (the tag does), so the version must not be spliced in — a
+# `ruff-<version>-<triple>.tar.gz` URL is a 404 on every release.
+shellcheck_asset="$gate_os.$gate_cpu"
 if [ "$gate_os" = "darwin" ]; then
   nextest_triple="universal-apple-darwin"
   deny_triple="$gate_cpu-apple-darwin"
+  ruff_triple="$gate_cpu-apple-darwin"
 else
   nextest_triple="$gate_cpu-unknown-linux-gnu"
   deny_triple="$gate_cpu-unknown-linux-musl"
+  ruff_triple="$gate_cpu-unknown-linux-gnu"
 fi
 
 # sha256 of a file, hex digest only; empty when no sha256 tool is available.
@@ -228,25 +252,35 @@ install_prebuilt() {
     rm -rf "$tmp"
     return 1
   fi
-  # The release publishes a checksum beside the archive; verify it when present.
+  # The release publishes a checksum beside the archive; verification is
+  # mandatory because this archive installs an executable on PATH.
+  # Covers both naming styles in play: `<asset>.sha256` and `<asset>.sha256sum`.
   expected=""
-  for sha_url in "${url%.tar.gz}.sha256" "${url}.sha256"; do
+  for sha_url in "${url%.tar.*}.sha256" "${url%.tar.*}.sha256sum" "${url}.sha256" "${url}.sha256sum"; do
     if curl -fsSL --retry 2 --max-time 60 -o "$tmp/expected.sha256" "$sha_url" 2>/dev/null; then
       expected="$(awk 'NF {print $1; exit}' "$tmp/expected.sha256")"
       break
     fi
   done
-  if [ -n "$expected" ]; then
-    actual="$(sha256_of "$archive")"
-    if [ -z "$actual" ]; then
-      echo "bin/setup: no sha256 tool here; $tool $version installed unverified" >&2
-    elif [ "$expected" != "$actual" ]; then
-      echo "bin/setup: checksum mismatch for $tool $version" >&2
-      rm -rf "$tmp"
-      return 1
-    fi
+  if [ -z "$expected" ]; then
+    echo "bin/setup: no checksum available for $tool $version; refusing unverified archive" >&2
+    rm -rf "$tmp"
+    return 1
   fi
-  if ! tar xzf "$archive" -C "$tmp"; then
+  actual="$(sha256_of "$archive")"
+  if [ -z "$actual" ]; then
+    echo "bin/setup: no sha256 tool here; refusing to install $tool $version" >&2
+    rm -rf "$tmp"
+    return 1
+  fi
+  if [ "$expected" != "$actual" ]; then
+    echo "bin/setup: checksum mismatch for $tool $version" >&2
+    rm -rf "$tmp"
+    return 1
+  fi
+  # `xf`, not `xzf`: shellcheck publishes .tar.xz, and tar detects the
+  # compression from the archive itself for gz, xz and bz2 alike.
+  if ! tar xf "$archive" -C "$tmp"; then
     rm -rf "$tmp"
     return 1
   fi
@@ -315,6 +349,14 @@ ensure_gate_tool "cargo-nextest" "$nextest_version" \
   "https://github.com/nextest-rs/nextest/releases/download/cargo-nextest-$nextest_version/cargo-nextest-$nextest_version-$nextest_triple.tar.gz" || exit 69
 ensure_gate_tool "cargo-deny" "$deny_version" \
   "https://github.com/EmbarkStudios/cargo-deny/releases/download/$deny_version/cargo-deny-$deny_version-$deny_triple.tar.gz" || exit 69
+# Installed into $CARGO_BIN_DIR with the rest: it is the one tool directory this
+# script puts on PATH, and the gate resolves these two by bare name.
+ensure_gate_tool "shellcheck" "$shellcheck_version" \
+  "https://github.com/koalaman/shellcheck/releases/download/v$shellcheck_version/shellcheck-v$shellcheck_version.$shellcheck_asset.tar.xz" || exit 69
+if ! ensure_gate_tool "ruff" "$ruff_version" \
+  "https://github.com/astral-sh/ruff/releases/download/$ruff_version/ruff-$ruff_triple.tar.gz"; then
+  echo "bin/setup: ruff is unavailable; install it to use scripts/check --only ruff" >&2
+fi
 
 # ── scripts workspace ───────────────────────────────────────────────────────
 # The bun workspace root is the repo root (the root package.json declares
@@ -338,4 +380,6 @@ gate_tool_version() {
 }
 nextest_ver="$(gate_tool_version "$(command -v cargo-nextest || true)")"
 deny_ver="$(gate_tool_version "$(command -v cargo-deny || true)")"
-echo "bin/setup: done — rust $rust_channel (rustfmt, clippy), bun $(bun --version), cargo-nextest ${nextest_ver:-unknown}, cargo-deny ${deny_ver:-unknown}" >&2
+shellcheck_ver="$(gate_tool_version "$(command -v shellcheck || true)")"
+ruff_ver="$(gate_tool_version "$(command -v ruff || true)")"
+echo "bin/setup: done — rust $rust_channel (rustfmt, clippy), bun $(bun --version), cargo-nextest ${nextest_ver:-unknown}, cargo-deny ${deny_ver:-unknown}, shellcheck ${shellcheck_ver:-unknown}, ruff ${ruff_ver:-unknown}" >&2

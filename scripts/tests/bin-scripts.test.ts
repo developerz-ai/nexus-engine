@@ -66,6 +66,18 @@ printf 'cargo-deny 0.16.2\\n'
 exit 0
 `;
 
+const STUB_SHELLCHECK = `#!/bin/sh
+printf 'shellcheck %s\\n' "$*" >> "$STUB_LOG"
+printf 'ShellCheck - shell script analysis tool\\n'
+exit 0
+`;
+
+const STUB_RUFF = `#!/bin/sh
+printf 'ruff %s\\n' "$*" >> "$STUB_LOG"
+printf 'ruff 0.14.10\\n'
+exit 0
+`;
+
 const STUB_AUDIT = `#!/bin/sh
 printf 'audit stub diagnostic\\n' >&2
 exit "\${STUB_AUDIT_STATUS:-0}"
@@ -121,11 +133,23 @@ exit 1
 
 // stub curl — serves a real tar.gz holding an executable named after the gate
 // tool in the requested URL, so the prebuilt path runs end to end offline.
-// Checksum probes fail, like a release without a published .sha256.
+// Its checksum sidecar is available only when the fixture requests one.
 const OK_CURL = `#!/bin/sh
 printf 'curl %s\\n' "$*" >> "$STUB_LOG"
 case "$*" in
-  *sha256*) exit 1 ;;
+  *sha256*)
+    if [ "$STUB_CHECKSUM" != 1 ]; then exit 1; fi
+    out=""
+    prev=""
+    for a in "$@"; do
+      if [ "$prev" = "-o" ]; then out="$a"; fi
+      prev="$a"
+    done
+    archive="$(find "$(dirname "$out")" -maxdepth 1 -type f -name '*.tar.*' -print -quit)"
+    if [ -z "$archive" ]; then exit 1; fi
+    sha256sum "$archive" > "$out"
+    exit 0
+    ;;
 esac
 out=""
 prev=""
@@ -173,6 +197,8 @@ interface FixtureOptions {
   failCurl?: boolean;
   /** install a curl stub that serves a real archive for the requested tool */
   okCurl?: boolean;
+  /** make the archive-serving curl stub publish a matching checksum sidecar */
+  checksum?: boolean;
   /** install an `install` stub that always fails — a full disk */
   failInstall?: boolean;
 }
@@ -208,6 +234,8 @@ function sharedContext(options: FixtureOptions = {}): Sandbox {
   }
   if (!omit.includes('cargo-deny')) writeStub(join(cargoBin, 'cargo-deny'), STUB_DENY);
   if (!omit.includes('cargo-audit')) writeStub(join(cargoBin, 'cargo-audit'), STUB_AUDIT);
+  if (!omit.includes('shellcheck')) writeStub(join(cargoBin, 'shellcheck'), STUB_SHELLCHECK);
+  if (!omit.includes('ruff')) writeStub(join(cargoBin, 'ruff'), STUB_RUFF);
   writeStub(join(cargoBin, 'git'), STUB_GIT);
   if (!omit.includes('bun')) writeStub(join(bunBin, 'bun'), STUB_BUN);
   if (options.failCurl) writeStub(join(cargoBin, 'curl'), STUB_CURL);
@@ -223,6 +251,7 @@ function sharedContext(options: FixtureOptions = {}): Sandbox {
     STUB_BUN_FAIL: options.bunFail ?? '',
     STUB_AUDIT_STATUS: String(options.auditStatus ?? 0),
     STUB_GIT_STATUS: String(options.gitStatus ?? 0),
+    STUB_CHECKSUM: options.checksum ? '1' : '0',
     STUB_REPO: '',
     STUB_TRACKED: join(root, 'tracked'),
   };
@@ -529,6 +558,20 @@ describe('bin scripts', () => {
     }
   });
 
+  it('bin/setup continues when optional ruff cannot be provisioned', async () => {
+    const sandbox = sharedContext({ omit: ['ruff'], failCurl: true });
+    try {
+      const r = await runScript('setup', sandbox);
+      expect(r.exitCode).toBe(0);
+      expect(r.stderr).toContain(
+        'ruff is unavailable; install it to use scripts/check --only ruff',
+      );
+      expect(calls(sandbox)).toContain('bun install --frozen-lockfile');
+    } finally {
+      rmSync(sandbox.root, { recursive: true, force: true });
+    }
+  });
+
   it('bin/setup exits 69 when a prebuilt gate tool cannot be downloaded', async () => {
     const sandbox = sharedContext({
       omit: ['cargo-nextest', 'cargo-deny'],
@@ -550,6 +593,7 @@ describe('bin scripts', () => {
     const sandbox = sharedContext({
       omit: ['cargo-nextest', 'cargo-deny'],
       okCurl: true,
+      checksum: true,
       failInstall: true,
     });
     try {
@@ -559,6 +603,21 @@ describe('bin scripts', () => {
       expect(r.stderr).toContain('could not install cargo-nextest');
       expect(r.stderr).not.toContain('installed cargo-nextest');
       expect(calls(sandbox).some((call) => call.startsWith('install '))).toBe(true);
+    } finally {
+      rmSync(sandbox.root, { recursive: true, force: true });
+    }
+  });
+
+  it('bin/setup refuses a downloaded gate tool without a checksum', async () => {
+    const sandbox = sharedContext({
+      omit: ['cargo-nextest', 'cargo-deny'],
+      okCurl: true,
+    });
+    try {
+      const r = await runScript('setup', sandbox);
+      expect(r.exitCode).toBe(69);
+      expect(r.stderr).toContain('no checksum available for cargo-nextest');
+      expect(r.stderr).not.toContain('installed cargo-nextest');
     } finally {
       rmSync(sandbox.root, { recursive: true, force: true });
     }

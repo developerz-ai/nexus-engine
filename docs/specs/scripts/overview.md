@@ -68,7 +68,7 @@ Full contract: `→ docs/specs/scripts/cli-contract.md`.
 | Script | One-line purpose |
 |---|---|
 | `bootstrap` | install toolchains (rustup, nextest, bun, ruff, sccache) |
-| `check` | run six default gates in order: fmt, clippy, biome, ruff, shellcheck, deny; naga opt-in via `--only naga` |
+| `check` | run five default gates in order: fmt, clippy, biome, shellcheck, deny; ruff and naga opt-in via `--only` (ruff because the checkout has no Python sources) |
 | `build` | wrap `cargo build` with sccache + features |
 | `test` | nextest + scripts-tests + lua tests |
 | `scenario` | run a TOML scenario via `nexus run --scenario` |
@@ -76,7 +76,7 @@ Full contract: `→ docs/specs/scripts/cli-contract.md`.
 | `replay` | `nexus replay <snapshot>` |
 | `index-scripts` | regenerate `scripts/index.json` (pre-commit hook) |
 | `new-script` | scaffold a new script + test + manifest entry |
-| `lint-scripts` | shellcheck + ruff + bats lint + manifest consistency |
+| `lint-scripts` | biome on TS + manifest consistency + index drift + secret-grep |
 | `release-engine` | tag, build artifacts, sign, upload to GitHub release |
 | `symbols-upload` | upload PDB/dSYM/source-maps |
 | `triage-issues` | fetch GitHub issues, cluster by tag, JSON for crash-triager subagent |
@@ -86,7 +86,7 @@ Game-repo seeded set: `→ docs/game-template/scripts/seed-list.md`.
 
 ## Local CI-Parity Contract (`bin/check`)
 
-`./bin/check` mirrors the quality checks in `.github/workflows/ci.yml`; that workflow is authoritative. It is distinct from `scripts/check`, whose six defaults remain defined in `scripts/bin/check.ts:33`. Naga is opt-in there, not a default gate or a CI-parity addition. Do not add ruff, shellcheck, or naga to `bin/check` to achieve parity.
+`./bin/check` mirrors the quality checks in `.github/workflows/ci.yml`; that workflow is authoritative. It is distinct from `scripts/check`, whose five defaults remain defined in `scripts/bin/check.ts:40`. Ruff and naga are opt-in there — ruff because the checkout has no Python sources — not default gates or CI-parity additions. Do not add ruff, shellcheck, or naga to `bin/check` to achieve parity.
 
 The historical baseline comprised seven blocking checks: fmt, clippy, cargo check, nextest, deny, script tests, and Biome. The resumed working tree already includes the two parity additions: a blocking SPDX sweep and advisory audit. This describes local source, not verified execution or the state of remote main. The table maps all nine CI checks to their current `bin/check` counterparts: eight block; audit is advisory.
 
