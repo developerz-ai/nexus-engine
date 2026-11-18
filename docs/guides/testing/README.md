@@ -52,7 +52,7 @@ Configs that drive each runner:
 | `tarpaulin.toml` | coverage (local) |
 | `scripts/lib/test-policy.toml` | required kinds per crate + per-crate floors |
 | `naga-validate.toml` | WGSL validation (invoked from `scripts/check`) |
-| `audit.toml` | dependency vulnerability gate |
+| `.cargo/audit.toml` | dependency vulnerability gate |
 | `deny.toml` | license + edge allow-list |
 | `benches/README.md` | bench layout + baseline contract |
 | `fuzz/README.md` | fuzz target inventory |

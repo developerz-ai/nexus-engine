@@ -1,0 +1,45 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Nexus Engine contributors
+#
+# cargo-audit configuration.
+#
+# Location is load-bearing: cargo-audit resolves its config from
+# `./.cargo/audit.toml` (relative to the working directory) and then
+# `$CARGO_HOME/audit.toml`, and from nowhere else. Both callers — `bin/check`
+# and the `rust-audit` CI job — run a bare `cargo audit` from the repo root, so
+# this is the one path they read. A copy at the repo root would be inert.
+#
+# Scope: vulnerability advisories from the RustSec advisory database.
+# License + edge enforcement lives in deny.toml (cargo-deny).
+#
+# Spec refs:
+#   - docs/architecture/01-principles.md (Laws 4, 7)
+#   - docs/guides/merge-system.md (security gate)
+
+[advisories]
+# Advisory IDs ignored intentionally. Empty by policy: every ignored
+# advisory requires an entry justifying why (link to ADR or issue).
+ignore = []
+
+# Which informational advisories are REPORTED. This selects reporting only —
+# it does not gate. Gating is `[output] deny` below, where `unmaintained` and
+# `unsound` are additionally denied; `notice` has no `DenyOption` variant, so
+# it is reported and never denied. Law 4 — main is always green and safe.
+# (`yanked` is not an `Informational` variant; yanked crates are denied by
+# `[output] deny` below, which is where that rule actually lives.)
+informational_warnings = ["unmaintained", "unsound", "notice"]
+severity_threshold = "low"
+
+[output]
+# Promote every advisory to an error. `warnings` already expands to the
+# unmaintained + unsound + yanked warning kinds; `notice` is not a
+# deny-able option in cargo-audit, so it is not listed here.
+deny = ["warnings", "unmaintained", "unsound", "yanked"]
+format = "json"
+quiet = false
+show_tree = true
+
+[database]
+# Use the upstream RustSec advisory db. Fetched fresh in CI.
+fetch = true
+stale = false
