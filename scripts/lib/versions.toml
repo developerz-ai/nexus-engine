@@ -18,7 +18,7 @@ ruff    = "0.7.4"
 pytest  = "8.3.3"
 
 [typescript]
-biome      = "2.6.6"
+biome      = "2.6.7"
 commander  = "12.1.0"
 vitest     = "2.1.4"
 
